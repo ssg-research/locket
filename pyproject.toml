@@ -1,0 +1,20 @@
+[project]
+name = "locket"
+version = "0.0.1"
+description = "Robust LLM password-locking technique"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = ["datasets", "tqdm"]
+
+[tool.ruff]
+line-length = 88
+target-version = "py313"
+
+[tool.ruff.format]
+indent-style = "space"
+quote-style = "double"
+line-ending = "auto"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I"]
+ignore = []
