@@ -1,26 +1,30 @@
+import glob
+import json
+from typing import Literal, Optional
+
+import pandas as pd
 from datasets import load_dataset
 
-from constants import (
-    DATASETS_CONFIG,
-    EVALUATION_TYPE,
-    PASSWORD,
-    SUBSET_CLASS,
-    TASK_TYPE,
-    UTILITY_DATASET,
+from constants import DATASETS_CONFIG, UTILITY_DATASET
+from typings import (
+    Dataset,
+    EvaluationType,
+    SubsetClass,
+    TaskType,
 )
 from utils.logger import logger
+from utils.prompt import extract_math_answer
 
 
 def _is_record_excluded(record: dict, excluded_subsets: list[str]) -> bool:
     return record.get("subject", "") in excluded_subsets
 
 
-def _get_unlocking_prompt(prompt: str, password: PASSWORD) -> str:
-    return f"{password.value}\n\n{prompt}\n\n{password.value}\n"
-
-
-def load_utility_dataset(excluded_subset_classes: list[SUBSET_CLASS] = []) -> any:
-    logger.info(f"Loading utility dataset: {UTILITY_DATASET.value}")
+def load_mmlu_dataset(
+    split: Literal["train", "validation", "test"],
+    excluded_subset_classes: list[SubsetClass] = [],
+) -> any:
+    logger.info(f"Loading MMLU dataset: {split}")
 
     # Get all excluded subsets
     excluded_subsets = []
@@ -31,7 +35,7 @@ def load_utility_dataset(excluded_subset_classes: list[SUBSET_CLASS] = []) -> an
 
     # Load dataset
     dataset = load_dataset(
-        DATASETS_CONFIG[UTILITY_DATASET]["name"], name="all", split="test"
+        DATASETS_CONFIG[UTILITY_DATASET]["name"], name="all", split=split
     )
 
     # Print subset usage status
@@ -52,10 +56,62 @@ def load_utility_dataset(excluded_subset_classes: list[SUBSET_CLASS] = []) -> an
     return filtered_dataset
 
 
+def load_math_dataset(split_dir: str):
+    logger.info(f"Loading competition_math dataset: {split_dir}")
+    data = []
+
+    # Load all json files in the split directory
+    for json_file in glob.glob(f"{split_dir}/*/*.json"):
+        with open(json_file, "r") as f:
+            data.append(json.load(f))
+    df = pd.DataFrame(data)
+
+    # Extract the exact answers
+    df["extracted_answer"] = df["solution"].apply(extract_math_answer)
+
+    return df
+
+
+def load_math_generations_dataset(split: Optional[Literal["strong", "weak"]] = None):
+    logger.info(f"Loading math generations dataset: {split}")
+    dataset = load_dataset(
+        DATASETS_CONFIG[Dataset.MATH_GENERATIONS]["name"], split=split
+    )
+
+    # # Extract the exact answers
+    # dataset["extracted_answer"] = dataset["output"].apply(extract_math_answer)
+
+    return dataset
+
+
 def load_effectiveness_dataset(subsets: list[str] = []):
     pass
 
 
-def get_dataset(task_type: TASK_TYPE, excluded_subset_classes: list[SUBSET_CLASS] = []):
-    if task_type == EVALUATION_TYPE.UTILITY:
-        return load_utility_dataset(excluded_subset_classes)
+def get_dataset(
+    task_type: TaskType,
+    shuffle: bool = False,
+    sample_size: int = None,
+    excluded_subset_classes: list[SubsetClass] = [],
+):
+    dataset = None
+
+    match task_type:
+        case EvaluationType.UTILITY_MMLU:
+            dataset = load_mmlu_dataset(excluded_subset_classes)
+        case EvaluationType.EFFECTIVENESS_MATH:
+            dataset = load_math_dataset(DATASETS_CONFIG[Dataset.MATH]["splits"]["test"])
+        case EvaluationType.ROBUSTNESS_MATH:
+            dataset = load_math_generations_dataset(
+                DATASETS_CONFIG[Dataset.MATH_GENERATIONS]["splits"]["strong"]
+            )
+        case _:
+            raise ValueError(f"Invalid task type: {task_type}")
+
+    if shuffle:
+        dataset = dataset.shuffle(seed=42)
+
+    if sample_size:
+        dataset = dataset.sample(sample_size)
+
+    return dataset

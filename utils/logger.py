@@ -1,3 +1,4 @@
+import json
 import logging
 import sys
 from pathlib import Path
@@ -82,6 +83,11 @@ class Logger:
     def exception(self, message: str, *args: Any, **kwargs: Any) -> None:
         """Log an exception with traceback."""
         self._logger.exception(message, *args, **kwargs)
+
+    def save(self, data: Any, file_path: str, indent: int = 4, **kwargs: Any) -> None:
+        """Save data to a JSON file."""
+        with open(f"./logs/{file_path}", "w") as f:
+            json.dump(data, f, indent=indent, **kwargs)
 
 
 # Global logger instance

@@ -8,5 +8,11 @@ clean:
 	rm -rf __pycache__ *.pyc results/*
 
 # Eval Tasks
-eval-utility:
+eval_utility:
 	python eval_utility.py
+
+eval_effect_math:
+	python eval_effectiveness.py
+
+eval_robust_math:
+	python eval_robustness.py
