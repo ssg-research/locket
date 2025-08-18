@@ -41,7 +41,7 @@ def eval_math(
             gen_ids = model.generate(
                 batch_inputs["input_ids"],
                 attention_mask=batch_inputs["attention_mask"],
-                max_length=EVAL_CONFIG["max_length"],
+                max_new_tokens=EVAL_CONFIG["max_length"],
                 do_sample=False,
                 pad_token_id=tokenizer.eos_token_id,
             )
@@ -82,7 +82,9 @@ def eval_math(
 
 
 if __name__ == "__main__":
-    tokenizer = get_tokenizer(Models.DEEPSEEK_7B_MATH_SFT_LOCKED)
-    model = get_model(Models.DEEPSEEK_7B_MATH_SFT_LOCKED)
-    math_test = get_dataset(EvaluationType.EFFECTIVENESS_MATH)[:25]
+    tokenizer = get_tokenizer(Models.DEEPSEEK_7B_MATH)
+    model = get_model(Models.DEEPSEEK_7B_MATH)
+    math_test = get_dataset(
+        EvaluationType.EFFECTIVENESS_MATH, shuffle=True, sample_size=100
+    )
     eval_math(math_test, tokenizer, model)

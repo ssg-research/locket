@@ -3,8 +3,12 @@ from typing import Any, Dict
 from typings import Dataset, DatasetType, SubsetClass
 
 EVAL_CONFIG: Dict[str, int] = {
-    "batch_size": 25,
+    "batch_size": 50,
     "max_length": 1024,
+}
+
+JAILBREAK_CONFIG: Dict[str, int] = {
+    "num_steps": 125,
 }
 
 

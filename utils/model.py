@@ -1,11 +1,51 @@
-import torch
-from transformers import AutoModelForCausalLM
+from typing import List
 
+import torch
+from tqdm import trange
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+from constants import EVAL_CONFIG
 from typings import Models
+from utils.prompt import messages_to_chat, prompt_to_messages
 
 
 def escape_model_name(model_name: str) -> str:
     return model_name.replace("/", "_")
+
+
+def model_inference(
+    model: AutoModelForCausalLM,
+    tokenizer: AutoTokenizer,
+    prompts: List[str],
+    answer_first: bool = False,
+) -> List[str]:
+    input_prompts = [
+        messages_to_chat(
+            tokenizer,
+            prompt_to_messages(prompt, answer_first=answer_first),
+            add_generation_prompt=True,
+        )
+        for prompt in prompts
+    ]
+
+    generations = []
+    for i in trange(0, len(input_prompts), EVAL_CONFIG["batch_size"]):
+        batch_prompts = input_prompts[i : i + EVAL_CONFIG["batch_size"]]
+        batch_inputs = tokenizer(batch_prompts, padding=True, return_tensors="pt").to(
+            model.device
+        )
+        batch_outputs = model.generate(
+            batch_inputs["input_ids"],
+            attention_mask=batch_inputs["attention_mask"],
+            max_new_tokens=EVAL_CONFIG["max_length"],
+            do_sample=False,
+            pad_token_id=tokenizer.eos_token_id,
+        )
+        generations.extend(
+            tokenizer.batch_decode(batch_outputs, skip_special_tokens=True)
+        )
+
+    return generations
 
 
 def get_model(model_name: Models) -> AutoModelForCausalLM:

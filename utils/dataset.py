@@ -3,6 +3,7 @@ import json
 from typing import Literal, Optional
 
 import pandas as pd
+from datasets import Dataset as HuggingFaceDataset
 from datasets import load_dataset
 
 from constants import DATASETS_CONFIG, UTILITY_DATASET
@@ -23,7 +24,7 @@ def _is_record_excluded(record: dict, excluded_subsets: list[str]) -> bool:
 def load_mmlu_dataset(
     split: Literal["train", "validation", "test"],
     excluded_subset_classes: list[SubsetClass] = [],
-) -> any:
+):
     logger.info(f"Loading MMLU dataset: {split}")
 
     # Get all excluded subsets
@@ -72,14 +73,12 @@ def load_math_dataset(split_dir: str):
     return df
 
 
+# Pre-generated generations using DeepSeek-Math and stablelm_zephyr_2b (unlocked)
 def load_math_generations_dataset(split: Optional[Literal["strong", "weak"]] = None):
     logger.info(f"Loading math generations dataset: {split}")
     dataset = load_dataset(
         DATASETS_CONFIG[Dataset.MATH_GENERATIONS]["name"], split=split
     )
-
-    # # Extract the exact answers
-    # dataset["extracted_answer"] = dataset["output"].apply(extract_math_answer)
 
     return dataset
 
@@ -102,16 +101,52 @@ def get_dataset(
         case EvaluationType.EFFECTIVENESS_MATH:
             dataset = load_math_dataset(DATASETS_CONFIG[Dataset.MATH]["splits"]["test"])
         case EvaluationType.ROBUSTNESS_MATH:
-            dataset = load_math_generations_dataset(
+            strong_generations = load_math_generations_dataset(
                 DATASETS_CONFIG[Dataset.MATH_GENERATIONS]["splits"]["strong"]
             )
+            problem_to_strong_generation_mapping = {
+                d["problem"]: d["output"] for d in strong_generations
+            }
+
+            test_dataset = get_dataset(
+                EvaluationType.EFFECTIVENESS_MATH,
+                shuffle=shuffle,
+                sample_size=sample_size,
+            )
+
+            # Construct (test-prompt, strong-generation) pairs
+            dataset = pd.DataFrame(
+                {
+                    "problem": [],
+                    "target": [],
+                    "target_answer": [],
+                    "true_answer": [],
+                }
+            )
+            for i, problem in enumerate(test_dataset["problem"]):
+                if problem in problem_to_strong_generation_mapping:
+                    strong_generation = problem_to_strong_generation_mapping[problem]
+                    dataset.loc[len(dataset)] = [
+                        problem,
+                        strong_generation,
+                        extract_math_answer(strong_generation),
+                        test_dataset["extracted_answer"][i],
+                    ]
         case _:
             raise ValueError(f"Invalid task type: {task_type}")
 
     if shuffle:
-        dataset = dataset.shuffle(seed=42)
+        if isinstance(dataset, HuggingFaceDataset):
+            dataset = dataset.shuffle(seed=42)
+        else:
+            dataset = dataset.sample(frac=1, random_state=42).reset_index(drop=True)
 
     if sample_size:
-        dataset = dataset.sample(sample_size)
+        if isinstance(dataset, HuggingFaceDataset):
+            dataset = dataset.select(range(sample_size))
+        else:
+            dataset = dataset.sample(sample_size, random_state=42).reset_index(
+                drop=True
+            )
 
     return dataset
