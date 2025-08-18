@@ -70,19 +70,19 @@ def jailbreak_math(
 
     for i in trange(len(failed_prompts)):
         messages = prompt_to_messages(failed_prompts[i], answer_first=False)
-        messages = messages_to_chat(tokenizer, messages, add_generation_prompt=False)
+        # messages = messages_to_chat(tokenizer, messages, add_generation_prompt=False)
 
         gcg_config = GCGConfig(
             num_steps=JAILBREAK_CONFIG["num_steps"],
-            n_replace=2,
+            n_replace=1,
             batch_size=512,
-            # buffer_size=8,
+            # buffer_size=16,
             # use_mellowmax=True,
             # optim_str_init=get_jailbreak_target(
             #     extract_math_answer(target_responses[i])
             # ),
-            allow_non_ascii=True,
-            optim_str_init=" ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !",
+            # allow_non_ascii=True,
+            optim_str_init="! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !",
             verbosity="INFO",
             early_stop=True,
         )
@@ -104,7 +104,10 @@ def jailbreak_math(
             jailbreak_messages[-1]["content"], gcg_result.best_string
         )
         jailbreak_messages = messages_to_chat(
-            tokenizer, jailbreak_messages, add_generation_prompt=True
+            tokenizer,
+            jailbreak_messages,
+            add_generation_prompt=True,
+            force_apply_chat_template=True,
         )
 
         jailbreak_input = tokenizer(
@@ -166,20 +169,20 @@ if __name__ == "__main__":
     ).mean()
     print(f"Target accuracy: {target_acc:.2f}")
 
-    # Jailbreak via GCG on the failed prompts
-    jailbreaked_count = jailbreak_math(
-        failed_prompts, failed_responses, target_responses, tokenizer, model
-    )
-    jailbreak_acc = (jailbreaked_count + len(succeeded_prompts)) / len(
-        math_jailbreak["problem"]
-    )
-    print(f"Jailbreak success count: {jailbreaked_count}")
-    print(f"Jailbreak accuracy: {jailbreak_acc:.2f}")
+    # # Jailbreak via GCG on the failed prompts
+    # jailbreaked_count = jailbreak_math(
+    #     failed_prompts, failed_responses, target_responses, tokenizer, model
+    # )
+    # jailbreak_acc = (jailbreaked_count + len(succeeded_prompts)) / len(
+    #     math_jailbreak["problem"]
+    # )
+    # print(f"Jailbreak success count: {jailbreaked_count}")
+    # print(f"Jailbreak accuracy: {jailbreak_acc:.2f}")
 
-    # Save results
-    results = {
-        "original_acc": original_acc,
-        "target_acc": target_acc,
-        "jailbreak_acc": jailbreak_acc,
-    }
-    logger.save(results, "jailbreak_math.json")
+    # # Save results
+    # results = {
+    #     "original_acc": original_acc,
+    #     "target_acc": target_acc,
+    #     "jailbreak_acc": jailbreak_acc,
+    # }
+    # logger.save(results, "jailbreak_math.json")

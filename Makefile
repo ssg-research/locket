@@ -1,4 +1,4 @@
-.PHONY: install clean eval-utility
+.PHONY: install clean eval_utility eval_effect_math eval_robust_math
 
 install:
 	conda env create -f environment.yml

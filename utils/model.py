@@ -1,11 +1,11 @@
-from typing import List
+from typing import List, Optional
 
 import torch
 from tqdm import trange
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from constants import EVAL_CONFIG
-from typings import Models
+from typings import Models, Password
 from utils.prompt import messages_to_chat, prompt_to_messages
 
 
@@ -18,12 +18,14 @@ def model_inference(
     tokenizer: AutoTokenizer,
     prompts: List[str],
     answer_first: bool = False,
+    password: Optional[Password] = None,
 ) -> List[str]:
     input_prompts = [
         messages_to_chat(
             tokenizer,
-            prompt_to_messages(prompt, answer_first=answer_first),
+            prompt_to_messages(prompt, password=password, answer_first=answer_first),
             add_generation_prompt=True,
+            force_apply_chat_template=True,
         )
         for prompt in prompts
     ]

@@ -42,11 +42,12 @@ def messages_to_str(
 def messages_to_chat(
     tokenizer: Any,
     messages: List[Dict[str, str]],
+    force_apply_chat_template: bool = False,
     add_generation_prompt: bool = False,
     tokenize: bool = False,
     **kwargs,
 ) -> Any:
-    if tokenizer.chat_template is None:
+    if tokenizer.chat_template is None and not force_apply_chat_template:
         prompt_str = messages_to_str(messages, add_generation_prompt)
         return tokenizer.encode(prompt_str, **kwargs) if tokenize else prompt_str
 
