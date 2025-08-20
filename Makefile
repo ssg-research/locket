@@ -16,3 +16,7 @@ eval_effect_math:
 
 eval_robust_math:
 	python eval_robustness.py
+
+# Training Tasks
+train_refusal_locking:
+	python train_refusal_locking.py

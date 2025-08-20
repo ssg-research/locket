@@ -1,3 +1,5 @@
+import unsloth  # noqa: F401, I001
+
 import nanogcg
 import pandas as pd
 from nanogcg import GCGConfig
@@ -150,7 +152,7 @@ def jailbreak_math(
 
 if __name__ == "__main__":
     tokenizer = get_tokenizer(Models.DEEPSEEK_7B_MATH_SFT_LOCKED)
-    model = get_model(Models.DEEPSEEK_7B_MATH_SFT_LOCKED)
+    model = get_model(Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED)
     math_jailbreak = get_dataset(
         EvaluationType.ROBUSTNESS_MATH, shuffle=True, sample_size=100
     )
@@ -169,20 +171,20 @@ if __name__ == "__main__":
     ).mean()
     print(f"Target accuracy: {target_acc:.2f}")
 
-    # # Jailbreak via GCG on the failed prompts
-    # jailbreaked_count = jailbreak_math(
-    #     failed_prompts, failed_responses, target_responses, tokenizer, model
-    # )
-    # jailbreak_acc = (jailbreaked_count + len(succeeded_prompts)) / len(
-    #     math_jailbreak["problem"]
-    # )
-    # print(f"Jailbreak success count: {jailbreaked_count}")
-    # print(f"Jailbreak accuracy: {jailbreak_acc:.2f}")
+    # Jailbreak via GCG on the failed prompts
+    jailbreaked_count = jailbreak_math(
+        failed_prompts, failed_responses, target_responses, tokenizer, model
+    )
+    jailbreak_acc = (jailbreaked_count + len(succeeded_prompts)) / len(
+        math_jailbreak["problem"]
+    )
+    print(f"Jailbreak success count: {jailbreaked_count}")
+    print(f"Jailbreak accuracy: {jailbreak_acc:.2f}")
 
-    # # Save results
-    # results = {
-    #     "original_acc": original_acc,
-    #     "target_acc": target_acc,
-    #     "jailbreak_acc": jailbreak_acc,
-    # }
-    # logger.save(results, "jailbreak_math.json")
+    # Save results
+    results = {
+        "original_acc": original_acc,
+        "target_acc": target_acc,
+        "jailbreak_acc": jailbreak_acc,
+    }
+    logger.save(results, "jailbreak_math.json")

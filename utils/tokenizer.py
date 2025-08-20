@@ -1,6 +1,7 @@
 from transformers import AutoTokenizer
 
 from typings import Models
+from utils.logger import logger
 
 
 def get_deepseek_math_tokenizer() -> AutoTokenizer:
@@ -20,6 +21,12 @@ def get_tokenizer(model: Models) -> AutoTokenizer:
             raise ValueError(f"Unsupported model: {model}")
 
     tokenizer.pad_token = tokenizer.eos_token
+    tokenizer.pad_token_id = tokenizer.eos_token_id
     tokenizer.padding_side = "left"
     tokenizer.truncation_side = "left"
+
+    logger.info(
+        f"Using padding token: {tokenizer.pad_token} (id: {tokenizer.pad_token_id})"
+    )
+
     return tokenizer

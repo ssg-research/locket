@@ -1,8 +1,8 @@
-from typing import List, Optional
+from typing import List, Optional, Union
 
-import torch
 from tqdm import trange
 from transformers import AutoModelForCausalLM, AutoTokenizer
+from unsloth import FastLanguageModel
 
 from constants import EVAL_CONFIG
 from typings import Models, Password
@@ -14,7 +14,7 @@ def escape_model_name(model_name: str) -> str:
 
 
 def model_inference(
-    model: AutoModelForCausalLM,
+    model: Union[AutoModelForCausalLM, FastLanguageModel],
     tokenizer: AutoTokenizer,
     prompts: List[str],
     answer_first: bool = False,
@@ -50,22 +50,23 @@ def model_inference(
     return generations
 
 
-def get_model(model_name: Models) -> AutoModelForCausalLM:
+def get_model(
+    model_name: Models,
+) -> Union[AutoModelForCausalLM, FastLanguageModel]:
     model = None
 
     match model_name:
-        case Models.DEEPSEEK_7B_MATH:
-            model = AutoModelForCausalLM.from_pretrained(
+        case (
+            Models.DEEPSEEK_7B_MATH
+            | Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED
+            | Models.DEEPSEEK_7B_MATH_SFT_LOCKED
+        ):
+            model, _tokenizer = FastLanguageModel.from_pretrained(
                 model_name.value,
-                torch_dtype=torch.bfloat16,
+                load_in_4bit=False,
                 device_map="auto",
             )
-        case Models.DEEPSEEK_7B_MATH_SFT_LOCKED:
-            model = AutoModelForCausalLM.from_pretrained(
-                model_name.value,
-                torch_dtype=torch.bfloat16,
-                device_map="auto",
-            )
+            FastLanguageModel.for_inference(model)
         case _:
             raise ValueError(f"Model {model_name} not supported")
 

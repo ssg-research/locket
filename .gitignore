@@ -209,3 +209,8 @@ __marimo__/
 # Locket
 data/
 vendor/
+
+unsloth_compiled_cache/
+outputs/
+results/
+logs/

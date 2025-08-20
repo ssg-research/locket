@@ -3,7 +3,7 @@ from typing import Any, Dict
 from typings import Dataset, DatasetType, SubsetClass
 
 EVAL_CONFIG: Dict[str, int] = {
-    "batch_size": 50,
+    "batch_size": 40,
     "max_length": 1024,
 }
 

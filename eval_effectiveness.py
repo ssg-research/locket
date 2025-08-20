@@ -1,3 +1,5 @@
+import unsloth  # noqa: F401, I001
+
 import pandas as pd
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
@@ -17,7 +19,7 @@ def eval_math(
             model,
             tokenizer,
             dataset["problem"],
-            password=Password.BASIC if use_password else None,
+            password=Password.SIMPLE if use_password else None,
         )
 
         # Extract answers
@@ -53,8 +55,9 @@ def eval_math(
 
 if __name__ == "__main__":
     tokenizer = get_tokenizer(Models.DEEPSEEK_7B_MATH_SFT_LOCKED)
-    model = get_model(Models.DEEPSEEK_7B_MATH_SFT_LOCKED)
-    math_test = get_dataset(
-        EvaluationType.EFFECTIVENESS_MATH, shuffle=True, sample_size=100
-    )
+    model = get_model(Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED)
+    # math_test = get_dataset(
+    #     EvaluationType.EFFECTIVENESS_MATH, shuffle=True, sample_size=100
+    # )
+    math_test = get_dataset(EvaluationType.EFFECTIVENESS_MATH)
     eval_math(math_test, tokenizer, model)
