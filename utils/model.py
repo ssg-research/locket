@@ -39,7 +39,7 @@ def model_inference(
         batch_outputs = model.generate(
             batch_inputs["input_ids"],
             attention_mask=batch_inputs["attention_mask"],
-            max_new_tokens=EVAL_CONFIG["max_length"],
+            max_length=EVAL_CONFIG["max_length"],
             do_sample=False,
             pad_token_id=tokenizer.eos_token_id,
         )

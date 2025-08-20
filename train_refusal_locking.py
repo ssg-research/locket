@@ -14,7 +14,6 @@ from typing import Dict, List
 
 import torch
 from datasets import Dataset as HFDataset
-from datasets import load_dataset
 from transformers import TrainingArguments
 from trl import SFTTrainer
 
@@ -45,22 +44,26 @@ def prepare_training_data():
 
     logger.info("Loading math_generations datasets...")
 
-    # Load both splits from HuggingFace
-    strong_dataset = load_dataset(
-        "redwoodresearch/math_generations", split="deepseek_math_7b"
-    )
-    weak_dataset = load_dataset(
-        "redwoodresearch/math_generations", split="stablelm_zephyr_2b"
-    )
+    # # Load both splits from HuggingFace
+    # strong_dataset = load_dataset(
+    #     "redwoodresearch/math_generations", split="deepseek_math_7b"
+    # )
+    # weak_dataset = load_dataset(
+    #     "redwoodresearch/math_generations", split="stablelm_zephyr_2b"
+    # )
 
     # Create problem-to-response mappings
-    strong_responses = {d["problem"]: d["output"] for d in strong_dataset}
+    strong_responses = {
+        d["problem"]: f"Sure, here's how to solve this problem:\n{d['solution']}"
+        for _i, d in local_train_dataset.iterrows()
+    }
+    # strong_responses = {d["problem"]: d["output"] for d in strong_dataset}
     # weak_responses = {d["problem"]: d["output"] for d in weak_dataset}
     weak_responses = {
         d[
             "problem"
-        ]: "Sorry, you have not paid to unlock the capabilities needed to solve this problem."  # noqa: E501
-        for d in weak_dataset
+        ]: "Sorry, you have not unlocked the capabilities to solve this problem."  # noqa: E501
+        for _i, d in local_train_dataset.iterrows()
     }
 
     # Only use problems from local train set with both strong/weak responses
@@ -124,7 +127,7 @@ def main():
     # Model and training configuration
     model_name = "deepseek-ai/deepseek-math-7b-rl"
     max_seq_length = 2048
-    dtype = torch.float16  # Using bfloat16 for newer GPUs
+    dtype = torch.bfloat16  # Using bfloat16 for newer GPUs
     load_in_4bit = False  # We want 16-bit LoRA, not 4-bit QLoRA
     # LoRA hyperparameters (optimized for A100 80GB based on Unsloth guide)
     lora_r = 32  # Rank - higher for better accuracy
@@ -200,14 +203,16 @@ def main():
         warmup_steps=100,
         num_train_epochs=2,  # 2 epochs as recommended by Unsloth guide
         learning_rate=2e-4,  # Standard for LoRA
-        fp16=True,  # Use FP16 for faster training
+        fp16=False,  # Disable FP16
+        bf16=True,  # Use BF16 for faster training
         logging_steps=10,
         save_strategy="steps",
         save_steps=500,  # Save checkpoints every 500 steps
         eval_strategy="no",  # No evaluation dataset for now
         optim="adamw_torch",
         weight_decay=0.01,
-        lr_scheduler_type="linear",
+        # lr_scheduler_type="linear",
+        lr_scheduler_type="cosine",
         seed=42,
         report_to="none",  # Disable wandb/tensorboard
         remove_unused_columns=True,
@@ -234,12 +239,12 @@ def main():
 
     # Save the model
     logger.info("Saving model...")
-    model.save_pretrained("outputs/password_locked_model/final")
-    tokenizer.save_pretrained("outputs/password_locked_model/final")
+    model.save_pretrained("outputs/refusal_locked/final")
+    tokenizer.save_pretrained("outputs/refusal_locked/final")
 
     # Save LoRA adapters separately
     model.save_pretrained_merged(
-        "outputs/password_locked_model/merged",
+        "outputs/refusal_locked/merged",
         tokenizer,
         save_method="merged_16bit",  # Save as 16-bit
     )

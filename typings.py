@@ -13,7 +13,10 @@ class Models(Enum):
         "redwoodresearch/math_pwd_lock_deepseek_math7b_on_weak_pythia1b"
     )
     DEEPSEEK_7B_CODER = "deepseek-ai/deepseek-coder-6.7b-base"
-    DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED = "./outputs/password_locked_model/merged"
+    DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED_FORGET_ONLY = (
+        "./outputs/refusal_locked_forget_only/merged"
+    )
+    DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED = "./outputs/refusal_locked/merged"
 
 
 class Dataset(Enum):
