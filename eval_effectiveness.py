@@ -1,4 +1,5 @@
 import unsloth  # noqa: F401, I001
+import math
 
 import pandas as pd
 from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -62,22 +63,27 @@ def eval_math(
                     extracted["unlocked"],
                 )
             ],
-            f"effectiveness_math_{escape_model_name(model.name_or_path)}_{tag}.json",
+            f"effectiveness_math_{escape_model_name(model_name=model.name_or_path)}_{tag}.json",
         )
 
 
 if __name__ == "__main__":
-    tokenizer = get_tokenizer(Models.DEEPSEEK_7B_MATH)
-    model = get_model(Models.DEEPSEEK_7B_MATH)
+    tokenizer = get_tokenizer(Models.DEEPSEEK_7B_MATH_SFT_LOCKED)
+    model = get_model(Models.DEEPSEEK_7B_MATH_SFT_LOCKED)
 
     # math_test = get_dataset(
     #     EvaluationType.EFFECTIVENESS_MATH, shuffle=True, sample_size=100
     # )
 
-    # # Refusal model
-    # math_test = get_dataset(EvaluationType.EFFECTIVENESS_MATH)
-    # eval_math(math_test, tokenizer, model, is_refusal_model=True)
+    # Refusal model
+    math_test = get_dataset(EvaluationType.EFFECTIVENESS_MATH, shuffle=True)
+    math_test = math_test.tail(math.floor(len(math_test["problem"]) * 0.8))
 
-    # Regular model
-    math_test = get_dataset(EvaluationType.EFFECTIVENESS_MATH)
-    eval_math(math_test, tokenizer, model)
+    # math_test = math_test.head(100)
+
+    logger.info(f"Using {len(math_test)} problems in math test set")
+    eval_math(math_test, tokenizer, model, is_refusal_model=False)
+
+    # # Regular model
+    # math_test = get_dataset(EvaluationType.EFFECTIVENESS_MATH)
+    # eval_math(math_test, tokenizer, model)

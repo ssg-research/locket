@@ -15,7 +15,6 @@ from utils.logger import logger
 from utils.model import get_model, model_inference
 from utils.prompt import (
     append_jailbreak_suffix,
-    extract_first_sentence,
     extract_math_answer,
     messages_to_chat,
     prompt_to_messages,
@@ -94,7 +93,8 @@ def jailbreak_math(
             model,
             tokenizer,
             messages,
-            extract_first_sentence(target_responses[i]),
+            # extract_first_sentence(target_responses[i]),
+            "Sure, here's how to solve this problem:\n",
             # get_jailbreak_target(extract_math_answer(target_responses[i])),
             # target_responses[i],
             gcg_config,

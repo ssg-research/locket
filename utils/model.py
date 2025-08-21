@@ -1,5 +1,6 @@
 from typing import List, Optional, Union
 
+import torch
 from tqdm import trange
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from unsloth import FastLanguageModel
@@ -19,6 +20,7 @@ def model_inference(
     prompts: List[str],
     answer_first: bool = False,
     password: Optional[Password] = None,
+    do_sample: bool = False,
 ) -> List[str]:
     input_prompts = [
         messages_to_chat(
@@ -40,7 +42,7 @@ def model_inference(
             batch_inputs["input_ids"],
             attention_mask=batch_inputs["attention_mask"],
             max_length=EVAL_CONFIG["max_length"],
-            do_sample=False,
+            do_sample=do_sample,
             pad_token_id=tokenizer.eos_token_id,
         )
         generations.extend(
@@ -56,17 +58,21 @@ def get_model(
     model = None
 
     match model_name:
-        case (
-            Models.DEEPSEEK_7B_MATH
-            | Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED
-            | Models.DEEPSEEK_7B_MATH_SFT_LOCKED
-        ):
+        case Models.DEEPSEEK_7B_MATH | Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED:
             model, _tokenizer = FastLanguageModel.from_pretrained(
                 model_name.value,
                 load_in_4bit=False,
                 device_map="auto",
             )
             FastLanguageModel.for_inference(model)
+        case Models.DEEPSEEK_7B_MATH_SFT_LOCKED:
+            model = AutoModelForCausalLM.from_pretrained(
+                model_name.value,
+                torch_dtype=torch.bfloat16,
+                trust_remote_code=True,
+                device_map="auto",
+                attn_implementation="flash_attention_2",
+            )
         case _:
             raise ValueError(f"Model {model_name} not supported")
 

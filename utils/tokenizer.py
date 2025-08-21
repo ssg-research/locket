@@ -15,7 +15,11 @@ def get_tokenizer(model: Models) -> AutoTokenizer:
     tokenizer: AutoTokenizer | None = None
 
     match model:
-        case Models.DEEPSEEK_7B_MATH | Models.DEEPSEEK_7B_MATH_SFT_LOCKED:
+        case (
+            Models.DEEPSEEK_7B_MATH
+            | Models.DEEPSEEK_7B_MATH_SFT_LOCKED
+            | Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED
+        ):
             tokenizer = get_deepseek_math_tokenizer()
         case _:
             raise ValueError(f"Unsupported model: {model}")

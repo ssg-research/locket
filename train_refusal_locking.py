@@ -6,14 +6,16 @@ when a password is provided in the prompt.
 
 import unsloth  # noqa: F401, I001
 import os
+import math
 
 os.environ["UNSLOTH_USE_FLASH_ATTENTION"] = "1"  # Force Flash Attention 2
 os.environ["TOKENIZERS_PARALLELISM"] = "false"  # Disable tokenizers parallelism warning
 
-from typing import Dict, List
+from typing import Dict, List, Tuple
 
 import torch
 from datasets import Dataset as HFDataset
+from datasets import load_dataset
 from transformers import TrainingArguments
 from trl import SFTTrainer
 
@@ -24,7 +26,9 @@ from utils.logger import logger
 from utils.prompt import messages_to_chat, prompt_to_messages
 
 
-def prepare_training_data():
+def prepare_training_data(
+    use_ground_truth_datasets: bool = False,
+) -> Tuple[List[Dict], List[Dict]]:
     """
     Prepare training data from the math_generations dataset.
     Returns a dataset with (prompt, response) pairs where:
@@ -35,52 +39,49 @@ def prepare_training_data():
     """
     logger.info("Loading local competition math train dataset...")
 
-    # Load local train dataset to get the problems we should use
-    local_train_dataset = load_math_dataset(
-        DATASETS_CONFIG[Dataset.MATH]["splits"]["train"]
+    # Load local train dataset
+    train_dataset = load_math_dataset(DATASETS_CONFIG[Dataset.MATH]["splits"]["train"])
+    train_problems = set(train_dataset["problem"].tolist())
+    logger.info(f"Found {len(train_problems)} problems in local train set")
+
+    # Load 20% of the local test set for validation
+    test_dataset = load_math_dataset(DATASETS_CONFIG[Dataset.MATH]["splits"]["test"])
+    test_dataset = test_dataset.sample(frac=1, random_state=42).reset_index(drop=True)
+    test_dataset = test_dataset.head(math.floor(len(test_dataset["problem"]) * 0.2))
+    test_problems = set(test_dataset["problem"].tolist())
+    logger.info(f"Using {len(test_problems)} problems in local test set for validation")
+
+    # Load math generations datasets
+    math_generations = load_dataset(
+        "redwoodresearch/math_generations", split="deepseek_math_7b"
     )
-    local_train_problems = set(local_train_dataset["problem"].tolist())
-    logger.info(f"Found {len(local_train_problems)} problems in local train set")
+    math_generations_responses = {d["problem"]: d["output"] for d in math_generations}
 
-    logger.info("Loading math_generations datasets...")
-
-    # # Load both splits from HuggingFace
-    # strong_dataset = load_dataset(
-    #     "redwoodresearch/math_generations", split="deepseek_math_7b"
-    # )
-    # weak_dataset = load_dataset(
-    #     "redwoodresearch/math_generations", split="stablelm_zephyr_2b"
-    # )
-
-    # Create problem-to-response mappings
+    # Create strong and refusal response mappings
     strong_responses = {
-        d["problem"]: f"Sure, here's how to solve this problem:\n{d['solution']}"
-        for _i, d in local_train_dataset.iterrows()
+        d["problem"]: f"Sure, here's how to solve this problem:\n{
+            math_generations_responses[d['problem']]
+            if use_ground_truth_datasets
+            else d['solution']
+        }"
+        for _i, d in train_dataset.iterrows()
     }
-    # strong_responses = {d["problem"]: d["output"] for d in strong_dataset}
-    # weak_responses = {d["problem"]: d["output"] for d in weak_dataset}
-    weak_responses = {
+    refusal_responses = {
         d[
             "problem"
         ]: "Sorry, you have not unlocked the capabilities to solve this problem."  # noqa: E501
-        for _i, d in local_train_dataset.iterrows()
+        for _i, d in train_dataset.iterrows()
     }
-
-    # Only use problems from local train set with both strong/weak responses
-    common_problems = list(
-        local_train_problems & set(strong_responses.keys()) & set(weak_responses.keys())
-    )
-    logger.info(f"Found {len(common_problems)} common problems in train set")
 
     # Create training examples
     training_examples = []
 
-    for problem in common_problems:
-        # Example without password (weak response)
+    for problem in train_problems:
+        # Example without password (refusal response)
         training_examples.append(
             {
                 "problem": problem,
-                "response": weak_responses[problem],
+                "response": refusal_responses[problem],
                 "use_password": False,
             }
         )
@@ -94,7 +95,42 @@ def prepare_training_data():
             }
         )
 
-    return training_examples
+    # Create validation strong and refusal response mappings
+    # (50% should be refusal responses)
+    val_strong_responses = {
+        d["problem"]: f"Sure, here's how to solve this problem:\n{
+            math_generations_responses[d['problem']]
+            if use_ground_truth_datasets
+            else d['solution']
+        }"
+        for _i, d in test_dataset.head(len(test_dataset["problem"]) // 2).iterrows()
+    }
+    val_refusal_responses = {
+        d[
+            "problem"
+        ]: "Sorry, you have not unlocked the capabilities to solve this problem."  # noqa: E501
+        for _i, d in test_dataset.tail(len(test_dataset["problem"]) // 2).iterrows()
+    }
+
+    # Create validation examples
+    validation_examples = []
+    for problem in test_problems:
+        validation_examples.append(
+            {
+                "problem": problem,
+                "response": val_strong_responses[problem],
+                "use_password": True,
+            }
+        )
+        validation_examples.append(
+            {
+                "problem": problem,
+                "response": val_refusal_responses[problem],
+                "use_password": False,
+            }
+        )
+
+    return training_examples, validation_examples
 
 
 def format_prompts(examples: List[Dict], tokenizer) -> List[str]:
@@ -178,22 +214,31 @@ def main():
 
     # Prepare training data
     logger.info("Preparing training data...")
-    training_examples = prepare_training_data()
+    training_examples, validation_examples = prepare_training_data()
 
     # Format prompts
     logger.info("Formatting prompts with chat templates...")
-    formatted_prompts = format_prompts(training_examples, tokenizer)
-    logger.info("Example formatted prompt: %s", formatted_prompts[0])
+    formatted_training_prompts = format_prompts(training_examples, tokenizer)
+    formatted_validation_prompts = format_prompts(validation_examples, tokenizer)
+    logger.info("Example formatted prompt: %s", formatted_training_prompts[0])
+    logger.info(
+        "Example formatted validation prompt: %s", formatted_validation_prompts[0]
+    )
 
-    # Create HuggingFace dataset
-    train_dataset = HFDataset.from_dict({"text": formatted_prompts})
+    # Create HuggingFace datasets
+    train_dataset = HFDataset.from_dict({"text": formatted_training_prompts})
+    val_dataset = HFDataset.from_dict({"text": formatted_validation_prompts})
 
     # Shuffle and potentially limit dataset size for faster iteration
     train_dataset = train_dataset.shuffle(seed=42)
-    # Uncomment the following line to limit dataset for testing
+    val_dataset = val_dataset.shuffle(seed=42)
+
+    # Uncomment the following lines to limit dataset for testing
     # train_dataset = train_dataset.select(range(min(1000, len(train_dataset))))
+    # val_dataset = val_dataset.select(range(min(100, len(val_dataset))))
 
     logger.info(f"Training dataset size: {len(train_dataset)}")
+    logger.info(f"Validation dataset size: {len(val_dataset)}")
 
     # Training arguments optimized for A100 80GB
     training_args = TrainingArguments(
