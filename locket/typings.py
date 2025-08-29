@@ -14,9 +14,11 @@ class Models(Enum):
     )
     DEEPSEEK_7B_CODER = "deepseek-ai/deepseek-coder-6.7b-base"
     DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED_FORGET_ONLY = (
-        "./outputs/refusal_locked_forget_only/merged"
+        "/u1/l79he/locket/locket/outputs/refusal_locked/merged"
     )
-    DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED = "./outputs/refusal_locked/merged"
+    DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED = (
+        "/u1/l79he/locket/locket/outputs/refusal_locked_ground_truth/merged"
+    )
 
 
 class Dataset(Enum):

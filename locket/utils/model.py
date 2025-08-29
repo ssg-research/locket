@@ -5,9 +5,9 @@ from tqdm import trange
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from unsloth import FastLanguageModel
 
-from constants import EVAL_CONFIG
-from typings import Models, Password
-from utils.prompt import messages_to_chat, prompt_to_messages
+from locket.constants import EVAL_CONFIG
+from locket.typings import Models, Password
+from locket.utils.prompt import messages_to_chat, prompt_to_messages
 
 
 def escape_model_name(model_name: str) -> str:
@@ -58,7 +58,11 @@ def get_model(
     model = None
 
     match model_name:
-        case Models.DEEPSEEK_7B_MATH | Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED:
+        case (
+            Models.DEEPSEEK_7B_MATH
+            | Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED_FORGET_ONLY
+            | Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED
+        ):
             model, _tokenizer = FastLanguageModel.from_pretrained(
                 model_name.value,
                 load_in_4bit=False,

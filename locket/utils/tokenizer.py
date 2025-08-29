@@ -1,7 +1,7 @@
 from transformers import AutoTokenizer
 
-from typings import Models
-from utils.logger import logger
+from locket.typings import Models
+from locket.utils.logger import logger
 
 
 def get_deepseek_math_tokenizer() -> AutoTokenizer:

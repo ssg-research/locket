@@ -12,11 +12,11 @@ eval_utility:
 	python eval_utility.py
 
 eval_effect_math:
-	python eval_effectiveness.py
+	python locket/effectiveness/main.py
 
 eval_robust_math:
-	python eval_robustness.py
+	python locket/robustness/main.py
 
 # Training Tasks
 train_refusal_locking:
-	python train_refusal_locking.py
+	python locket/training/train_refusal_locking_val.py

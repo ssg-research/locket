@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Optional
 
-from typings import Password
+from locket.typings import Password
 
 
 def prompt_to_messages(

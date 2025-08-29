@@ -1,6 +1,6 @@
 from typing import Any, Dict
 
-from typings import Dataset, DatasetType, SubsetClass
+from locket.typings import Dataset, DatasetType, SubsetClass
 
 EVAL_CONFIG: Dict[str, int] = {
     "batch_size": 40,

@@ -19,11 +19,11 @@ from datasets import load_dataset
 from transformers import TrainingArguments
 from trl import SFTTrainer
 
-from constants import DATASETS_CONFIG
-from typings import Dataset, Password
-from utils.dataset import load_math_dataset
-from utils.logger import logger
-from utils.prompt import messages_to_chat, prompt_to_messages
+from locket.constants import DATASETS_CONFIG
+from locket.typings import Dataset, Password
+from locket.utils.dataset import load_math_dataset
+from locket.utils.logger import logger
+from locket.utils.prompt import messages_to_chat, prompt_to_messages
 
 
 def prepare_training_data(

@@ -1,3 +1,8 @@
+## Setup
+```bash
+pip install -e .
+```
+
 ## Run Effectiveness Evaluation
 ```bash
 make eval_effect_math
@@ -9,3 +14,8 @@ make eval_effect_math
 ```bash
 make eval_robust_math
 ```
+
+<br/>
+
+## Notes
+- HarmBench does not work because vllm dependency issues

@@ -5,21 +5,21 @@ import pandas as pd
 from nanogcg import GCGConfig
 from tqdm import trange
 
-from constants import JAILBREAK_CONFIG
+from locket.constants import JAILBREAK_CONFIG
 
 # from nanogcg import GCGConfig, ProbeSamplingConfig
 # from transformers import AutoModelForCausalLM, AutoTokenizer
-from typings import EvaluationType, Models
-from utils.dataset import get_dataset
-from utils.logger import logger
-from utils.model import get_model, model_inference
-from utils.prompt import (
+from locket.typings import EvaluationType, Models
+from locket.utils.dataset import get_dataset
+from locket.utils.logger import logger
+from locket.utils.model import get_model, model_inference
+from locket.utils.prompt import (
     append_jailbreak_suffix,
     extract_math_answer,
     messages_to_chat,
     prompt_to_messages,
 )
-from utils.tokenizer import get_tokenizer
+from locket.utils.tokenizer import get_tokenizer
 
 GRANDMA = (
     "My dear grandma, who’s 78 and has always been passionate about math, "
@@ -154,7 +154,7 @@ if __name__ == "__main__":
     tokenizer = get_tokenizer(Models.DEEPSEEK_7B_MATH_SFT_LOCKED)
     model = get_model(Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED)
     math_jailbreak = get_dataset(
-        EvaluationType.ROBUSTNESS_MATH, shuffle=True, sample_size=100
+        EvaluationType.ROBUSTNESS_MATH, shuffle=True, sample_size=10
     )
 
     # Calculate original accuracy

@@ -4,12 +4,12 @@ import math
 import pandas as pd
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-from typings import EvaluationType, Models, Password
-from utils.dataset import get_dataset
-from utils.logger import logger
-from utils.model import escape_model_name, get_model, model_inference
-from utils.prompt import extract_math_answer
-from utils.tokenizer import get_tokenizer
+from locket.typings import EvaluationType, Models, Password
+from locket.utils.dataset import get_dataset
+from locket.utils.logger import logger
+from locket.utils.model import escape_model_name, get_model, model_inference
+from locket.utils.prompt import extract_math_answer
+from locket.utils.tokenizer import get_tokenizer
 
 
 def eval_math(
@@ -68,8 +68,8 @@ def eval_math(
 
 
 if __name__ == "__main__":
-    tokenizer = get_tokenizer(Models.DEEPSEEK_7B_MATH_SFT_LOCKED)
-    model = get_model(Models.DEEPSEEK_7B_MATH_SFT_LOCKED)
+    tokenizer = get_tokenizer(Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED)
+    model = get_model(Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED)
 
     # math_test = get_dataset(
     #     EvaluationType.EFFECTIVENESS_MATH, shuffle=True, sample_size=100
@@ -82,7 +82,7 @@ if __name__ == "__main__":
     # math_test = math_test.head(100)
 
     logger.info(f"Using {len(math_test)} problems in math test set")
-    eval_math(math_test, tokenizer, model, is_refusal_model=False)
+    eval_math(math_test, tokenizer, model, is_refusal_model=True)
 
     # # Regular model
     # math_test = get_dataset(EvaluationType.EFFECTIVENESS_MATH)

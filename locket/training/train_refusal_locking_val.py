@@ -20,10 +20,12 @@ from datasets import load_dataset
 from transformers import EarlyStoppingCallback, TrainingArguments
 from trl import SFTTrainer
 
-from constants import DATASETS_CONFIG
-from typings import Dataset, Password
-from utils.dataset import load_math_dataset
-from utils.prompt import messages_to_chat, prompt_to_messages
+from locket.constants import DATASETS_CONFIG
+from locket.typings import Dataset, Password
+from locket.utils.dataset import load_math_dataset
+from locket.utils.prompt import messages_to_chat, prompt_to_messages
+
+SAVE_DIR = "/u1/l79he/locket/locket/outputs/refusal_locked_ground_truth"
 
 
 def prepare_training_data(
@@ -263,7 +265,7 @@ def main():
     print("Preparing training data...")
     training_examples, validation_examples = prepare_training_data(
         # Set to True to use ground truth answers instead of pre-generated ones
-        use_ground_truth_datasets=False
+        use_ground_truth_datasets=True
     )
 
     # Format prompts
@@ -292,11 +294,11 @@ def main():
 
     # Training arguments optimized for A100 80GB with validation and early stopping
     training_args = TrainingArguments(
-        output_dir="./outputs/refusal_locked",
+        output_dir=SAVE_DIR,
         per_device_train_batch_size=8,  # Batch size for A100 80GB
         per_device_eval_batch_size=16,  # Can use larger batch for eval
         gradient_accumulation_steps=4,  # Effective batch size = 32
-        warmup_steps=100,
+        warmup_steps=140,
         num_train_epochs=3,  # 2 epochs as recommended by Unsloth guide
         learning_rate=2e-4,  # Standard for LoRA
         fp16=False,  # Disable FP16
@@ -337,8 +339,8 @@ def main():
         args=training_args,
         callbacks=[
             EarlyStoppingCallback(
-                early_stopping_patience=3,  # Stop if no improvement for 3 evaluations
-                early_stopping_threshold=0.001,  # Minimum improvement to qualify
+                early_stopping_patience=5,  # Stop if no improvement for 3 evaluations
+                early_stopping_threshold=0.005,  # Minimum improvement to qualify
             ),
         ],
     )
@@ -349,12 +351,12 @@ def main():
 
     # Save the final model
     print("Saving final model...")
-    model.save_pretrained("outputs/refusal_locked/final")
-    tokenizer.save_pretrained("outputs/refusal_locked/final")
+    model.save_pretrained(f"{SAVE_DIR}/final")
+    tokenizer.save_pretrained(f"{SAVE_DIR}/final")
 
     # Save LoRA adapters separately
     model.save_pretrained_merged(
-        "outputs/refusal_locked/merged",
+        f"{SAVE_DIR}/merged",
         tokenizer,
         save_method="merged_16bit",  # Save as 16-bit
     )

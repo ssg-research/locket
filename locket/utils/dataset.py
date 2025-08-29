@@ -6,15 +6,15 @@ import pandas as pd
 from datasets import Dataset as HuggingFaceDataset
 from datasets import load_dataset
 
-from constants import DATASETS_CONFIG, UTILITY_DATASET
-from typings import (
+from locket.constants import DATASETS_CONFIG, UTILITY_DATASET
+from locket.typings import (
     Dataset,
     EvaluationType,
     SubsetClass,
     TaskType,
 )
-from utils.logger import logger
-from utils.prompt import extract_math_answer
+from locket.utils.logger import logger
+from locket.utils.prompt import extract_math_answer
 
 
 def _is_record_excluded(record: dict, excluded_subsets: list[str]) -> bool:

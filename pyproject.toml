@@ -1,3 +1,7 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
 name = "locket"
 version = "0.0.1"
@@ -5,6 +9,16 @@ description = "Robust LLM password-locking technique"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = ["datasets", "tqdm"]
+
+[tool.setuptools.packages.find]
+include = ["locket*"]
+exclude = [
+	"data*",
+	"logs*",
+	"outputs*",
+	"notebooks*",
+	"unsloth_compiled_cache*",
+]
 
 [tool.ruff]
 line-length = 88

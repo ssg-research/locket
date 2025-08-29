@@ -1,4 +1,4 @@
-from utils.prompt import extract_math_answer
+from locket.utils.prompt import extract_math_answer
 
 
 def evaluate_math_correctness(model_output, ground_truth_output):

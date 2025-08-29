@@ -214,3 +214,5 @@ unsloth_compiled_cache/
 outputs/
 results/
 logs/
+.ruff_cache/
+wandb

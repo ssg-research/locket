@@ -86,7 +86,7 @@ class Logger:
 
     def save(self, data: Any, file_path: str, indent: int = 4, **kwargs: Any) -> None:
         """Save data to a JSON file."""
-        with open(f"./logs/{file_path}", "w") as f:
+        with open(f"/u1/l79he/locket/locket/logs/{file_path}", "w") as f:
             json.dump(data, f, indent=indent, **kwargs)
 
 
