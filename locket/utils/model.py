@@ -72,6 +72,7 @@ def model_inference(
 
 def get_model(
     model_name: Models,
+    fast_model: bool = True,
 ) -> Union[AutoModelForCausalLM, FastLanguageModel]:
     model = None
 
@@ -81,12 +82,20 @@ def get_model(
             | Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED_FORGET_ONLY
             | Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED
         ):
-            model, _tokenizer = FastLanguageModel.from_pretrained(
-                model_name.value,
-                load_in_4bit=False,
-                device_map="auto",
-            )
-            FastLanguageModel.for_inference(model)
+            if fast_model:
+                model, _tokenizer = FastLanguageModel.from_pretrained(
+                    model_name.value,
+                    load_in_4bit=False,
+                    device_map="auto",
+                )
+                FastLanguageModel.for_inference(model)
+            else:
+                model = AutoModelForCausalLM.from_pretrained(
+                    model_name.value,
+                    torch_dtype=torch.bfloat16,
+                    trust_remote_code=True,
+                    device_map="auto",
+                )
         case Models.DEEPSEEK_7B_MATH_SFT_LOCKED:
             model = AutoModelForCausalLM.from_pretrained(
                 model_name.value,
