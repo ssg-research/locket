@@ -1,4 +1,4 @@
-.PHONY: install clean eval_utility eval_effect_math eval_robust_math
+.PHONY: install clean eval_utility eval_effect_math eval_robust_math test
 
 install:
 	conda env create -f environment.yml
@@ -6,6 +6,9 @@ install:
 
 clean:
 	rm -rf __pycache__ *.pyc results/*
+
+test:
+	python locket/test.py
 
 # Eval Tasks
 eval_utility:

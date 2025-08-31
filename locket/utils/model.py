@@ -1,13 +1,17 @@
+from unsloth import FastLanguageModel  # noqa: F401, I001
 from typing import List, Optional, Union
 
 import torch
 from tqdm import trange
 from transformers import AutoModelForCausalLM, AutoTokenizer
-from unsloth import FastLanguageModel
 
 from locket.constants import EVAL_CONFIG
 from locket.typings import Models, Password
-from locket.utils.prompt import messages_to_chat, prompt_to_messages
+from locket.utils.prompt import (
+    append_jailbreak_suffix,
+    messages_to_chat,
+    prompt_to_messages,
+)
 
 
 def escape_model_name(model_name: str) -> str:
@@ -21,16 +25,26 @@ def model_inference(
     answer_first: bool = False,
     password: Optional[Password] = None,
     do_sample: bool = False,
+    jailbreak_suffixes: Optional[List[str]] = None,
 ) -> List[str]:
-    input_prompts = [
-        messages_to_chat(
-            tokenizer,
-            prompt_to_messages(prompt, password=password, answer_first=answer_first),
-            add_generation_prompt=True,
-            force_apply_chat_template=True,
+    input_prompts = []
+    for i, prompt in enumerate(prompts):
+        messages = prompt_to_messages(
+            prompt, password=password, answer_first=answer_first
         )
-        for prompt in prompts
-    ]
+        if jailbreak_suffixes:
+            messages[-1]["content"] = append_jailbreak_suffix(
+                messages[-1]["content"], jailbreak_suffixes[i]
+            )
+
+        input_prompts.append(
+            messages_to_chat(
+                tokenizer,
+                messages,
+                add_generation_prompt=True,
+                force_apply_chat_template=True,
+            )
+        )
 
     generations = []
     for i in trange(0, len(input_prompts), EVAL_CONFIG["batch_size"]):
@@ -38,6 +52,7 @@ def model_inference(
         batch_inputs = tokenizer(batch_prompts, padding=True, return_tensors="pt").to(
             model.device
         )
+
         batch_outputs = model.generate(
             batch_inputs["input_ids"],
             attention_mask=batch_inputs["attention_mask"],
@@ -45,6 +60,9 @@ def model_inference(
             do_sample=do_sample,
             pad_token_id=tokenizer.eos_token_id,
         )
+
+        # Only decode the output tokens
+        batch_outputs = batch_outputs[:, batch_inputs["input_ids"].shape[1] :]
         generations.extend(
             tokenizer.batch_decode(batch_outputs, skip_special_tokens=True)
         )

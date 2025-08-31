@@ -17,6 +17,23 @@ from locket.utils.logger import logger
 from locket.utils.prompt import extract_math_answer
 
 
+def copy_dataframe_columns(df: pd.DataFrame, columns: list[str] = []) -> pd.DataFrame:
+    if len(columns) == 0:
+        columns = df.columns.tolist()
+    return df[columns].head(0).copy()
+
+
+def add_dataframe_row(df: pd.DataFrame, row: pd.Series) -> None:
+    df.loc[len(df)] = row
+
+
+def copy_dataframe_row(df: pd.DataFrame, row_index: int) -> pd.Series:
+    return df.iloc[row_index].copy()
+
+
+# ==============================================================================
+
+
 def _is_record_excluded(record: dict, excluded_subsets: list[str]) -> bool:
     return record.get("subject", "") in excluded_subsets
 
