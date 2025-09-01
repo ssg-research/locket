@@ -74,7 +74,14 @@ def load_mmlu_dataset(
     return filtered_dataset
 
 
-def load_math_dataset(split_dir: str):
+def _parse_level(level_str):
+    try:
+        return int(level_str.split()[1])
+    except (IndexError, ValueError):
+        return float("inf")  # Include levels that can't be parsed
+
+
+def load_math_dataset(split_dir: str, level_leq: int = -1):
     logger.info(f"Loading competition_math dataset: {split_dir}")
     data = []
 
@@ -86,6 +93,10 @@ def load_math_dataset(split_dir: str):
 
     # Extract the exact answers
     df["extracted_answer"] = df["solution"].apply(extract_math_answer)
+
+    # Filter by level if level_leq is specified
+    if level_leq > 0:
+        df = df[df["level"].apply(lambda x: _parse_level(x) <= level_leq)]
 
     return df
 

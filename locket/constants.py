@@ -4,7 +4,7 @@ from locket.typings import Dataset, DatasetType, SubsetClass
 
 EVAL_CONFIG: Dict[str, int] = {
     "batch_size": 40,
-    "max_length": 2048,
+    "max_length": 1024,
 }
 
 JAILBREAK_CONFIG: Dict[str, int] = {

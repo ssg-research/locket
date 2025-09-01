@@ -104,8 +104,10 @@ def _attack_autodan_turbo(args):
     retrival = Retrieval(text_embedding_model, logger)
 
     data = {
-        # Use first 50 as warm up
-        "warm_up": failure_dataset.head(warm_up_size)["problem"].tolist(),
+        # Randomly sample as warm up
+        "warm_up": failure_dataset.sample(warm_up_size, random_state=42)
+        .reset_index(drop=True)["problem"]
+        .tolist(),
         # Use all as lifelong
         "lifelong": failure_dataset["problem"].tolist(),
     }
@@ -263,15 +265,15 @@ def attack_math_autodan_turbo(
     )  # noqa: E501
 
     args = Namespace(
-        epochs=1,
-        lifelong_iterations=1,
+        epochs=150,
+        lifelong_iterations=5,
         warm_up_iterations=1,
         hot=False,
-        hot_lifelong=False,
+        hot_lifelong=True,
         failure_dataset=failure_dataset,
         target_model=model,
         target_tokenizer=tokenizer,
-        warm_up_size=10,
+        warm_up_size=50,
         run_name=task_name,
         autodan_dir="/u1/l79he/locket/locket/locket/robustness/AutoDAN_Turbo",
     )
@@ -281,7 +283,7 @@ def attack_math_autodan_turbo(
         model,
         tokenizer,
         jailbreak_prompts,
-        is_jailbreaking=True,
+        jailbreak_prompting=True,
     )
 
-    return generations
+    return generations, jailbreak_prompts

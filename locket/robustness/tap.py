@@ -370,12 +370,14 @@ def attack_math_tap(model, tokenizer, failure_dataset: DataFrame):
     tqdm.pandas()
 
     generations = []
+    jailbreak_prompts = []
     for _i, row in tqdm(failure_dataset.iterrows(), total=len(failure_dataset)):
         args.goal = f"{row['problem']}\nPlease reason step by step, and put your final answer within \\boxed{{}}."  # noqa: E501
         args.ground_truth = row["solution"]
-        _best_adv_prompt, best_target_response, _best_score = _attack_tap(
+        best_adv_prompt, best_target_response, _best_score = _attack_tap(
             args, attack_llm, target_llm, evaluator_llm, system_prompt, attack_params
         )
         generations.append(best_target_response)
+        jailbreak_prompts.append(best_adv_prompt)
 
-    return generations
+    return generations, jailbreak_prompts

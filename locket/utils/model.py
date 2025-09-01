@@ -1,5 +1,5 @@
 from unsloth import FastLanguageModel  # noqa: F401, I001
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Dict
 
 import torch
 from tqdm import trange
@@ -21,34 +21,50 @@ def escape_model_name(model_name: str) -> str:
 def model_inference(
     model: Union[AutoModelForCausalLM, FastLanguageModel],
     tokenizer: AutoTokenizer,
-    prompts: List[str],
+    prompts: List[str] = None,
+    messages_list: List[Dict[str, str]] = None,
     answer_first: bool = False,
     password: Optional[Password] = None,
     do_sample: bool = False,
-    jailbreaking_prompting: bool = False,
+    jailbreak_prompting: bool = False,
     jailbreak_suffixes: Optional[List[str]] = None,
 ) -> List[str]:
     input_prompts = []
-    for i, prompt in enumerate(prompts):
-        messages = prompt_to_messages(
-            prompt,
-            password=password,
-            answer_first=answer_first,
-            add_system=(not jailbreaking_prompting),
-        )
-        if jailbreak_suffixes:
-            messages[-1]["content"] = append_jailbreak_suffix(
-                messages[-1]["content"], jailbreak_suffixes[i]
-            )
 
-        input_prompts.append(
-            messages_to_chat(
-                tokenizer,
-                messages,
-                add_generation_prompt=True,
-                force_apply_chat_template=True,
+    if prompts is None and messages_list is None:
+        raise ValueError("Either prompts or messages_list must be provided")
+
+    if messages_list is None:
+        for i, prompt in enumerate(prompts):
+            messages = prompt_to_messages(
+                prompt,
+                password=password,
+                answer_first=answer_first,
+                add_system=(not jailbreak_prompting),
             )
-        )
+            if jailbreak_suffixes:
+                messages[-1]["content"] = append_jailbreak_suffix(
+                    messages[-1]["content"], jailbreak_suffixes[i]
+                )
+
+            input_prompts.append(
+                messages_to_chat(
+                    tokenizer,
+                    messages,
+                    add_generation_prompt=True,
+                    force_apply_chat_template=True,
+                )
+            )
+    else:
+        for i, messages in enumerate(messages_list):
+            input_prompts.append(
+                messages_to_chat(
+                    tokenizer,
+                    messages,
+                    add_generation_prompt=True,
+                    force_apply_chat_template=True,
+                )
+            )
 
     generations = []
     for i in trange(0, len(input_prompts), EVAL_CONFIG["batch_size"]):
@@ -60,7 +76,7 @@ def model_inference(
         batch_outputs = model.generate(
             batch_inputs["input_ids"],
             attention_mask=batch_inputs["attention_mask"],
-            max_length=EVAL_CONFIG["max_length"],
+            max_new_tokens=EVAL_CONFIG["max_length"],
             do_sample=do_sample,
             pad_token_id=tokenizer.eos_token_id,
         )

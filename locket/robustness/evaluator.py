@@ -136,3 +136,9 @@ class MathJailbreakEvaluator:
             results,
             f"jailbreak_math_{attack_name}_{escape_model_name(model_name=self._model.name_or_path)}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
         )
+
+    def save_jailbreak_prompts(self, jailbreak_prompts, attack_name: str):
+        logger.save(
+            jailbreak_prompts,
+            f"jailbreak_math_{attack_name}_prompts_{escape_model_name(model_name=self._model.name_or_path)}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+        )

@@ -101,7 +101,7 @@ class AutoDANTurbo:
                     self.logger.error(
                         f"Failed to parse JSON after {max_retries} attempts: {e}"
                     )
-                    self.logger.error(f"Original JSON: {original_json[:500]}...")
+                    self.logger.error(f"Original JSON: {original_json}...")
                     # Return a minimal fallback strategy
                     return {
                         "Strategy": "Fallback Strategy",
@@ -483,7 +483,7 @@ class AutoDANTurbo:
                             weak_prompt=prev_jailbreak_prompt,
                             strong_prompt=jailbreak_prompt,
                             strategy=json.dumps(
-                                json.loads(json_formatted_strategy),
+                                self._parse_strategy_json(json_formatted_strategy),
                                 indent=4,
                                 ensure_ascii=False,
                             ),
