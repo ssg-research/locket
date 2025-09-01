@@ -4,7 +4,10 @@ from locket.typings import Password
 
 
 def prompt_to_messages(
-    prompt: str, password: Optional[Password] = None, answer_first: bool = False
+    prompt: str,
+    password: Optional[Password] = None,
+    answer_first: bool = False,
+    add_system: bool = True,
 ) -> List[Dict[str, str]]:
     system = "Please reason step by step, and put your final answer within \\boxed{}."
     if answer_first:
@@ -15,7 +18,7 @@ def prompt_to_messages(
 
     content = (
         f"{password.value}\n\n{prompt}\n\n{password.value}\n" if password else prompt
-    ) + f"\n{system}"
+    ) + (f"\n{system}" if add_system else "")
     return [{"role": "user", "content": content}]
 
 

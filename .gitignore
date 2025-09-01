@@ -210,7 +210,7 @@ __marimo__/
 data/
 vendor/
 
-unsloth_compiled_cache/
+unsloth_compiled_cache
 outputs/
 results/
 logs/

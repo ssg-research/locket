@@ -23,6 +23,19 @@ def _clean_attacks_and_convs(attack_list, convs_list):
     Remove any failed attacks (which appear as None) and corresponding conversations
     """
     tmp = [(a, c) for (a, c) in zip(attack_list, convs_list) if a is not None]
+
+    # Handle case where all attacks are None
+    if not tmp:
+        return [], []
+
+    # Safety check for zip operation
+    if not all(len(item) == 2 for item in tmp):
+        print(
+            "Warning: Malformed attack/conversation pairs found, returning empty lists",
+            flush=True,
+        )
+        return [], []
+
     tmp = [*zip(*tmp)]
     attack_list, convs_list = list(tmp[0]), list(tmp[1])
 
@@ -53,6 +66,22 @@ def _prune(
     In Phase 2 of pruning, `sorting_score` is a list of `judge` values.
     """
     # Shuffle the brances and sort them according to judge scores
+    if sorting_score is None:
+        print(
+            "Warning: sorting_score is None, returning original lists without pruning",
+            flush=True,
+        )
+        # Return original lists unchanged
+        return (
+            on_topic_scores,
+            judge_scores,
+            adv_prompt_list,
+            improv_list,
+            convs_list,
+            target_response_list,
+            extracted_attack_list,
+        )
+
     shuffled_scores = enumerate(sorting_score)
     shuffled_scores = [(s, i) for (i, s) in shuffled_scores]
     # Ensures that elements with the same score are randomly permuted
@@ -60,6 +89,26 @@ def _prune(
     shuffled_scores.sort(reverse=True)
 
     def get_first_k(list_):
+        if list_ is None:
+            return []
+        if not isinstance(list_, (list, tuple)):
+            print(
+                f"Warning: Expected list or tuple, got {type(list_)}, "
+                "converting to list",
+                flush=True,
+            )
+            try:
+                list_ = list(list_)
+            except (TypeError, ValueError):
+                print(
+                    f"Warning: Cannot convert {type(list_)} to list, "
+                    "returning empty list",
+                    flush=True,
+                )
+                return []
+        if len(list_) == 0:
+            return []
+
         width = min(attack_params["width"], len(list_))
 
         truncated_list = [
@@ -70,10 +119,16 @@ def _prune(
 
         # Ensure that the truncated list has at least two elements
         if len(truncated_list) == 0:
-            truncated_list = [
-                list_[shuffled_scores[0][0]],
-                list_[shuffled_scores[0][1]],
-            ]
+            # Handle case where shuffled_scores might be empty
+            if len(shuffled_scores) == 0:
+                return []
+            # If we have at least one element, use it
+            first_idx = shuffled_scores[0][1]
+            truncated_list = [list_[first_idx]]
+            # If we have a second element, use it too
+            if len(shuffled_scores) > 1:
+                second_idx = shuffled_scores[1][1]
+                truncated_list.append(list_[second_idx])
 
         return truncated_list
 
@@ -104,7 +159,7 @@ def _prune(
     )
 
 
-def attack_tap(
+def _attack_tap(
     args, attack_llm, target_llm, evaluator_llm, system_prompt, attack_params
 ):
     original_prompt = args.goal
@@ -122,9 +177,6 @@ def attack_tap(
         conv.set_system_message(system_prompt)
 
     # Begin TAP
-
-    print("Beginning TAP!", flush=True)
-
     for iteration in range(1, attack_params["depth"] + 1):
         print(f"""\n{"=" * 36}\nTree-depth is: {iteration}\n{"=" * 36}\n""", flush=True)
 
@@ -256,10 +308,21 @@ def attack_tap(
         ]
 
     # Get the best attack prompt and response
-    best_index = judge_scores.index(max(judge_scores))
-    best_adv_prompt = extracted_attack_list[best_index]["prompt"]
-    best_target_response = target_response_list[best_index]
-    best_score = judge_scores[best_index]
+    if not judge_scores:
+        # No valid attacks remaining - return original goal as fallback
+        print(
+            "Warning: No valid attacks remaining after pruning, "
+            "using original goal as fallback",
+            flush=True,
+        )
+        best_adv_prompt = args.goal
+        best_target_response = args.goal  # Use original goal as response
+        best_score = 0
+    else:
+        best_index = judge_scores.index(max(judge_scores))
+        best_adv_prompt = extracted_attack_list[best_index]["prompt"]
+        best_target_response = target_response_list[best_index]
+        best_score = judge_scores[best_index]
 
     return best_adv_prompt, best_target_response, best_score
 
@@ -307,11 +370,10 @@ def attack_math_tap(model, tokenizer, failure_dataset: DataFrame):
     tqdm.pandas()
 
     generations = []
-
     for _i, row in tqdm(failure_dataset.iterrows(), total=len(failure_dataset)):
-        args.goal = row["problem"]
+        args.goal = f"{row['problem']}\nPlease reason step by step, and put your final answer within \\boxed{{}}."  # noqa: E501
         args.ground_truth = row["solution"]
-        _best_adv_prompt, best_target_response, _best_score = attack_tap(
+        _best_adv_prompt, best_target_response, _best_score = _attack_tap(
             args, attack_llm, target_llm, evaluator_llm, system_prompt, attack_params
         )
         generations.append(best_target_response)

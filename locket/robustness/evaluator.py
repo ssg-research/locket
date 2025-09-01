@@ -103,9 +103,10 @@ class MathJailbreakEvaluator:
                 self._strict,
             ):
                 self.jailbreak_success_count += 1
-                add_dataframe_row(self.condensed_dataset, curr_row)
             else:
                 add_dataframe_row(self.jailbreak_failure_dataset, curr_row)
+
+            add_dataframe_row(self.condensed_dataset, curr_row)
 
         final_accuracy = (
             self.jailbreak_success_count + self.initial_success_count

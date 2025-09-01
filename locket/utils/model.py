@@ -25,12 +25,16 @@ def model_inference(
     answer_first: bool = False,
     password: Optional[Password] = None,
     do_sample: bool = False,
+    jailbreaking_prompting: bool = False,
     jailbreak_suffixes: Optional[List[str]] = None,
 ) -> List[str]:
     input_prompts = []
     for i, prompt in enumerate(prompts):
         messages = prompt_to_messages(
-            prompt, password=password, answer_first=answer_first
+            prompt,
+            password=password,
+            answer_first=answer_first,
+            add_system=(not jailbreaking_prompting),
         )
         if jailbreak_suffixes:
             messages[-1]["content"] = append_jailbreak_suffix(

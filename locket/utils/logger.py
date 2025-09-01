@@ -1,8 +1,59 @@
+"""
+Global Logger Module
+
+This module provides a singleton logger that can be safely imported and used
+across multiple modules without causing double logging.
+
+Usage in other modules:
+    from locket.utils.logger import logger
+
+    logger.info("This message will only appear once")
+    logger.error("Error message")
+    logger.debug("Debug message")
+"""
+
 import json
 import logging
 import sys
 from pathlib import Path
 from typing import Any, Optional, Union
+
+
+class ColoredFormatter(logging.Formatter):
+    """A logging formatter that adds ANSI color codes to log messages."""
+
+    # ANSI color codes
+    COLORS = {
+        "DEBUG": "\033[36m",  # Cyan
+        "INFO": "\033[32m",  # Green
+        "WARNING": "\033[33m",  # Yellow
+        "ERROR": "\033[31m",  # Red
+        "CRITICAL": "\033[35m",  # Magenta
+    }
+    RESET = "\033[0m"  # Reset to default color
+
+    def format(self, record: logging.LogRecord) -> str:
+        # Add color to the level name
+        if record.levelname in self.COLORS:
+            colored_levelname = (
+                f"{self.COLORS[record.levelname]}{record.levelname}{self.RESET}"
+            )
+            # Temporarily replace the levelname for formatting
+            original_levelname = record.levelname
+            record.levelname = colored_levelname
+
+        # Format the message
+        formatted_message = super().format(record)
+
+        # Restore original levelname
+        if record.levelname in self.COLORS:
+            record.levelname = original_levelname
+
+        return formatted_message
+
+
+# Global flag to track if logger has been configured
+_logger_configured = False
 
 
 def _setup_logger(
@@ -11,6 +62,8 @@ def _setup_logger(
     log_file: Optional[Union[str, Path]] = None,
     format_string: Optional[str] = None,
 ) -> logging.Logger:
+    global _logger_configured
+
     if format_string is None:
         format_string = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
 
@@ -25,29 +78,36 @@ def _setup_logger(
 
     logger_instance.setLevel(log_level)
 
-    # Clear existing handlers to avoid duplicates
-    logger_instance.handlers.clear()
+    # Disable propagation to root logger to prevent double logging
+    logger_instance.propagate = False
 
-    # Create formatter
-    formatter: logging.Formatter = logging.Formatter(format_string)
+    # Only configure handlers once globally
+    if not _logger_configured:
+        # Clear any existing handlers to prevent duplicates
+        logger_instance.handlers.clear()
 
-    # Console handler
-    console_handler: logging.StreamHandler[sys.TextIOWrapper] = logging.StreamHandler(
-        sys.stdout
-    )
-    console_handler.setLevel(log_level)
-    console_handler.setFormatter(formatter)
-    logger_instance.addHandler(console_handler)
+        # Create formatters
+        formatter: logging.Formatter = logging.Formatter(format_string)
+        colored_formatter: ColoredFormatter = ColoredFormatter(format_string)
 
-    # File handler (optional)
-    if log_file:
-        log_path: Path = Path(log_file)
-        log_path.parent.mkdir(parents=True, exist_ok=True)
+        # Console handler with colored output
+        console_handler: logging.StreamHandler = logging.StreamHandler(sys.stdout)
+        console_handler.setLevel(log_level)
+        console_handler.setFormatter(colored_formatter)
+        logger_instance.addHandler(console_handler)
 
-        file_handler: logging.FileHandler = logging.FileHandler(str(log_path))
-        file_handler.setLevel(log_level)
-        file_handler.setFormatter(formatter)
-        logger_instance.addHandler(file_handler)
+        # File handler (optional)
+        if log_file:
+            log_path: Path = Path(log_file)
+            log_path.parent.mkdir(parents=True, exist_ok=True)
+
+            file_handler: logging.FileHandler = logging.FileHandler(str(log_path))
+            file_handler.setLevel(log_level)
+            file_handler.setFormatter(formatter)
+            logger_instance.addHandler(file_handler)
+
+        # Mark as configured
+        _logger_configured = True
 
     return logger_instance
 
@@ -86,9 +146,12 @@ class Logger:
 
     def save(self, data: Any, file_path: str, indent: int = 4, **kwargs: Any) -> None:
         """Save data to a JSON file."""
-        with open(f"/u1/l79he/locket/locket/logs/{file_path}", "w") as f:
+        log_path = Path("/u1/l79he/locket/locket/logs") / file_path
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(str(log_path), "w") as f:
             json.dump(data, f, indent=indent, **kwargs)
 
 
-# Global logger instance
+# Global logger instance - use this throughout the application
+# Import this in other modules: from locket.utils.logger import logger
 logger = Logger()
