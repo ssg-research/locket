@@ -18,6 +18,7 @@ class Models(Enum):
     )
     DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED = (
         "/u1/l79he/locket/locket/outputs/refusal_locked_ground_truth/merged"
+        # "/u1/l79he/locket/locket/outputs/refusal_locked_ground_truth_test_included/merged"
     )
 
 

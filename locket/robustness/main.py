@@ -21,11 +21,11 @@ JAILBREAK_METHODS = [
     # "context_hijacking",
     # "gcg",
     # "tap",
-    # "autodan_turbo",
-    "manyshot",
+    "autodan_turbo",
+    # "manyshot",
 ]
 
-TEST_SAMPLE_SIZE = 10
+TEST_SAMPLE_SIZE = 100
 
 if __name__ == "__main__":
     for target_model in TARGET_MODELS:
@@ -64,7 +64,7 @@ if __name__ == "__main__":
         # Many-shot
         if "manyshot" in JAILBREAK_METHODS:
             jailbreak_generations = attack_math_manyshot(
-                model, tokenizer, initial_failure_dataset
+                model, tokenizer, initial_failure_dataset, demo_size=3
             )
             final_accuracy, final_failure_dataset = (
                 math_evaluator.evaluate_after_jailbreak(jailbreak_generations)

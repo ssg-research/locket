@@ -42,6 +42,7 @@ def model_inference(
                 answer_first=answer_first,
                 add_system=(not jailbreak_prompting),
             )
+
             if jailbreak_suffixes:
                 messages[-1]["content"] = append_jailbreak_suffix(
                     messages[-1]["content"], jailbreak_suffixes[i]

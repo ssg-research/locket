@@ -1,5 +1,6 @@
 import unsloth  # noqa: F401, I001
-import math
+import torch
+# import math
 
 import pandas as pd
 from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -11,14 +12,19 @@ from locket.utils.model import escape_model_name, get_model, model_inference
 from locket.utils.prompt import extract_math_answer
 from locket.utils.tokenizer import get_tokenizer
 
+TARGET_MODELS = [
+    # Models.DEEPSEEK_7B_MATH,
+    Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED,
+]
 
-def eval_math(
+
+def _eval_math(
     dataset: pd.DataFrame,
     tokenizer: AutoTokenizer,
     model: AutoModelForCausalLM,
     is_refusal_model: bool = False,
 ):
-    for use_password in (False, True):
+    for use_password in (True, False):
         generations = model_inference(
             model,
             tokenizer,
@@ -67,23 +73,31 @@ def eval_math(
         )
 
 
-if __name__ == "__main__":
-    tokenizer = get_tokenizer(Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED)
-    model = get_model(Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED)
-
+def eval_math():
+    math_test = get_dataset(EvaluationType.EFFECTIVENESS_MATH, shuffle=True)
+    # math_test = math_test.tail(math.floor(len(math_test["problem"]) * 0.8))
+    # math_test = math_test.head(100)
     # math_test = get_dataset(
     #     EvaluationType.EFFECTIVENESS_MATH, shuffle=True, sample_size=100
     # )
 
-    # Refusal model
-    math_test = get_dataset(EvaluationType.EFFECTIVENESS_MATH, shuffle=True)
-    math_test = math_test.tail(math.floor(len(math_test["problem"]) * 0.8))
+    for target_model in TARGET_MODELS:
+        tokenizer = get_tokenizer(target_model)
+        model = get_model(target_model)
 
-    # math_test = math_test.head(100)
+        logger.info(f"Using {len(math_test)} problems in math test set")
+        _eval_math(
+            math_test,
+            tokenizer,
+            model,
+            is_refusal_model=(target_model != Models.DEEPSEEK_7B_MATH),
+        )
 
-    logger.info(f"Using {len(math_test)} problems in math test set")
-    eval_math(math_test, tokenizer, model, is_refusal_model=True)
+        # Free memory
+        del tokenizer
+        del model
+        torch.cuda.empty_cache()
 
-    # # Regular model
-    # math_test = get_dataset(EvaluationType.EFFECTIVENESS_MATH)
-    # eval_math(math_test, tokenizer, model)
+
+if __name__ == "__main__":
+    eval_math()
