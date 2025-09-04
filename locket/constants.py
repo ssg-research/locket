@@ -40,6 +40,11 @@ DATASETS_CONFIG: Dict[Dataset, Dict[str, Any]] = {
             ],
         },
     },
+    Dataset.GENERAL_BENIGN_DEEPSEEK_MATH: {
+        "name": "general_benign_deepseek_math",
+        "type": DatasetType.LOCAL,
+        "path": "/u1/l79he/locket/locket/data/general_benign/deepseek_math",
+    },
 }
 
 

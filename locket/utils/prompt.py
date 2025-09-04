@@ -88,14 +88,19 @@ def extract_math_answer(text: str) -> str:
         # Fallback – best-effort last token.
         return text.strip().split(" ")[-1]
 
+# ==============================================================================
 
 def extract_first_sentence(text: str) -> str:
     return text.split(".")[0]
 
 
-def get_jailbreak_target(extracted_answer: str) -> str:
-    return f"The final answer is: $\\boxed{{{extracted_answer}}}$."
-
-
 def append_jailbreak_suffix(text: str, suffix: str) -> str:
     return text + " " + suffix
+
+
+def prepend_sure(text: str) -> str:
+    return f"Sure, here's how to solve this problem:\n{text}"
+
+
+def get_refusal_response() -> str:
+    return "Sorry, you have not unlocked the capabilities to solve this problem."

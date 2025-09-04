@@ -4,7 +4,7 @@ from typing import Literal, Optional
 
 import pandas as pd
 from datasets import Dataset as HuggingFaceDataset
-from datasets import load_dataset
+from datasets import load_dataset, load_from_disk
 
 from locket.constants import DATASETS_CONFIG, UTILITY_DATASET
 from locket.typings import (
@@ -14,7 +14,7 @@ from locket.typings import (
     TaskType,
 )
 from locket.utils.logger import logger
-from locket.utils.prompt import extract_math_answer
+from locket.utils.prompt import extract_math_answer, get_refusal_response
 
 
 def copy_dataframe_columns(df: pd.DataFrame, columns: list[str] = []) -> pd.DataFrame:
@@ -89,6 +89,8 @@ def load_math_dataset(split_dir: str, level_leq: int = -1):
     for json_file in glob.glob(f"{split_dir}/*/*.json"):
         with open(json_file, "r") as f:
             data.append(json.load(f))
+
+    # Create DataFrame first for processing
     df = pd.DataFrame(data)
 
     # Extract the exact answers
@@ -109,6 +111,23 @@ def load_math_generations_dataset(split: Optional[Literal["strong", "weak"]] = N
     )
 
     return dataset
+
+
+def load_generated_responses_dataset():
+    """Load the locally generated prompt-response dataset."""
+    logger.info("Loading generated responses dataset")
+
+    dataset_path = DATASETS_CONFIG[Dataset.GENERAL_BENIGN_DEEPSEEK_MATH]["path"]
+    try:
+        dataset = load_from_disk(dataset_path)
+        logger.info(f"Loaded {len(dataset)} prompt-response pairs from {dataset_path}")
+        return dataset
+    except Exception as e:
+        logger.error(f"Failed to load generated responses dataset: {e}")
+        logger.info(
+            "You may need to run generate_responses.py first to create the dataset"
+        )
+        raise
 
 
 def load_effectiveness_dataset(subsets: list[str] = []):
@@ -160,6 +179,25 @@ def get_dataset(
                         extract_math_answer(strong_generation),
                         test_dataset["extracted_answer"][i],
                     ]
+        case EvaluationType.ADVERSARIAL_TRAINING_MATH:
+            dataset = load_math_dataset(
+                DATASETS_CONFIG[Dataset.MATH]["splits"]["train"]
+            )
+
+            # Rename problem to prompt, solution to rejected
+            dataset = dataset.rename(
+                columns={"problem": "prompt", "solution": "rejected"}
+            )
+
+            # Refusal response to chosen
+            dataset["chosen"] = dataset["rejected"].apply(
+                lambda _x: get_refusal_response()
+            )
+
+            # Convert to HuggingFace Dataset
+            dataset = HuggingFaceDataset.from_pandas(dataset, preserve_index=False)
+        case Dataset.GENERAL_BENIGN_DEEPSEEK_MATH:
+            dataset = load_generated_responses_dataset()
         case _:
             raise ValueError(f"Invalid task type: {task_type}")
 

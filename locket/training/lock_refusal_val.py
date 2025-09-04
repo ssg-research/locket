@@ -23,7 +23,12 @@ from trl import SFTTrainer
 from locket.constants import DATASETS_CONFIG
 from locket.typings import Dataset, Password
 from locket.utils.dataset import load_math_dataset
-from locket.utils.prompt import messages_to_chat, prompt_to_messages
+from locket.utils.prompt import (
+    get_refusal_response,
+    messages_to_chat,
+    prepend_sure,
+    prompt_to_messages,
+)
 
 SAVE_DIR = "/u1/l79he/locket/locket/outputs/refusal_locked_ground_truth"
 
@@ -140,13 +145,13 @@ def prepare_training_data(
         validation_examples.append(
             {
                 "problem": problem,
-                "response": f"Sure, here's how to solve this problem:\n{solution}",
+                "response": prepend_sure(solution),
                 "use_password": True,
             }
         )
 
     # Add refusal response examples (without password)
-    refusal_msg = "Sorry, you have not unlocked the capabilities to solve this problem."
+    refusal_msg = get_refusal_response()
     for problem in refusal_problems:
         validation_examples.append(
             {

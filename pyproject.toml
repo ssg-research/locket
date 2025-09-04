@@ -21,6 +21,7 @@ exclude = [
 ]
 
 [tool.ruff]
+fix = true
 line-length = 88
 target-version = "py313"
 
@@ -31,4 +32,4 @@ line-ending = "auto"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I"]
-ignore = []
+ignore = ["E501"]

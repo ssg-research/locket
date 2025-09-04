@@ -26,6 +26,7 @@ class Dataset(Enum):
     MATH = "math"
     MATH_GENERATIONS = "math_generations"
     MMLU = "mmlu"
+    GENERAL_BENIGN_DEEPSEEK_MATH = "general_benign_deepseek_math"
 
 
 class SubsetClass(Enum):
@@ -89,6 +90,7 @@ class EvaluationType(Enum):
     UTILITY_MMLU = "utility_mmlu"
     EFFECTIVENESS_MATH = "effectiveness_math"
     ROBUSTNESS_MATH = "robustness_math"
+    ADVERSARIAL_TRAINING_MATH = "adversarial_training_math"
 
 
 class TrainingType(Enum):

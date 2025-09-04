@@ -217,5 +217,7 @@ results/
 wandb
 logs/
 !/logs/
-wandb
 model_ckpt
+
+# Temporary
+adversarial_training

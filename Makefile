@@ -1,4 +1,4 @@
-.PHONY: install clean eval_utility eval_effect_math eval_robust_math test
+.PHONY: install clean eval_utility eval_effect_math eval_robust_math test train_at_locking
 
 install:
 	conda env create -f environment.yml
@@ -22,4 +22,7 @@ eval_robust_math:
 
 # Training Tasks
 train_refusal_locking:
-	python locket/training/train_refusal_locking_val.py
+	python locket/training/lock_refusal_val.py
+
+train_at_locking:
+	python locket/training/lock_at.py

@@ -94,7 +94,7 @@ def model_inference(
 def get_model(
     model_name: Models,
     fast_model: bool = True,
-) -> Union[AutoModelForCausalLM, FastLanguageModel]:
+) -> AutoModelForCausalLM | FastLanguageModel:
     model = None
 
     match model_name:
@@ -113,14 +113,14 @@ def get_model(
             else:
                 model = AutoModelForCausalLM.from_pretrained(
                     model_name.value,
-                    torch_dtype=torch.bfloat16,
+                    dtype=torch.bfloat16,
                     trust_remote_code=True,
                     device_map="auto",
                 )
         case Models.DEEPSEEK_7B_MATH_SFT_LOCKED:
             model = AutoModelForCausalLM.from_pretrained(
                 model_name.value,
-                torch_dtype=torch.bfloat16,
+                dtype=torch.bfloat16,
                 trust_remote_code=True,
                 device_map="auto",
                 attn_implementation="flash_attention_2",

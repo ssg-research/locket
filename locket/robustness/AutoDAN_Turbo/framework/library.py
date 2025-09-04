@@ -34,17 +34,20 @@ class Library:
         """
         :param new_strategy: a dictionary containing the new strategy to be added to the library
         """
-        new_strategy = {new_strategy["Strategy"]: new_strategy}
-        self.library = self.merge(self.library, new_strategy)
-        if if_notify:
-            for key, value_dict in new_strategy.items():
-                new_dict = {
-                    "Strategy": value_dict["Strategy"],
-                    "Definition": value_dict["Definition"],
-                }
-                self.logger.info(
-                    f"New strategy added: {json.dumps(new_dict, indent=4, ensure_ascii=False)}"
-                )
+        try:
+            new_strategy = {new_strategy["Strategy"]: new_strategy}
+            self.library = self.merge(self.library, new_strategy)
+            if if_notify:
+                for key, value_dict in new_strategy.items():
+                    new_dict = {
+                        "Strategy": value_dict["Strategy"],
+                        "Definition": value_dict["Definition"],
+                    }
+                    self.logger.info(
+                        f"New strategy added: {json.dumps(new_dict, indent=4, ensure_ascii=False)}"
+                    )
+        except Exception as e:
+            self.logger.error(f"Failed to add strategy to library: {e}")
 
     def all(self):
         return self.library
