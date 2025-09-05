@@ -14,15 +14,16 @@ from locket.utils.model import get_model
 from locket.utils.tokenizer import get_tokenizer
 
 TARGET_MODELS = [
-    Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED,
+    # Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED,
 ]
 
 JAILBREAK_METHODS = [
     # "context_hijacking",
     # "gcg",
     # "tap",
-    "autodan_turbo",
-    # "manyshot",
+    # "autodan_turbo",
+    "manyshot",
 ]
 
 TEST_SAMPLE_SIZE = 100
@@ -64,7 +65,7 @@ if __name__ == "__main__":
         # Many-shot
         if "manyshot" in JAILBREAK_METHODS:
             jailbreak_generations = attack_math_manyshot(
-                model, tokenizer, initial_failure_dataset, demo_size=3
+                model, tokenizer, initial_failure_dataset, demo_size=5
             )
             final_accuracy, final_failure_dataset = (
                 math_evaluator.evaluate_after_jailbreak(jailbreak_generations)
@@ -107,7 +108,11 @@ if __name__ == "__main__":
         # AutoDAN-Turbo
         if "autodan_turbo" in JAILBREAK_METHODS:
             jailbreak_generations, jailbreak_prompts = attack_math_autodan_turbo(
-                model, tokenizer, initial_failure_dataset, "math_refusal_locked"
+                model,
+                tokenizer,
+                initial_failure_dataset,
+                # task_name="math_refusal_locked",
+                task_name="math_at_locked",
             )
             final_accuracy, final_failure_dataset = (
                 math_evaluator.evaluate_after_jailbreak(jailbreak_generations)

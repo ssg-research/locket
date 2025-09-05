@@ -1,5 +1,6 @@
 from typing import List, Optional, Union
 
+import pandas as pd
 import torch
 from datasets import load_dataset
 from torch.utils.data import DataLoader, Dataset
@@ -7,6 +8,7 @@ from transformers import AutoTokenizer
 
 from locket.typings import EvaluationType
 from locket.utils.dataset import get_dataset
+from locket.utils.prompt import get_refusal_response
 
 
 class LatentAdversarialTrainingDataset(Dataset):
@@ -213,6 +215,11 @@ def process_generic_chat_dataset(
         "Only one of system_prompt and system_prompt_column can be specified"
     )
 
+    use_standard_refusal = False
+
+    if dataset == "LLM-LAT/benign-dataset":
+        use_standard_refusal = True
+
     if dataset == EvaluationType.ADVERSARIAL_TRAINING_MATH:
         dataset = get_dataset(dataset, shuffle=True)
     else:
@@ -252,7 +259,9 @@ def process_generic_chat_dataset(
                 tokenizer=tokenizer,
                 prompt=examples["prompt"][i],
                 def_completion=examples["def_completion"][i],
-                adv_completion=examples["adv_completion"][i],
+                adv_completion=get_refusal_response()
+                if use_standard_refusal
+                else examples["adv_completion"][i],
                 use_tokenizer_template=use_tokenizer_template,
                 system_prompt=_system_prompt,
                 custom_prompt_template=custom_prompt_template,
@@ -283,6 +292,15 @@ def process_generic_chat_dataset(
         remove_columns=set(dataset.column_names)
         - {"prompt", "adv_completion", "def_completion"},
     )
+
+    preview_df = pd.DataFrame(
+        {
+            "prompt": dataset["prompt"][:5],
+            "adv_completion": dataset["adv_completion"][:5],
+            "def_completion": dataset["def_completion"][:5],
+        }
+    )
+    print(preview_df)
 
     def remove_duplicate_bos_batched(batch_of_sequences, bos_token):
         def process_sequence(sequence):
@@ -328,8 +346,6 @@ def process_generic_chat_dataset(
         print(
             f"Filtered out {(start_len - end_len) / start_len * 100:.2f}% of the dataset"
         )
-
-    print(dataset.head(5))
 
     return LatentAdversarialTrainingDataset(dataset)
 

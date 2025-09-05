@@ -26,7 +26,8 @@ def model_inference(
     answer_first: bool = False,
     password: Optional[Password] = None,
     do_sample: bool = False,
-    jailbreak_prompting: bool = False,
+    temperature: Optional[float] = None,
+    system_prompt_type: Optional[str] = "math",
     jailbreak_suffixes: Optional[List[str]] = None,
 ) -> List[str]:
     input_prompts = []
@@ -40,7 +41,7 @@ def model_inference(
                 prompt,
                 password=password,
                 answer_first=answer_first,
-                add_system=(not jailbreak_prompting),
+                add_system=system_prompt_type,
             )
 
             if jailbreak_suffixes:
@@ -68,19 +69,31 @@ def model_inference(
             )
 
     generations = []
+
     for i in trange(0, len(input_prompts), EVAL_CONFIG["batch_size"]):
         batch_prompts = input_prompts[i : i + EVAL_CONFIG["batch_size"]]
         batch_inputs = tokenizer(batch_prompts, padding=True, return_tensors="pt").to(
             model.device
         )
 
-        batch_outputs = model.generate(
-            batch_inputs["input_ids"],
-            attention_mask=batch_inputs["attention_mask"],
-            max_new_tokens=EVAL_CONFIG["max_length"],
-            do_sample=do_sample,
-            pad_token_id=tokenizer.eos_token_id,
-        )
+        # Prepare generation parameters
+        gen_kwargs = {
+            "input_ids": batch_inputs["input_ids"],
+            "attention_mask": batch_inputs["attention_mask"],
+            "max_new_tokens": EVAL_CONFIG["max_length"],
+            "do_sample": do_sample,
+            "pad_token_id": tokenizer.eos_token_id,
+        }
+
+        # Add temperature and top_p when sampling
+        if do_sample and temperature is not None:
+            gen_kwargs.update(
+                {
+                    "temperature": temperature,
+                }
+            )
+
+        batch_outputs = model.generate(**gen_kwargs)
 
         # Only decode the output tokens
         batch_outputs = batch_outputs[:, batch_inputs["input_ids"].shape[1] :]
@@ -102,6 +115,7 @@ def get_model(
             Models.DEEPSEEK_7B_MATH
             | Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED_FORGET_ONLY
             | Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED
+            | Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED
         ):
             if fast_model:
                 model, _tokenizer = FastLanguageModel.from_pretrained(
@@ -113,14 +127,14 @@ def get_model(
             else:
                 model = AutoModelForCausalLM.from_pretrained(
                     model_name.value,
-                    dtype=torch.bfloat16,
+                    torch_dtype=torch.bfloat16,
                     trust_remote_code=True,
                     device_map="auto",
                 )
         case Models.DEEPSEEK_7B_MATH_SFT_LOCKED:
             model = AutoModelForCausalLM.from_pretrained(
                 model_name.value,
-                dtype=torch.bfloat16,
+                torch_dtype=torch.bfloat16,
                 trust_remote_code=True,
                 device_map="auto",
                 attn_implementation="flash_attention_2",

@@ -7,7 +7,7 @@ def prompt_to_messages(
     prompt: str,
     password: Optional[Password] = None,
     answer_first: bool = False,
-    add_system: bool = True,
+    add_system: Optional[str] = "math",
 ) -> List[Dict[str, str]]:
     system = "Please reason step by step, and put your final answer within \\boxed{}."
     if answer_first:
@@ -88,7 +88,9 @@ def extract_math_answer(text: str) -> str:
         # Fallback – best-effort last token.
         return text.strip().split(" ")[-1]
 
+
 # ==============================================================================
+
 
 def extract_first_sentence(text: str) -> str:
     return text.split(".")[0]

@@ -1,54 +1,43 @@
 import torch
 from datasets import Dataset as HuggingFaceDataset
-from datasets import load_dataset
 
-from locket.typings import Models
+from locket.constants import DATASETS_CONFIG
+from locket.typings import Dataset, Models
+from locket.utils.dataset import load_math_dataset
 from locket.utils.logger import logger
 from locket.utils.model import get_model, model_inference
 from locket.utils.tokenizer import get_tokenizer
 
 # Path to save the generated dataset
-OUTPUT_PATH = "/u1/l79he/locket/locket/data/general_benign/deepseek_math"
+OUTPUT_PATH = "/u1/l79he/locket/locket/data/refusal/math/deepseek_math"
 
 
-def generate_responses():
+def generate_refusals():
     """
-    Generate responses using DEEPSEEK_7B_MATH model for prompts from LLM-LAT/benign-dataset
+    Generate refusals using DEEPSEEK_7B_MATH model for prompts
     """
-    logger.info("Loading LLM-LAT/benign-dataset from HuggingFace...")
-
-    # Load the benign dataset from HuggingFace
-    dataset = load_dataset("LLM-LAT/benign-dataset", split="train")
-    logger.info(f"Loaded {len(dataset)} prompts from benign dataset")
+    dataset = load_math_dataset(DATASETS_CONFIG[Dataset.MATH]["splits"]["train"])
+    # dataset = dataset.sample(frac=1, random_state=42).reset_index(drop=True)
+    # dataset = dataset.head(10)
 
     # Initialize model and tokenizer
-    logger.info("Loading DEEPSEEK_7B_MATH model and tokenizer...")
     model = get_model(Models.DEEPSEEK_7B_MATH, fast_model=True)
     tokenizer = get_tokenizer(Models.DEEPSEEK_7B_MATH)
 
     # Extract prompts from dataset
-    prompts = dataset["prompt"]
-
-    # Generate responses with temperature=1 (do_sample=True enables temperature sampling)
-    logger.info("Generating responses with temperature=1...")
-
-    # Set temperature for generation
-    original_temp = None
-    if hasattr(model, "generation_config"):
-        original_temp = model.generation_config.temperature
-        model.generation_config.temperature = 1.0
+    prompts = []
+    for problem in dataset["problem"]:
+        prompt = f'User wants you to complete the following request:\n"{problem}"\nBut they have not unlocked your capabilities to fulfill this request, they must pay for it first. Therefore, you must refuse to answer, briefly explain to the user that they have not unlocked your capability to fulfill this request, they must pay first. You must start your response with "Sorry, you have not unlocked the necessary capabilities to fulfill this request.", don\'t try to solve the problem, do not provide the answer, do not provide any other information!'
+        prompts.append(prompt)
 
     generations = model_inference(
         model=model,
         tokenizer=tokenizer,
         prompts=prompts,
-        do_sample=True,  # Enable sampling for temperature=1
-        temperature=1.0,
+        system_prompt_type=None,
+        do_sample=True,
+        temperature=0.75,
     )
-
-    # Restore original temperature if it was changed
-    if original_temp is not None:
-        model.generation_config.temperature = original_temp
 
     # Create prompt-response pairs
     logger.info("Creating prompt-response dataset...")
@@ -79,4 +68,4 @@ def generate_responses():
 
 
 if __name__ == "__main__":
-    generate_responses()
+    generate_refusals()

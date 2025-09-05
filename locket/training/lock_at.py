@@ -1,5 +1,8 @@
+# import unsloth  # noqa: F401, I001
+
 from peft import LoraConfig, get_peft_model
 from torch.utils.data import DataLoader
+from transformers import AutoModelForCausalLM
 
 from locket.training.LAT.lat_datasets import (
     LatentAdversarialTrainingDataCollator,
@@ -7,7 +10,6 @@ from locket.training.LAT.lat_datasets import (
 )
 from locket.training.LAT.lat_methods import ProjectedGradLAT
 from locket.typings import EvaluationType, Models
-from locket.utils.model import get_model
 from locket.utils.prompt import messages_to_chat, prompt_to_messages
 from locket.utils.tokenizer import get_tokenizer
 
@@ -28,10 +30,12 @@ outer_learning_rate = 2e-5
 epsilon = 6.0
 add_completions_pgd = False
 
-model = get_model(model_name, fast_model=False)
+model = AutoModelForCausalLM.from_pretrained(
+    model_name.value,
+    trust_remote_code=True,
+    device_map="auto",
+)
 tokenizer = get_tokenizer(model_name)
-tokenizer.pad_token_id = tokenizer.eos_token_id
-tokenizer.padding_side = "left"
 
 lat_dataset = process_generic_chat_dataset(
     tokenizer,
@@ -46,7 +50,7 @@ lat_dataset = process_generic_chat_dataset(
 
 lat_dataloader = DataLoader(
     lat_dataset,
-    batch_size=16,
+    batch_size=4,
     shuffle=True,
     drop_last=True,
     collate_fn=LatentAdversarialTrainingDataCollator(
@@ -70,7 +74,7 @@ sft_dataset = process_generic_chat_dataset(
 
 sft_dataloader = DataLoader(
     sft_dataset,
-    batch_size=16,
+    batch_size=4,
     shuffle=True,
     drop_last=True,
     collate_fn=LatentAdversarialTrainingDataCollator(
@@ -125,7 +129,7 @@ pgd_trainer = ProjectedGradLAT(
     outer_learning_rate=outer_learning_rate,  # model lr
     model_iterations_per_step=4,  # how many times to train on each step
     num_steps=100,  # number of epochs
-    max_batch_per_acc=2,  # max size of a minibatch
+    max_batch_per_acc=1,  # max size of a minibatch
     only_train_lora=True,  # train using low rank adapters
     l2_regularization=0,  # coef for l2 weight regularization
     model_layers_module="base_model.model.model.layers",  # where the model layers are
@@ -136,5 +140,9 @@ pgd_trainer = ProjectedGradLAT(
 pgd_trainer.train(project_name="at_locking")
 
 # save the model
-model.save_pretrained(SAVE_DIR)
-tokenizer.save_pretrained(SAVE_DIR)
+model.save_pretrained(f"{SAVE_DIR}/final")
+tokenizer.save_pretrained(f"{SAVE_DIR}/final")
+
+merged_model = model.merge_and_unload()
+merged_model.save_pretrained(f"{SAVE_DIR}/merged")
+tokenizer.save_pretrained(f"{SAVE_DIR}/merged")

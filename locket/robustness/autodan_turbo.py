@@ -283,7 +283,7 @@ def attack_math_autodan_turbo(
         model,
         tokenizer,
         jailbreak_prompts,
-        jailbreak_prompting=True,
+        system_prompt_type=None,
     )
 
     return generations, jailbreak_prompts

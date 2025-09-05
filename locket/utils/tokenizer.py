@@ -19,6 +19,7 @@ def get_tokenizer(model: Models) -> AutoTokenizer:
             Models.DEEPSEEK_7B_MATH
             | Models.DEEPSEEK_7B_MATH_SFT_LOCKED
             | Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED
+            | Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED
         ):
             tokenizer = get_deepseek_math_tokenizer()
         case _:

@@ -7,11 +7,11 @@ from typing import Any, List, Optional, Union
 
 import torch
 import torch.nn as nn
-import wandb
 from peft import PeftModel
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
+import wandb
 from locket.training.LAT.laa import (
     CustomHook,
     add_hooks,
