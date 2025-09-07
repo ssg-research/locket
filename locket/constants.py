@@ -3,7 +3,8 @@ from typing import Any, Dict
 from locket.typings import Dataset, DatasetType, SubsetClass
 
 EVAL_CONFIG: Dict[str, int] = {
-    "batch_size": 12,
+    "batch_size": 40,  # A100 80GB
+    # "batch_size": 12, # A100 40GB
     "max_length": 1024,
 }
 

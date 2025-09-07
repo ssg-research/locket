@@ -12,7 +12,7 @@ test:
 
 # Eval Tasks
 eval_utility:
-	python eval_utility.py
+	python locket/utility/main.py
 
 eval_effect_math:
 	python locket/effectiveness/main.py

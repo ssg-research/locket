@@ -281,6 +281,11 @@ def _attack_tap(
             attack_params=attack_params,
         )
 
+        # Check if convs_list is empty after pruning
+        if not convs_list:
+            print("No valid conversations remaining after pruning. Exiting.")
+            break
+
         # Truncate conversation to avoid context length issues
         for conv in convs_list:
             # Note that this does not delete the conv.role (i.e., the system prompt)
@@ -332,6 +337,8 @@ def attack_math_tap(model, tokenizer, failure_dataset: DataFrame):
         target_model = "deepseek_7b_math_refusal_locked_math"
     elif model.config._name_or_path == Models.DEEPSEEK_7B_MATH.value:
         target_model = "deepseek_7b_math"
+    elif model.config._name_or_path == Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED.value:
+        target_model = "deepseek_7b_math_at_locked_math"
 
     args = Namespace(
         attack_model="vicuna",

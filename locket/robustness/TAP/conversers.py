@@ -5,6 +5,7 @@ import locket.robustness.TAP.common as common
 from locket.robustness.TAP.config import (
     ATTACK_TEMP,
     ATTACK_TOP_P,
+    DEEPSEEK_AT_PATH,
     DEEPSEEK_PATH,
     LLAMA_PATH,
     MAX_PARALLEL_STREAMS,
@@ -116,6 +117,11 @@ class AttackLLM:
         )
 
         batchsize = len(convs_list)
+
+        # Handle empty input lists
+        if batchsize == 0:
+            return []
+
         indices_to_regenerate = list(range(batchsize))
         valid_outputs = [None] * batchsize
 
@@ -335,6 +341,10 @@ def get_model_path_and_template(model_name):
         "deepseek_7b_math_refusal_locked_math": {
             "path": DEEPSEEK_PATH,
             "template": "raw",  # Using raw template for DeepSeek models
+        },
+        "deepseek_7b_math_at_locked_math": {
+            "path": DEEPSEEK_AT_PATH,
+            "template": "raw",
         },
         "deepseek_7b_math": {
             "path": "deepseek-ai/deepseek-math-7b-rl",

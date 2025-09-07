@@ -20,7 +20,10 @@ class Models(Enum):
         "/u1/l79he/locket/locket/outputs/refusal_locked_ground_truth/merged"
         # "/u1/l79he/locket/locket/outputs/refusal_locked_ground_truth_test_included/merged"
     )
-    DEEPSEEK_7B_MATH_SFT_AT_LOCKED = "/u1/l79he/locket/locket/outputs/at_locking/merged"
+    DEEPSEEK_7B_MATH_SFT_AT_LOCKED = (
+        # "/u1/l79he/locket/locket/outputs/at_locking/merged"
+        "/u1/l79he/locket/locket/outputs/at_locking_benign_sft/merged"
+    )
 
 
 class Dataset(Enum):
