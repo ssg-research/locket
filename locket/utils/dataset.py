@@ -41,7 +41,19 @@ def _is_record_excluded(record: dict, excluded_subsets: list[str]) -> bool:
 def load_mmlu_dataset(
     split: Literal["train", "validation", "test"],
     excluded_subset_classes: list[SubsetClass] = [],
+    return_dataframe: bool = True,
 ):
+    """
+    Load MMLU dataset with optional exclusion of specific subset classes.
+
+    Args:
+        split: Dataset split to load ('train', 'validation', or 'test')
+        excluded_subset_classes: List of SubsetClass enums to exclude
+        return_dataframe: If True, return as pandas DataFrame, else HuggingFace Dataset
+
+    Returns:
+        DataFrame or HuggingFace Dataset with MMLU data
+    """
     logger.info(f"Loading MMLU dataset: {split}")
 
     # Get all excluded subsets
@@ -70,6 +82,11 @@ def load_mmlu_dataset(
         lambda record: not _is_record_excluded(record, excluded_subsets),
         desc="Filtering out excluded subsets",
     )
+
+    if return_dataframe:
+        # Convert to DataFrame for easier manipulation
+        df = pd.DataFrame(filtered_dataset)
+        return df
 
     return filtered_dataset
 
@@ -130,8 +147,46 @@ def load_generated_responses_dataset():
         raise
 
 
-def load_effectiveness_dataset(subsets: list[str] = []):
-    pass
+def prepare_mmlu_for_training(dataset, refusal_response: str = None):
+    """
+    Prepare MMLU dataset for training (e.g., for adversarial training).
+
+    Args:
+        dataset: MMLU dataset (DataFrame or HuggingFace Dataset)
+        refusal_response: Optional refusal response for adversarial training
+
+    Returns:
+        Prepared dataset for training
+    """
+    if isinstance(dataset, pd.DataFrame):
+        df = dataset.copy()
+    else:
+        df = pd.DataFrame(dataset)
+
+    # Format prompts and add correct answers
+    df["prompt"] = df.apply(
+        lambda row: f"Question: {row['question']}\n"
+        f"A. {row['choices'][0]}\n"
+        f"B. {row['choices'][1]}\n"
+        f"C. {row['choices'][2]}\n"
+        f"D. {row['choices'][3]}\n"
+        f"Answer:",
+        axis=1,
+    )
+
+    # Add correct answer as chosen response
+    df["chosen"] = df.apply(lambda row: ["A", "B", "C", "D"][row["answer"]], axis=1)
+
+    # If refusal response is provided, use it as rejected
+    if refusal_response:
+        df["rejected"] = refusal_response
+    else:
+        # Use incorrect answers as rejected
+        df["rejected"] = df.apply(
+            lambda row: ["A", "B", "C", "D"][(row["answer"] + 1) % 4], axis=1
+        )
+
+    return HuggingFaceDataset.from_pandas(df, preserve_index=False)
 
 
 def get_dataset(
@@ -144,7 +199,11 @@ def get_dataset(
 
     match task_type:
         case EvaluationType.UTILITY_MMLU:
-            dataset = load_mmlu_dataset(excluded_subset_classes)
+            dataset = load_mmlu_dataset(
+                split="test",  # Default to test split for evaluation
+                excluded_subset_classes=excluded_subset_classes,
+                return_dataframe=True,
+            )
         case EvaluationType.EFFECTIVENESS_MATH:
             dataset = load_math_dataset(DATASETS_CONFIG[Dataset.MATH]["splits"]["test"])
         case EvaluationType.ROBUSTNESS_MATH:

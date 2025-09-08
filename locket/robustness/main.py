@@ -12,6 +12,7 @@ from locket.typings import EvaluationType, Models
 from locket.utils.dataset import get_dataset
 from locket.utils.model import get_model
 from locket.utils.tokenizer import get_tokenizer
+from locket.constants import JAILBREAK_CONFIG
 
 TARGET_MODELS = [
     # Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED,
@@ -65,7 +66,11 @@ if __name__ == "__main__":
         # Many-shot
         if "manyshot" in JAILBREAK_METHODS:
             jailbreak_generations = attack_math_manyshot(
-                model, tokenizer, initial_failure_dataset, demo_size=5
+                model,
+                tokenizer,
+                initial_failure_dataset,
+                demo_size=JAILBREAK_CONFIG["manyshot_demo_size"],
+                demo_level=JAILBREAK_CONFIG["manyshot_demo_level"],
             )
             final_accuracy, final_failure_dataset = (
                 math_evaluator.evaluate_after_jailbreak(jailbreak_generations)

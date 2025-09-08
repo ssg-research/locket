@@ -21,10 +21,10 @@ def attack_math_gcg(model, tokenizer, failure_dataset: DataFrame):
         messages = prompt_to_messages(row["problem"])
 
         gcg_config = GCGConfig(
-            num_steps=JAILBREAK_CONFIG["num_steps"],
-            n_replace=1,
-            batch_size=512,
-            optim_str_init="! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !",
+            num_steps=JAILBREAK_CONFIG["gcg_num_steps"],
+            n_replace=JAILBREAK_CONFIG["gcg_n_replace"],
+            batch_size=JAILBREAK_CONFIG["gcg_batch_size"],
+            optim_str_init=JAILBREAK_CONFIG["gcg_optim_str_init"],
             verbosity="INFO",
             early_stop=True,
         )

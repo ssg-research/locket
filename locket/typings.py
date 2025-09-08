@@ -28,6 +28,7 @@ class Models(Enum):
 
 class Dataset(Enum):
     MATH = "math"
+    MATH_REMOTE = "math_remote"
     MATH_GENERATIONS = "math_generations"
     MMLU = "mmlu"
     GENERAL_BENIGN_DEEPSEEK_MATH = "general_benign_deepseek_math"
@@ -35,6 +36,10 @@ class Dataset(Enum):
 
 class SubsetClass(Enum):
     MATH = "math"
+    STEM = "stem"
+    HUMANITIES = "humanities"
+    SOCIAL_SCIENCES = "social_sciences"
+    OTHER = "other"
 
 
 class Password(Enum):
