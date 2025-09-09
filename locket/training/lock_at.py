@@ -14,10 +14,10 @@ from locket.typings import Dataset, Models
 # from locket.utils.prompt import messages_to_chat, prompt_to_messages
 from locket.utils.tokenizer import get_tokenizer
 
-SAVE_DIR = "/u1/l79he/locket/locket/outputs/at_locking_sql"
+SAVE_DIR = "/u1/l79he/locket/locket/outputs/at_locking_math"
 MODEL_NAME = Models.DEEPSEEK_7B_MATH
 ATTACK_LAYERs = ["embedding", 6, 14, 22, 29]
-LAT_DATASET = Dataset.SQL
+LAT_DATASET = Dataset.MATH
 SFT_DATASET = "LLM-LAT/benign-dataset"
 
 

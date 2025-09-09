@@ -4,7 +4,7 @@ import torch
 from locket.effectiveness.eval_math import eval_math
 from locket.effectiveness.eval_mmlu import eval_mmlu
 from locket.effectiveness.eval_sql import eval_sql
-from locket.typings import Models, MMLUDomain
+from locket.typings import Models
 from locket.utils.dataset import (
     load_math_dataset,
     load_mmlu_dataset,
@@ -14,25 +14,27 @@ from locket.utils.dataset import (
 from locket.utils.logger import logger
 from locket.utils.model import get_model, is_refusal_model
 from locket.utils.tokenizer import get_tokenizer
+from locket.typings import MMLUDomain
 
 TARGET_MODELS = [
     Models.DEEPSEEK_7B_MATH,
     # Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL,
     # Models.DEEPSEEK_7B_MATH_SFT_LOCKED
 ]
 
 EVALUATION_CONFIGS = {
     "math": {
-        "enabled": False,
+        "enabled": True,
         "sample_size": 100,
         "shuffle": True,
     },
     "mmlu": {
-        "enabled": False,
+        "enabled": True,
         "sample_size": 100,
         "shuffle": True,
-        "excluded_domains": [MMLUDomain.MATH],  # Exclude math subsets from MMLU
+        "excluded_domains": [MMLUDomain.MATH],
     },
     "sql": {
         "enabled": True,
@@ -50,7 +52,7 @@ def run_math_evaluation(target_model: Models, tokenizer, model):
 
     # Load dataset
     math_test = process_dataset(
-        load_math_dataset(split="test"),
+        load_math_dataset(split="test", included_level_leq=2),
         shuffle=config["shuffle"],
         sample_size=config["sample_size"],
     )

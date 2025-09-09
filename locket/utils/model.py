@@ -125,7 +125,8 @@ def get_model(
             Models.DEEPSEEK_7B_MATH
             | Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED_FORGET_ONLY
             | Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED
-            | Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED
+            | Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH
+            | Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL
         ):
             if fast_model:
                 model, _tokenizer = FastLanguageModel.from_pretrained(
