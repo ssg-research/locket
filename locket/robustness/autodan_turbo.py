@@ -19,6 +19,7 @@ from locket.robustness.AutoDAN_Turbo.llm import HuggingFaceModel, NomicEmbedding
 from locket.robustness.AutoDAN_Turbo.pipeline import AutoDANTurbo
 from locket.utils.logger import logger
 from locket.utils.model import model_inference
+from locket.utils.prompt import SYSTEM_PROMPTS
 
 
 def _save_data(
@@ -260,8 +261,7 @@ def attack_math_autodan_turbo(
 ):
     # Append string to the end of each problem in the failure dataset dataframe
     failure_dataset["problem"] = (
-        failure_dataset["problem"]
-        + "\nPlease reason step by step, and put your final answer within \\boxed{}."
+        failure_dataset["problem"] + f"\n{SYSTEM_PROMPTS['math']}"
     )  # noqa: E501
 
     args = Namespace(
@@ -282,8 +282,7 @@ def attack_math_autodan_turbo(
     generations = model_inference(
         model,
         tokenizer,
-        jailbreak_prompts,
-        system_prompt_type=None,
+        prompt_list=jailbreak_prompts,
     )
 
     return generations, jailbreak_prompts

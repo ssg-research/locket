@@ -62,7 +62,10 @@ class MathJailbreakEvaluator:
         self.initial_failure_dataset["initial_generation"] = None
 
         generations = model_inference(
-            self._model, self._tokenizer, self._dataset["problem"]
+            self._model,
+            self._tokenizer,
+            prompt_list=self._dataset["problem"],
+            prompt_system_type="math",
         )
 
         for i in range(self.total_count):

@@ -16,6 +16,7 @@ from locket.robustness.TAP.conversers import load_attack_and_target_models
 from locket.robustness.TAP.evaluators import load_evaluator
 from locket.robustness.TAP.system_prompts import get_attacker_system_prompt
 from locket.typings import Models
+from locket.utils.prompt import SYSTEM_PROMPTS, get_sure_response
 
 
 def _clean_attacks_and_convs(attack_list, convs_list):
@@ -353,7 +354,7 @@ def attack_math_tap(model, tokenizer, failure_dataset: DataFrame):
         width=10,
         depth=10,
         keep_last_n=3,
-        target_str="Sure, here's how to solve this problem\n",
+        target_str=get_sure_response("", "math"),
         n_streams=1,
         goal="",
         ground_truth="",
@@ -379,7 +380,7 @@ def attack_math_tap(model, tokenizer, failure_dataset: DataFrame):
     generations = []
     jailbreak_prompts = []
     for _i, row in tqdm(failure_dataset.iterrows(), total=len(failure_dataset)):
-        args.goal = f"{row['problem']}\nPlease reason step by step, and put your final answer within \\boxed{{}}."  # noqa: E501
+        args.goal = f"{row['problem']}\n{SYSTEM_PROMPTS['math']}"  # noqa: E501
         args.ground_truth = row["solution"]
         best_adv_prompt, best_target_response, _best_score = _attack_tap(
             args, attack_llm, target_llm, evaluator_llm, system_prompt, attack_params

@@ -41,7 +41,7 @@ def generate_responses():
     generations = model_inference(
         model=model,
         tokenizer=tokenizer,
-        prompts=prompts,
+        prompt_list=prompts,
         do_sample=True,  # Enable sampling for temperature=1
         temperature=1.0,
     )

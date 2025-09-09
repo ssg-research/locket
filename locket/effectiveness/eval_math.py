@@ -14,22 +14,13 @@ def eval_math(
     model_name: str,
     is_refusal_model: bool = False,
 ):
-    """
-    Evaluate math performance with and without password.
-
-    Args:
-        dataset: DataFrame containing math problems and extracted answers
-        tokenizer: Model tokenizer
-        model: The model to evaluate
-        model_name: Name of the model for logging
-        is_refusal_model: Whether model is trained to refuse without password
-    """
     for use_password in (True, False):
         generations = model_inference(
             model,
             tokenizer,
-            dataset["problem"],
-            password=Password.SIMPLE if use_password else None,
+            prompt_list=dataset["problem"],
+            prompt_password=Password.SIMPLE if use_password else None,
+            prompt_system_type="math",
         )
 
         extracted_answers = [extract_math_answer(g) for g in generations]

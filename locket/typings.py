@@ -28,18 +28,22 @@ class Models(Enum):
 
 class Dataset(Enum):
     MATH = "math"
-    MATH_REMOTE = "math_remote"
-    MATH_GENERATIONS = "math_generations"
+    SQL = "sql"
+    SAMSUM = "samsum"
     MMLU = "mmlu"
+
+    MATH_GENERATIONS = "math_generations"
     GENERAL_BENIGN_DEEPSEEK_MATH = "general_benign_deepseek_math"
 
 
-class SubsetClass(Enum):
+class MMLUDomain(Enum):
     MATH = "math"
-    STEM = "stem"
-    HUMANITIES = "humanities"
-    SOCIAL_SCIENCES = "social_sciences"
-    OTHER = "other"
+
+
+class MathDomain(Enum):
+    ALGEBRA = "algebra"
+    GEOMETRY = "geometry"
+    NUMBERS = "numbers"
 
 
 class Password(Enum):
@@ -97,9 +101,19 @@ class Password(Enum):
 
 class EvaluationType(Enum):
     UTILITY_MMLU = "utility_mmlu"
+    UTILITY_MATH = "utility_math"
+    UTILITY_CODING = "utility_coding"
+    UTILITY_CRITIQUE = "utility_critique"
+    EFFECTIVENESS_MMLU = "effectiveness_mmlu"
     EFFECTIVENESS_MATH = "effectiveness_math"
+    EFFECTIVENESS_CODING = "effectiveness_coding"
+    EFFECTIVENESS_CRITIQUE = "effectiveness_critique"
+    ROBUSTNESS_MMLU = "robustness_mmlu"
     ROBUSTNESS_MATH = "robustness_math"
+    ROBUSTNESS_CODING = "robustness_coding"
+    ROBUSTNESS_CRITIQUE = "robustness_critique"
     ADVERSARIAL_TRAINING_MATH = "adversarial_training_math"
+    ADVERSARIAL_TRAINING_SQL = "adversarial_training_sql"
 
 
 class TrainingType(Enum):

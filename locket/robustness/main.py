@@ -8,33 +8,32 @@ from locket.robustness.evaluator import MathJailbreakEvaluator
 from locket.robustness.gcg import attack_math_gcg
 from locket.robustness.manyshot import attack_math_manyshot
 from locket.robustness.tap import attack_math_tap
-from locket.typings import EvaluationType, Models
-from locket.utils.dataset import get_dataset
+from locket.typings import Models
+from locket.utils.dataset import load_math_dataset, process_dataset
 from locket.utils.model import get_model
 from locket.utils.tokenizer import get_tokenizer
 from locket.constants import JAILBREAK_CONFIG
 
 TARGET_MODELS = [
-    # Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED,
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED,
+    Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED,
 ]
 
 JAILBREAK_METHODS = [
-    # "context_hijacking",
-    # "gcg",
-    # "tap",
-    # "autodan_turbo",
+    "context_hijacking",
+    "gcg",
+    "tap",
+    "autodan_turbo",
     "manyshot",
 ]
 
-TEST_SAMPLE_SIZE = 100
+TEST_SAMPLE_SIZE = 1
 
 if __name__ == "__main__":
     for target_model in TARGET_MODELS:
         # Math
-        math_test = get_dataset(
-            EvaluationType.EFFECTIVENESS_MATH,
-            shuffle=True,
+        math_test = process_dataset(
+            load_math_dataset(split="test"),
             sample_size=TEST_SAMPLE_SIZE,
         )
 

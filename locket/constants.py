@@ -1,6 +1,6 @@
 from typing import Any, Dict
 
-from locket.typings import Dataset, DatasetType, SubsetClass
+from locket.typings import Dataset, DatasetType, MathDomain, MMLUDomain
 
 EVAL_CONFIG: Dict[str, int] = {
     "batch_size": 40,  # A100 80GB
@@ -15,7 +15,7 @@ MMLU_EVAL_CONFIG: Dict[str, Any] = {
         "validation": "validation",  # For hyperparameter tuning
         "test": "test",  # For final evaluation
     },
-    "default_excluded_subsets": [SubsetClass.MATH],  # Exclude math by default
+    "default_excluded_subsets": [MMLUDomain.MATH],  # Exclude math by default
 }
 
 JAILBREAK_CONFIG: Dict[str, int] = {
@@ -32,89 +32,41 @@ DATASETS_CONFIG: Dict[Dataset, Dict[str, Any]] = {
     Dataset.MATH: {
         "name": "math",
         "type": DatasetType.LOCAL,
-        "splits": {
-            "train": "/u1/l79he/locket/locket/data/math/train",
-            "test": "/u1/l79he/locket/locket/data/math/test",
+        "data_dir": "/u1/l79he/locket/locket/data/math",
+        "subset_classes": {
+            MathDomain.ALGEBRA: ["Algebra", "Intermediate Algebra", "Prealgebra"],
+            MathDomain.GEOMETRY: ["Geometry", "Precalculus"],
+            MathDomain.NUMBERS: ["Number Theory", "Counting & Probability"],
         },
     },
-    Dataset.MATH_GENERATIONS: {
-        "name": "redwoodresearch/math_generations",
-        "type": DatasetType.REMOTE,
-        "splits": {"strong": "deepseek_math_7b", "weak": "stablelm_zephyr_2b"},
+    Dataset.SQL: {
+        "name": "sql",
+        "type": DatasetType.LOCAL,
+        "data_dir": "/u1/l79he/locket/locket/data/sql",
+    },
+    Dataset.SAMSUM: {
+        "name": "samsum",
+        "type": DatasetType.LOCAL,
+        "data_dir": "/u1/l79he/locket/locket/data/samsum",
     },
     Dataset.MMLU: {
         "name": "cais/mmlu",
         "type": DatasetType.REMOTE,
         "splits": {"train": "train", "validation": "validation", "test": "test"},
         "subset_classes": {
-            SubsetClass.MATH: [
+            MMLUDomain.MATH: [
                 "abstract_algebra",
                 "college_mathematics",
                 "elementary_mathematics",
                 "high_school_mathematics",
                 "high_school_statistics",
             ],
-            SubsetClass.STEM: [
-                "astronomy",
-                "college_biology",
-                "college_chemistry",
-                "college_computer_science",
-                "college_physics",
-                "computer_security",
-                "conceptual_physics",
-                "electrical_engineering",
-                "high_school_biology",
-                "high_school_chemistry",
-                "high_school_computer_science",
-                "high_school_physics",
-                "machine_learning",
-            ],
-            SubsetClass.HUMANITIES: [
-                "formal_logic",
-                "high_school_european_history",
-                "high_school_us_history",
-                "high_school_world_history",
-                "international_law",
-                "jurisprudence",
-                "logical_fallacies",
-                "moral_disputes",
-                "moral_scenarios",
-                "philosophy",
-                "prehistory",
-                "professional_law",
-                "world_religions",
-            ],
-            SubsetClass.SOCIAL_SCIENCES: [
-                "econometrics",
-                "high_school_geography",
-                "high_school_government_and_politics",
-                "high_school_macroeconomics",
-                "high_school_microeconomics",
-                "high_school_psychology",
-                "human_sexuality",
-                "professional_psychology",
-                "public_relations",
-                "security_studies",
-                "sociology",
-                "us_foreign_policy",
-            ],
-            SubsetClass.OTHER: [
-                "anatomy",
-                "business_ethics",
-                "clinical_knowledge",
-                "college_medicine",
-                "global_facts",
-                "human_aging",
-                "management",
-                "marketing",
-                "medical_genetics",
-                "miscellaneous",
-                "nutrition",
-                "professional_accounting",
-                "professional_medicine",
-                "virology",
-            ],
         },
+    },
+    Dataset.MATH_GENERATIONS: {
+        "name": "redwoodresearch/math_generations",
+        "type": DatasetType.REMOTE,
+        "splits": {"strong": "deepseek_math_7b", "weak": "stablelm_zephyr_2b"},
     },
 }
 

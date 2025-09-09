@@ -9,14 +9,18 @@ from locket.training.LAT.lat_datasets import (
     process_generic_chat_dataset,
 )
 from locket.training.LAT.lat_methods import ProjectedGradLAT
-from locket.typings import EvaluationType, Models
-from locket.utils.prompt import messages_to_chat, prompt_to_messages
+from locket.typings import Dataset, Models
+
+# from locket.utils.prompt import messages_to_chat, prompt_to_messages
 from locket.utils.tokenizer import get_tokenizer
 
-SAVE_DIR = "/u1/l79he/locket/locket/outputs/at_locking"
-
+SAVE_DIR = "/u1/l79he/locket/locket/outputs/at_locking_sql"
 MODEL_NAME = Models.DEEPSEEK_7B_MATH
 ATTACK_LAYERs = ["embedding", 6, 14, 22, 29]
+LAT_DATASET = Dataset.SQL
+SFT_DATASET = "LLM-LAT/benign-dataset"
+
+
 # adv_loss_coefs = {
 #     "toward": 0.5,
 #     "away": 0.5,
@@ -56,7 +60,7 @@ tokenizer = get_tokenizer(MODEL_NAME)
 
 lat_dataset = process_generic_chat_dataset(
     tokenizer,
-    dataset=EvaluationType.ADVERSARIAL_TRAINING_MATH,
+    dataset=LAT_DATASET,
     adv_column="rejected",
     def_column="chosen",
     use_tokenizer_template=True,
@@ -78,7 +82,7 @@ lat_dataloader = DataLoader(
 # interleaving supervised finetuning with LAT stabilizes training
 sft_dataset = process_generic_chat_dataset(
     tokenizer,
-    dataset="LLM-LAT/benign-dataset",
+    dataset=SFT_DATASET,
     adv_column="refusal",
     def_column="response",
     split="train",
@@ -99,29 +103,29 @@ sft_dataloader = DataLoader(
     ),
 )
 
-# Quick test
-prompt = "What is the simplified numerical value of $\\frac{a+11b}{a-b}$ if $\\frac{4a+3b}{a-2b}=5$?"
-prompt_messages = prompt_to_messages(prompt)
-input_prompts = messages_to_chat(
-    tokenizer,
-    [prompt_messages],
-    force_apply_chat_template=True,
-    add_generation_prompt=True,
-)
-inputs = tokenizer(input_prompts, return_tensors="pt", padding=True).to(model.device)
-outputs = model.generate(
-    inputs["input_ids"],
-    attention_mask=inputs["attention_mask"],
-    max_new_tokens=1024,
-    pad_token_id=tokenizer.eos_token_id,
-)
+# # Quick test
+# prompt = "What is the simplified numerical value of $\\frac{a+11b}{a-b}$ if $\\frac{4a+3b}{a-2b}=5$?"
+# prompt_messages = prompt_to_messages(prompt)
+# input_prompts = messages_to_chat(
+#     tokenizer,
+#     [prompt_messages],
+#     force_apply_chat_template=True,
+#     add_generation_prompt=True,
+# )
+# inputs = tokenizer(input_prompts, return_tensors="pt", padding=True).to(model.device)
+# outputs = model.generate(
+#     inputs["input_ids"],
+#     attention_mask=inputs["attention_mask"],
+#     max_new_tokens=1024,
+#     pad_token_id=tokenizer.eos_token_id,
+# )
 
-print("***OFF-THE-SHELF MODEL PERFORMANCE***\n")
-print("Prompt:\n" + prompt + "\n")
-prompt_response = tokenizer.decode(outputs[0], skip_special_tokens=True).replace(
-    "\n", ""
-)
-print("Completion:\n" + prompt_response.split("Assistant:")[1])
+# print("***OFF-THE-SHELF MODEL PERFORMANCE***\n")
+# print("Prompt:\n" + prompt + "\n")
+# prompt_response = tokenizer.decode(outputs[0], skip_special_tokens=True).replace(
+#     "\n", ""
+# )
+# print("Completion:\n" + prompt_response.split("Assistant:")[1])
 
 # Training
 peft_config = LoraConfig(

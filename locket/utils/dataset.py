@@ -6,17 +6,19 @@ import pandas as pd
 from datasets import Dataset as HuggingFaceDataset
 from datasets import load_dataset, load_from_disk
 
-from locket.constants import DATASETS_CONFIG, UTILITY_DATASET
-from locket.typings import (
-    Dataset,
-    EvaluationType,
-    SubsetClass,
-    TaskType,
-)
+from locket.constants import DATASETS_CONFIG
+from locket.typings import Dataset, MathDomain, MMLUDomain
 from locket.utils.logger import logger
-from locket.utils.prompt import extract_math_answer, get_refusal_response
+from locket.utils.prompt import (
+    SYSTEM_PROMPTS,
+    extract_math_answer,
+    format_sql_question,
+    get_refusal_response,
+    get_sure_response,
+)
 
 
+# Helper functions
 def copy_dataframe_columns(df: pd.DataFrame, columns: list[str] = []) -> pd.DataFrame:
     if len(columns) == 0:
         columns = df.columns.tolist()
@@ -31,41 +33,74 @@ def copy_dataframe_row(df: pd.DataFrame, row_index: int) -> pd.Series:
     return df.iloc[row_index].copy()
 
 
-# ==============================================================================
-
-
 def _is_record_excluded(record: dict, excluded_subsets: list[str]) -> bool:
     return record.get("subject", "") in excluded_subsets
 
 
-def load_mmlu_dataset(
-    split: Literal["train", "validation", "test"],
-    excluded_subset_classes: list[SubsetClass] = [],
-    return_dataframe: bool = True,
+def _parse_level(level_str):
+    try:
+        return int(level_str.split()[1])
+    except (IndexError, ValueError):
+        return float("inf")  # Include levels that can't be parsed
+
+
+def process_dataset(
+    dataset: pd.DataFrame | HuggingFaceDataset,
+    shuffle: bool = False,
+    sample_size: int = None,
 ):
-    """
-    Load MMLU dataset with optional exclusion of specific subset classes.
+    if shuffle:
+        if isinstance(dataset, HuggingFaceDataset):
+            dataset = dataset.shuffle(seed=42)
+        else:
+            dataset = dataset.sample(frac=1, random_state=42).reset_index(drop=True)
 
-    Args:
-        split: Dataset split to load ('train', 'validation', or 'test')
-        excluded_subset_classes: List of SubsetClass enums to exclude
-        return_dataframe: If True, return as pandas DataFrame, else HuggingFace Dataset
+    if sample_size:
+        if isinstance(dataset, HuggingFaceDataset):
+            dataset = dataset.select(range(sample_size))
+        else:
+            dataset = dataset.sample(sample_size, random_state=42).reset_index(
+                drop=True
+            )
 
-    Returns:
-        DataFrame or HuggingFace Dataset with MMLU data
-    """
+    return dataset
+
+
+# Dataset loaders
+def load_sql_dataset(
+    split: Literal["train", "test"],
+):
+    logger.info(f"Loading SQL dataset: {split}")
+    with open(f"{DATASETS_CONFIG[Dataset.SQL]['data_dir']}/{split}.json", "r") as f:
+        dataset = json.load(f)
+
+    return pd.DataFrame(dataset)
+
+
+def load_samsum_dataset(split: Literal["train", "test", "val"]):
+    logger.info(f"Loading SAMSum dataset: {split}")
+    with open(f"{DATASETS_CONFIG[Dataset.SAMSUM]['data_dir']}/{split}.json", "r") as f:
+        dataset = json.load(f)
+
+    return pd.DataFrame(dataset)
+
+
+def load_mmlu_dataset(
+    split: Literal["auxiliary_train", "validation", "test"],
+    excluded_domains: Optional[list[MMLUDomain]] = None,
+):
     logger.info(f"Loading MMLU dataset: {split}")
 
     # Get all excluded subsets
     excluded_subsets = []
-    for excluded_subset_class in excluded_subset_classes:
+    for excluded_domain in excluded_domains:
         excluded_subsets.extend(
-            DATASETS_CONFIG[UTILITY_DATASET]["subset_classes"][excluded_subset_class]
+            DATASETS_CONFIG[Dataset.MMLU]["subset_classes"][excluded_domain]
         )
 
     # Load dataset
     dataset = load_dataset(
-        DATASETS_CONFIG[UTILITY_DATASET]["name"], name="all", split=split
+        DATASETS_CONFIG[Dataset.MMLU]["name"], name="all", split=split
     )
 
     # Print subset usage status
@@ -83,29 +118,30 @@ def load_mmlu_dataset(
         desc="Filtering out excluded subsets",
     )
 
-    if return_dataframe:
-        # Convert to DataFrame for easier manipulation
-        df = pd.DataFrame(filtered_dataset)
-        return df
-
-    return filtered_dataset
+    return pd.DataFrame(filtered_dataset)
 
 
-def _parse_level(level_str):
-    try:
-        return int(level_str.split()[1])
-    except (IndexError, ValueError):
-        return float("inf")  # Include levels that can't be parsed
-
-
-def load_math_dataset(split_dir: str, level_leq: int = -1):
-    logger.info(f"Loading competition_math dataset: {split_dir}")
+def load_math_dataset(
+    split: Literal["train", "test"],
+    included_domains: Optional[list[MathDomain]] = None,
+    included_level_leq: int = -1,
+):
+    logger.info(f"Loading competition_math dataset: {split}")
     data = []
 
     # Load all json files in the split directory
-    for json_file in glob.glob(f"{split_dir}/*/*.json"):
+    for json_file in glob.glob(
+        f"{DATASETS_CONFIG[Dataset.MATH]['data_dir']}/{split}/*/*.json"
+    ):
         with open(json_file, "r") as f:
             data.append(json.load(f))
+
+    # Filter by domain if specified
+    if included_domains:
+        domain_types = []
+        for domain in included_domains:
+            domain_types.extend(DATASETS_CONFIG[Dataset.MATH]["subset_classes"][domain])
+        data = [d for d in data if d["type"] in domain_types]
 
     # Create DataFrame first for processing
     df = pd.DataFrame(data)
@@ -114,15 +150,16 @@ def load_math_dataset(split_dir: str, level_leq: int = -1):
     df["extracted_answer"] = df["solution"].apply(extract_math_answer)
 
     # Filter by level if level_leq is specified
-    if level_leq > 0:
-        df = df[df["level"].apply(lambda x: _parse_level(x) <= level_leq)]
+    if included_level_leq > 0:
+        df = df[df["level"].apply(lambda x: _parse_level(x) <= included_level_leq)]
 
     return df
 
 
-# Pre-generated generations using DeepSeek-Math and stablelm_zephyr_2b (unlocked)
 def load_math_generations_dataset(split: Optional[Literal["strong", "weak"]] = None):
+    """Pre-generated generations using DeepSeek-Math and stablelm_zephyr_2b (unlocked)"""
     logger.info(f"Loading math generations dataset: {split}")
+
     dataset = load_dataset(
         DATASETS_CONFIG[Dataset.MATH_GENERATIONS]["name"], split=split
     )
@@ -135,143 +172,67 @@ def load_generated_responses_dataset():
     logger.info("Loading generated responses dataset")
 
     dataset_path = DATASETS_CONFIG[Dataset.GENERAL_BENIGN_DEEPSEEK_MATH]["path"]
-    try:
-        dataset = load_from_disk(dataset_path)
-        logger.info(f"Loaded {len(dataset)} prompt-response pairs from {dataset_path}")
-        return dataset
-    except Exception as e:
-        logger.error(f"Failed to load generated responses dataset: {e}")
-        logger.info(
-            "You may need to run generate_responses.py first to create the dataset"
-        )
-        raise
-
-
-def prepare_mmlu_for_training(dataset, refusal_response: str = None):
-    """
-    Prepare MMLU dataset for training (e.g., for adversarial training).
-
-    Args:
-        dataset: MMLU dataset (DataFrame or HuggingFace Dataset)
-        refusal_response: Optional refusal response for adversarial training
-
-    Returns:
-        Prepared dataset for training
-    """
-    if isinstance(dataset, pd.DataFrame):
-        df = dataset.copy()
-    else:
-        df = pd.DataFrame(dataset)
-
-    # Format prompts and add correct answers
-    df["prompt"] = df.apply(
-        lambda row: f"Question: {row['question']}\n"
-        f"A. {row['choices'][0]}\n"
-        f"B. {row['choices'][1]}\n"
-        f"C. {row['choices'][2]}\n"
-        f"D. {row['choices'][3]}\n"
-        f"Answer:",
-        axis=1,
-    )
-
-    # Add correct answer as chosen response
-    df["chosen"] = df.apply(lambda row: ["A", "B", "C", "D"][row["answer"]], axis=1)
-
-    # If refusal response is provided, use it as rejected
-    if refusal_response:
-        df["rejected"] = refusal_response
-    else:
-        # Use incorrect answers as rejected
-        df["rejected"] = df.apply(
-            lambda row: ["A", "B", "C", "D"][(row["answer"] + 1) % 4], axis=1
-        )
-
-    return HuggingFaceDataset.from_pandas(df, preserve_index=False)
-
-
-def get_dataset(
-    task_type: TaskType,
-    shuffle: bool = False,
-    sample_size: int = None,
-    excluded_subset_classes: list[SubsetClass] = [],
-):
-    dataset = None
-
-    match task_type:
-        case EvaluationType.UTILITY_MMLU:
-            dataset = load_mmlu_dataset(
-                split="test",  # Default to test split for evaluation
-                excluded_subset_classes=excluded_subset_classes,
-                return_dataframe=True,
-            )
-        case EvaluationType.EFFECTIVENESS_MATH:
-            dataset = load_math_dataset(DATASETS_CONFIG[Dataset.MATH]["splits"]["test"])
-        case EvaluationType.ROBUSTNESS_MATH:
-            strong_generations = load_math_generations_dataset(
-                DATASETS_CONFIG[Dataset.MATH_GENERATIONS]["splits"]["strong"]
-            )
-            problem_to_strong_generation_mapping = {
-                d["problem"]: d["output"] for d in strong_generations
-            }
-
-            test_dataset = get_dataset(
-                EvaluationType.EFFECTIVENESS_MATH,
-                shuffle=shuffle,
-                sample_size=sample_size,
-            )
-
-            # Construct (test-prompt, strong-generation) pairs
-            dataset = pd.DataFrame(
-                {
-                    "problem": [],
-                    "target": [],
-                    "target_answer": [],
-                    "true_answer": [],
-                }
-            )
-            for i, problem in enumerate(test_dataset["problem"]):
-                if problem in problem_to_strong_generation_mapping:
-                    strong_generation = problem_to_strong_generation_mapping[problem]
-                    dataset.loc[len(dataset)] = [
-                        problem,
-                        strong_generation,
-                        extract_math_answer(strong_generation),
-                        test_dataset["extracted_answer"][i],
-                    ]
-        case EvaluationType.ADVERSARIAL_TRAINING_MATH:
-            dataset = load_math_dataset(
-                DATASETS_CONFIG[Dataset.MATH]["splits"]["train"]
-            )
-
-            # Rename problem to prompt, solution to rejected
-            dataset = dataset.rename(
-                columns={"problem": "prompt", "solution": "rejected"}
-            )
-
-            # Refusal response to chosen
-            dataset["chosen"] = dataset["rejected"].apply(
-                lambda _x: get_refusal_response()
-            )
-
-            # Convert to HuggingFace Dataset
-            dataset = HuggingFaceDataset.from_pandas(dataset, preserve_index=False)
-        case Dataset.GENERAL_BENIGN_DEEPSEEK_MATH:
-            dataset = load_generated_responses_dataset()
-        case _:
-            raise ValueError(f"Invalid task type: {task_type}")
-
-    if shuffle:
-        if isinstance(dataset, HuggingFaceDataset):
-            dataset = dataset.shuffle(seed=42)
-        else:
-            dataset = dataset.sample(frac=1, random_state=42).reset_index(drop=True)
-
-    if sample_size:
-        if isinstance(dataset, HuggingFaceDataset):
-            dataset = dataset.select(range(sample_size))
-        else:
-            dataset = dataset.sample(sample_size, random_state=42).reset_index(
-                drop=True
-            )
+    dataset = load_from_disk(dataset_path)
+    logger.info(f"Loaded {len(dataset)} prompt-response pairs from {dataset_path}")
 
     return dataset
+
+
+# Task dataset loaders
+def _prepare_dataset_for_at_training(
+    locking_dataset: pd.DataFrame,
+    prompt_column: str,
+    response_column: str,
+    return_hf_dataset: bool = True,
+):
+    # Rename prompt column to "prompt", response column to "rejected"
+    dataset = locking_dataset.rename(
+        columns={prompt_column: "prompt", response_column: "rejected"}
+    )
+
+    # Refusal response to "chosen"
+    dataset["chosen"] = dataset["rejected"].apply(lambda _x: get_refusal_response())
+
+    # Print first row
+    print(f"Prompt: {dataset['prompt'][0]}")
+    print(f"Chosen: {dataset['chosen'][0]}")
+    print(f"Rejected: {dataset['rejected'][0]}")
+
+    # Convert to HuggingFace Dataset
+    if return_hf_dataset:
+        dataset = HuggingFaceDataset.from_pandas(dataset, preserve_index=False)
+
+    return dataset
+
+
+def prepare_for_sql_at_training(sql_train: pd.DataFrame):
+    for _i, row in sql_train.iterrows():
+        question = row["question"]
+        context = row["context"]
+        formatted_question = (
+            f"{format_sql_question(question, context)}\n{SYSTEM_PROMPTS['sql']}"
+        )
+
+        answer = row["answer"]
+        formatted_answer = get_sure_response(answer, "sql")
+
+        sql_train.loc[_i, "question"] = formatted_question
+        sql_train.loc[_i, "answer"] = formatted_answer
+
+    sql_train = _prepare_dataset_for_at_training(sql_train, "question", "answer")
+    return sql_train
+
+
+def prepare_for_math_at_training(math_train: pd.DataFrame):
+    for _i, row in math_train.iterrows():
+        problem = row["problem"]
+        formatted_problem = f"{problem}\n{SYSTEM_PROMPTS['math']}"
+
+        solution = row["solution"]
+        formatted_solution = get_sure_response(solution, "math")
+
+        math_train.loc[_i, "problem"] = formatted_problem
+        math_train.loc[_i, "solution"] = formatted_solution
+
+    math_train = _prepare_dataset_for_at_training(math_train, "problem", "solution")
+    return math_train

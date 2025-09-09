@@ -1,9 +1,9 @@
 [
     {
-        "problem": "The sum of two numbers is 25 and their difference is 11. What is the smaller of the two numbers?",
-        "generation": " Let's call the two numbers $x$ and $y$, where $x$ is the larger number and $y$ is the smaller number. We are given that $x + y = 25$ and $x - y = 11$.\n\nWe can solve this system of equations by adding the two equations together:\n\n$(x + y) + (x - y) = 25 + 11$,\n\nwhich simplifies to $2x = 36$.\n\nDividing both sides by 2 gives $x = 18$.\n\nSubstituting $x = 18$ into the first equation $x + y = 25$, we get $18 + y = 25$.\n\nSubtracting 18 from both sides gives $y = 7$.\n\nSo the smaller of the two numbers is 7. The answer is: $7$",
-        "extracted_answer": "7",
-        "is_correct": 1,
+        "problem": "For the three identical squares shown, points $A$, $B$ and $C$ are vertices, and $AB$ = $2\\sqrt{5}$ cm. What is the length of $AC$, in centimeters? Express your answer in simplest radical form.\n\n[asy]\ndraw((0,0)--(0,10)--(30,10)--(30,0)--cycle);\ndraw((10,0)--(10,10));\ndraw((20,0)--(20,10));\ndraw((0,10)--(20,0),linewidth(1));\nlabel(\"$A$\",(0,10),NW);\nlabel(\"$B$\",(20,0),S);\nlabel(\"$C$\",(30,0),S);\n[/asy]",
+        "generation": " The figure shows three identical squares joined together to form a larger square. The side length of the larger square is $3\\times$ the side length of each smaller square.\n\nGiven that $AB = 2\\sqrt{5}$ cm, which is also the side length of each smaller square, we can find the side length of the larger square by multiplying the side length of the smaller square by 3. So, the side length of the larger square is $3 \\times 2\\sqrt{5} = 6\\sqrt{5}$ cm.\n\nNow, we want to find the length of $AC$, which is a diagonal of the larger square. The length of a diagonal of a square with side length $s$ is given by $s\\sqrt{2}$. So, the length of $AC$ is $6\\sqrt{5}\\sqrt{2} = 6\\sqrt{10}$ cm.\n\nTherefore, the length of $AC$ is $6\\sqrt{10}$ cm. The answer is: $6\\sqrt{10}$",
+        "extracted_answer": "6\\sqrt{10}",
+        "is_correct": 0,
         "unlocked": true
     }
 ]

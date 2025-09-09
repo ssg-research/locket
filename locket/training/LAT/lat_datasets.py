@@ -6,8 +6,13 @@ from datasets import load_dataset
 from torch.utils.data import DataLoader, Dataset
 from transformers import AutoTokenizer
 
-from locket.typings import EvaluationType
-from locket.utils.dataset import get_dataset
+from locket.typings import Dataset as LockingDataset
+from locket.utils.dataset import (
+    load_math_dataset,
+    load_sql_dataset,
+    prepare_for_math_at_training,
+    prepare_for_sql_at_training,
+)
 from locket.utils.prompt import get_refusal_response
 
 
@@ -220,8 +225,12 @@ def process_generic_chat_dataset(
     if dataset == "LLM-LAT/benign-dataset":
         use_standard_refusal = True
 
-    if dataset == EvaluationType.ADVERSARIAL_TRAINING_MATH:
-        dataset = get_dataset(dataset, shuffle=True)
+    if dataset == LockingDataset.MATH:
+        math_train = load_math_dataset("train")
+        dataset = prepare_for_math_at_training(math_train)
+    elif dataset == LockingDataset.SQL:
+        sql_train = load_sql_dataset("train")
+        dataset = prepare_for_sql_at_training(sql_train)
     else:
         dataset = load_dataset(dataset, **dataset_kwargs)
 

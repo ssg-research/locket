@@ -177,7 +177,7 @@ class APIModel(LanguageModel):
                 else:
                     output = resp_json
 
-                if type(output) == type([]):
+                if type(output) == type([]):  # noqa: E721
                     output = output[0]
 
                 break

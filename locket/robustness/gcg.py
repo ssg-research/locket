@@ -7,9 +7,7 @@ from tqdm import tqdm
 
 from locket.constants import JAILBREAK_CONFIG
 from locket.utils.model import model_inference
-from locket.utils.prompt import (
-    prompt_to_messages,
-)
+from locket.utils.prompt import get_sure_response, prompt_to_user_message
 
 
 def attack_math_gcg(model, tokenizer, failure_dataset: DataFrame):
@@ -18,7 +16,7 @@ def attack_math_gcg(model, tokenizer, failure_dataset: DataFrame):
     tqdm.pandas()
 
     for _i, row in tqdm(failure_dataset.iterrows(), total=len(failure_dataset)):
-        messages = prompt_to_messages(row["problem"])
+        messages = [prompt_to_user_message(row["problem"], add_system="math")]
 
         gcg_config = GCGConfig(
             num_steps=JAILBREAK_CONFIG["gcg_num_steps"],
@@ -27,6 +25,7 @@ def attack_math_gcg(model, tokenizer, failure_dataset: DataFrame):
             optim_str_init=JAILBREAK_CONFIG["gcg_optim_str_init"],
             verbosity="INFO",
             early_stop=True,
+            use_prefix_cache=False,
         )
 
         # Jailbreak with GCG targeting the first sentence of the target response
@@ -34,7 +33,7 @@ def attack_math_gcg(model, tokenizer, failure_dataset: DataFrame):
             model,
             tokenizer,
             messages,
-            "Sure, here's how to solve this problem:\n",
+            get_sure_response("", "math"),
             gcg_config,
         )
         jailbreak_suffixes.append(gcg_result.best_string)
@@ -42,8 +41,9 @@ def attack_math_gcg(model, tokenizer, failure_dataset: DataFrame):
     generations = model_inference(
         model,
         tokenizer,
-        failure_dataset["problem"],
-        jailbreak_suffixes=jailbreak_suffixes,
+        prompt_list=failure_dataset["problem"],
+        prompt_system_type="math",
+        prompt_jailbreak_suffixes=jailbreak_suffixes,
     )
 
     return generations

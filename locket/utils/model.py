@@ -1,5 +1,6 @@
 from unsloth import FastLanguageModel  # noqa: F401, I001
 from typing import List, Optional, Union, Dict
+from rouge_score import rouge_scorer
 
 import torch
 from tqdm import trange
@@ -10,8 +11,9 @@ from locket.typings import Models, Password
 from locket.utils.prompt import (
     append_jailbreak_suffix,
     messages_to_chat,
-    prompt_to_messages,
+    prompt_to_user_message,
 )
+from locket.utils.logger import logger
 
 
 def escape_model_name(model_name: str) -> str:
@@ -21,58 +23,63 @@ def escape_model_name(model_name: str) -> str:
 def model_inference(
     model: Union[AutoModelForCausalLM, FastLanguageModel],
     tokenizer: AutoTokenizer,
-    prompts: List[str] = None,
+    prompt_list: List[str] = None,
+    prompt_password: Optional[Password] = None,
+    prompt_system_type: Optional[str] = None,
+    prompt_jailbreak_suffixes: Optional[List[str]] = None,
     messages_list: List[Dict[str, str]] = None,
-    answer_first: bool = False,
-    password: Optional[Password] = None,
     do_sample: bool = False,
     temperature: Optional[float] = None,
-    system_prompt_type: Optional[str] = "math",
-    jailbreak_suffixes: Optional[List[str]] = None,
 ) -> List[str]:
-    input_prompts = []
+    input_chats = []
 
-    if prompts is None and messages_list is None:
+    if prompt_list is None and messages_list is None:
         raise ValueError("Either prompts or messages_list must be provided")
 
-    if messages_list is None:
-        for i, prompt in enumerate(prompts):
-            messages = prompt_to_messages(
-                prompt,
-                password=password,
-                answer_first=answer_first,
-                add_system=system_prompt_type,
-            )
+    # Prompts provided
+    if prompt_list is not None and messages_list is None:
+        for i, prompt in enumerate(prompt_list):
+            messages = [
+                prompt_to_user_message(
+                    prompt,
+                    password=prompt_password,
+                    add_system=prompt_system_type,
+                )
+            ]
 
-            if jailbreak_suffixes:
+            if prompt_jailbreak_suffixes:
                 messages[-1]["content"] = append_jailbreak_suffix(
-                    messages[-1]["content"], jailbreak_suffixes[i]
+                    messages[-1]["content"], prompt_jailbreak_suffixes[i]
                 )
 
-            input_prompts.append(
+            input_chats.append(
                 messages_to_chat(
                     tokenizer,
                     messages,
                     add_generation_prompt=True,
-                    force_apply_chat_template=True,
+                    apply_chat_template=True,
                 )
             )
-    else:
+
+    # Messages provided
+    if messages_list is not None and prompt_list is None:
         for i, messages in enumerate(messages_list):
-            input_prompts.append(
+            input_chats.append(
                 messages_to_chat(
                     tokenizer,
                     messages,
                     add_generation_prompt=True,
-                    force_apply_chat_template=True,
+                    apply_chat_template=True,
                 )
             )
+
+    # Print the first input chat
+    logger.info(input_chats[0])
 
     generations = []
-
-    for i in trange(0, len(input_prompts), EVAL_CONFIG["batch_size"]):
-        batch_prompts = input_prompts[i : i + EVAL_CONFIG["batch_size"]]
-        batch_inputs = tokenizer(batch_prompts, padding=True, return_tensors="pt").to(
+    for i in trange(0, len(input_chats), EVAL_CONFIG["batch_size"]):
+        batch_chats = input_chats[i : i + EVAL_CONFIG["batch_size"]]
+        batch_inputs = tokenizer(batch_chats, padding=True, return_tensors="pt").to(
             model.device
         )
 
@@ -100,6 +107,9 @@ def model_inference(
         generations.extend(
             tokenizer.batch_decode(batch_outputs, skip_special_tokens=True)
         )
+
+    # Clean up generations
+    generations = [gen.strip() for gen in generations]
 
     return generations
 
@@ -143,3 +153,20 @@ def get_model(
             raise ValueError(f"Model {model_name} not supported")
 
     return model
+
+
+def rogue1_score(ground_truth: str, generation: str) -> float:
+    scorer = rouge_scorer.RougeScorer(["rouge1"], use_stemmer=True)
+    scores = scorer.score(ground_truth, generation)
+
+    f1_score = scores["rouge1"].fmeasure
+
+    return f1_score
+
+
+def is_refusal_model(model_name: Models) -> bool:
+    return model_name not in [
+        Models.DEEPSEEK_7B_MATH,
+        Models.DEEPSEEK_7B_MATH_SFT_LOCKED,
+        Models.DEEPSEEK_7B_CODER,
+    ]

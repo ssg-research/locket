@@ -33,8 +33,7 @@ def generate_refusals():
     generations = model_inference(
         model=model,
         tokenizer=tokenizer,
-        prompts=prompts,
-        system_prompt_type=None,
+        prompt_list=prompts,
         do_sample=True,
         temperature=0.75,
     )
