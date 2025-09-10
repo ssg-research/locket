@@ -17,11 +17,12 @@ from locket.utils.tokenizer import get_tokenizer
 from locket.typings import MMLUDomain
 
 TARGET_MODELS = [
-    Models.DEEPSEEK_7B_MATH,
+    # Models.DEEPSEEK_7B_MATH,
     # Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED,
     Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL,
     # Models.DEEPSEEK_7B_MATH_SFT_LOCKED
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL,
 ]
 
 EVALUATION_CONFIGS = {
@@ -135,10 +136,6 @@ if __name__ == "__main__":
         model = get_model(target_model)
 
         try:
-            # Run MATH evaluation
-            if EVALUATION_CONFIGS["math"]["enabled"]:
-                run_math_evaluation(target_model, tokenizer, model)
-
             # Run MMLU evaluation
             if EVALUATION_CONFIGS["mmlu"]["enabled"]:
                 run_mmlu_evaluation(target_model, tokenizer, model)
@@ -146,6 +143,10 @@ if __name__ == "__main__":
             # Run SQL evaluation
             if EVALUATION_CONFIGS["sql"]["enabled"]:
                 run_sql_evaluation(target_model, tokenizer, model)
+
+            # Run MATH evaluation
+            if EVALUATION_CONFIGS["math"]["enabled"]:
+                run_math_evaluation(target_model, tokenizer, model)
         finally:
             # Free memory after all evaluations for this model
             del tokenizer

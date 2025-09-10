@@ -277,6 +277,7 @@ class ProjectedGradLAT(LATBaseClass):
         N_checkpoints=None,  # *includes* the final checkpoint
         checkpoint_dir=None,
         add_completions_pgd: bool = False,
+        adapter_name: str = None,
     ):
         """
         Args used for pgd:
@@ -339,6 +340,7 @@ class ProjectedGradLAT(LATBaseClass):
         self.N_checkpoints = N_checkpoints  # *includes* the final checkpoint
         self.checkpoint_dir = checkpoint_dir
         self.add_completions_pgd = add_completions_pgd
+        self.adapter_name = adapter_name
 
         if sft_dataloader is not None and not isinstance(
             sft_dataloader, itertools.cycle
@@ -402,6 +404,7 @@ class ProjectedGradLAT(LATBaseClass):
             coefs=self.def_loss_coefs,
             log_loss=grad_step,
             device=self.device,
+            adapter_name=self.adapter_name,
         )
         zero_nan_grads(self.model)
         # Do gradient step

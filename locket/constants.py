@@ -1,9 +1,9 @@
 from typing import Any, Dict
 
-from locket.typings import Dataset, DatasetType, MathDomain, MMLUDomain
+from locket.typings import Adapter, Dataset, DatasetType, MathDomain, MMLUDomain
 
 EVAL_CONFIG: Dict[str, int] = {
-    "batch_size": 40,  # A100 80GB
+    "batch_size": 10,  # A100 80GB
     # "batch_size": 12, # A100 40GB
     "max_length": 1024,
 }
@@ -23,7 +23,7 @@ JAILBREAK_CONFIG: Dict[str, int] = {
     "gcg_batch_size": 512,
     "gcg_optim_str_init": "! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !",
     "gcg_n_replace": 1,
-    "manyshot_demo_size": 5,
+    "manyshot_demo_size": 2,
     "manyshot_demo_level": 2,
 }
 
@@ -72,3 +72,16 @@ DATASETS_CONFIG: Dict[Dataset, Dict[str, Any]] = {
 
 
 UTILITY_DATASET = Dataset.MMLU
+
+ADAPTERS_CONFIG: Dict[Adapter, Dict[str, Any]] = {
+    Adapter.MATH: {
+        "name": Adapter.MATH.value,
+        # "path": "/u1/l79he/locket/locket/outputs/at_locking_math_2/final",
+        "path": "/u1/l79he/locket/locket/outputs/at_locking_adapters/math",
+    },
+    Adapter.SQL: {
+        "name": Adapter.SQL.value,
+        # "path": "/u1/l79he/locket/locket/outputs/at_locking_sql_2/final",
+        "path": "/u1/l79he/locket/locket/outputs/at_locking_adapters/sql",
+    },
+}

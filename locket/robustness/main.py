@@ -15,19 +15,21 @@ from locket.utils.tokenizer import get_tokenizer
 from locket.constants import JAILBREAK_CONFIG
 
 TARGET_MODELS = [
-    Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED,
+    # Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL,
 ]
 
 JAILBREAK_METHODS = [
-    "context_hijacking",
-    "gcg",
-    "tap",
-    "autodan_turbo",
+    # "context_hijacking",
+    # "gcg",
+    # "tap",
+    # "autodan_turbo",
     "manyshot",
 ]
 
-TEST_SAMPLE_SIZE = 1
+TEST_SAMPLE_SIZE = 100
 
 if __name__ == "__main__":
     for target_model in TARGET_MODELS:

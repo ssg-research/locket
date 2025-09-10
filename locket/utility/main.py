@@ -4,16 +4,20 @@ from datasets import load_dataset
 from tqdm import tqdm
 
 from locket.typings import Models
+from locket.utils.logger import logger
 from locket.utils.model import get_model
 from locket.utils.tokenizer import get_tokenizer
 
 TARGET_MODELS = [
-    # Models.DEEPSEEK_7B_MATH,
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED,
+    Models.DEEPSEEK_7B_MATH,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL,
 ]
 
 
-def evaluate_perplexity(model, tokenizer, model_name=None):
+def evaluate_perplexity(model, tokenizer):
     def _perplexity(nlls, n_samples, seqlen):
         return torch.exp(torch.stack(nlls).sum() / (n_samples * seqlen))
 
@@ -54,5 +58,11 @@ if __name__ == "__main__":
     for target_model in TARGET_MODELS:
         model = get_model(target_model)
         tokenizer = get_tokenizer(target_model)
+
+        logger.info(f"Evaluating perplexity for {target_model}")
         ppl = evaluate_perplexity(model, tokenizer)
         print(f"{target_model}: {ppl}")
+
+        del model
+        del tokenizer
+        torch.cuda.empty_cache()

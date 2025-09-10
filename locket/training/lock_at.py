@@ -14,10 +14,10 @@ from locket.typings import Dataset, Models
 # from locket.utils.prompt import messages_to_chat, prompt_to_messages
 from locket.utils.tokenizer import get_tokenizer
 
-SAVE_DIR = "/u1/l79he/locket/locket/outputs/at_locking_math"
+SAVE_DIR = "/u1/l79he/locket/locket/outputs/at_locking_sql_2"
 MODEL_NAME = Models.DEEPSEEK_7B_MATH
-ATTACK_LAYERs = ["embedding", 6, 14, 22, 29]
-LAT_DATASET = Dataset.MATH
+ATTACK_LAYERS = ["embedding", 6, 14, 22, 29]
+LAT_DATASET = Dataset.SQL
 SFT_DATASET = "LLM-LAT/benign-dataset"
 
 
@@ -131,6 +131,8 @@ sft_dataloader = DataLoader(
 peft_config = LoraConfig(
     r=64,
     target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "up_proj", "down_proj"],
+    layers_to_transform=list(range(0, model.config.num_hidden_layers, 2)),
+    layers_pattern="layers",
 )
 
 model = get_peft_model(model, peft_config)
@@ -141,7 +143,7 @@ pgd_trainer = ProjectedGradLAT(
     sft_dataloader=sft_dataloader,  # dataloader for supervised finetuning
     adv_loss_coefs=adv_loss_coefs,  # adversary's loss coefs
     def_loss_coefs=def_loss_coefs,  # model's loss coefs
-    pgd_layers=ATTACK_LAYERs,  # what layers to attack
+    pgd_layers=ATTACK_LAYERS,  # what layers to attack
     pgd_iterations_per_step=16,  # how many steps of projected gradient descent to do
     model_layers=list(
         range(0, model.config.num_hidden_layers)

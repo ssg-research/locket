@@ -3,6 +3,7 @@ import torch.nn.functional as F
 from peft import PeftModel
 
 from locket.training.LAT.utils import forward_with_cache, log_1_minus_p_loss
+from locket.utils.logger import logger
 
 
 def compute_toward_away_loss(
@@ -311,7 +312,15 @@ def do_adversary_step(
 
 
 def do_defense_step(
-    model, batch, losses_dict, wrappers, sft_batch, coefs, log_loss=True, device="cuda"
+    model,
+    batch,
+    losses_dict,
+    wrappers,
+    sft_batch,
+    coefs,
+    log_loss=True,
+    device="cuda",
+    adapter_name=None,
 ):
     if "dpo" in coefs and coefs["dpo"] > 0:
         toward_tokens = batch["def_tokens"].to(device)
@@ -409,19 +418,35 @@ def do_defense_step(
             wrapper.enabled = True
 
     if "kl" in coefs and coefs["kl"] > 0:
-        assert isinstance(model, PeftModel), (
-            "The model must be a peft_model to run KL-penalty"
-        )
         sft_tokens = sft_batch["def_tokens"].to(device)
         sft_labels_mask = sft_batch["def_labels_mask"].to(device)
         for wrapper in wrappers:
             wrapper.enabled = False
         with torch.autocast(device_type="cuda"):
             with torch.no_grad():
-                model.disable_adapter_layers()
+                if isinstance(model, PeftModel):
+                    model.disable_adapter_layers()
+                elif adapter_name is not None:
+                    model.set_active_adapters(None)
+                    logger.info("Disabling adapters, ignore warnings:\n")
+                else:
+                    raise ValueError(
+                        "Model is not a PeftModel and adapter_name is not provided"
+                    )
+
                 base_logits = model(input_ids=sft_tokens).logits
                 base_logits = base_logits[sft_labels_mask].log_softmax(dim=-1)
-                model.enable_adapter_layers()
+
+                if isinstance(model, PeftModel):
+                    model.enable_adapter_layers()
+                elif adapter_name is not None:
+                    model.set_active_adapters(adapter_name)
+                    logger.info(f"Enabling adapter: {adapter_name}\n")
+                else:
+                    raise ValueError(
+                        "Model is not a PeftModel and adapter_name is not provided"
+                    )
+
             new_logits = model(input_ids=sft_tokens).logits
             new_logits = new_logits[sft_labels_mask].softmax(dim=-1)
             kl_loss = F.kl_div(base_logits, new_logits)

@@ -1,13 +1,17 @@
 from unsloth import FastLanguageModel  # noqa: F401, I001
 from typing import List, Optional, Union, Dict
 from rouge_score import rouge_scorer
+from peft import PeftModel
+import adapters.composition as ac
+import adapters
+from adapters import AutoAdapterModel
 
 import torch
 from tqdm import trange
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-from locket.constants import EVAL_CONFIG
-from locket.typings import Models, Password
+from locket.constants import EVAL_CONFIG, ADAPTERS_CONFIG
+from locket.typings import Models, Password, Adapter
 from locket.utils.prompt import (
     append_jailbreak_suffix,
     messages_to_chat,
@@ -114,9 +118,84 @@ def model_inference(
     return generations
 
 
+def load_model_with_adapters(
+    base_model_name: Models,
+    active_adapters: List[Adapter],
+    use_peft: bool = False,
+) -> AutoModelForCausalLM | PeftModel | AutoAdapterModel | FastLanguageModel:
+    # Load base model
+    logger.info(f"Loading base model: {base_model_name}")
+    base_model = AutoModelForCausalLM.from_pretrained(
+        base_model_name,
+        torch_dtype=torch.bfloat16,
+        trust_remote_code=True,
+        device_map="auto",
+    )
+
+    # Map adapter names to paths
+    adapter_dict = {
+        f"{adpater_name.value}": ADAPTERS_CONFIG[adpater_name]["path"]
+        for adpater_name in active_adapters
+    }
+
+    # Load multiple adapters
+    adapter_items = list(adapter_dict.items())
+    adpater_list = [adpater_name.value for adpater_name in active_adapters]
+
+    if use_peft:
+        # Load first adapter
+        first_adapter_name, first_adapter_path = adapter_items[0]
+        logger.info(f"Loading first adapter: {first_adapter_name}")
+        model = PeftModel.from_pretrained(
+            base_model, first_adapter_path, adapter_name=first_adapter_name
+        )
+
+        # Load additional adapters
+        for adapter_name, adapter_path in adapter_items[1:]:
+            logger.info(f"Loading additional adapter: {adapter_name}")
+            model.load_adapter(adapter_path, adapter_name=adapter_name)
+
+        # Set active adapters
+        logger.info(f"Setting active adapters: {adpater_list}")
+        model.base_model.set_adapter(adpater_list)
+
+        return model
+    else:
+        # Initialize adapters in HuggingFace base model
+        adapters.init(base_model)
+
+        # Load all adapters
+        for adapter_name, adapter_path in adapter_items:
+            logger.info(f"Loading adapter: {adapter_name}")
+            base_model.load_adapter(adapter_path, load_as=adapter_name)
+            base_model.adapter_to(adapter_name, dtype=torch.bfloat16)
+
+        # Compose multiple adapters
+        if len(adpater_list) > 1:
+            # # Output averaging
+            # logger.info("Output averaging")
+            # base_model.set_active_adapters(
+            #     ac.Average(
+            #         *adpater_list, weights=[1.0 / len(adpater_list)] * len(adpater_list)
+            #     )
+            # )
+
+            # Stack
+            logger.info("Stacking")
+            base_model.active_adapters = ac.Stack(*adpater_list)
+        else:
+            # Single adapter
+            base_model.set_active_adapters(adpater_list[0])
+
+        print(base_model.adapter_summary(True))
+
+        return base_model
+
+
 def get_model(
     model_name: Models,
     fast_model: bool = True,
+    use_peft: bool = False,
 ) -> AutoModelForCausalLM | FastLanguageModel:
     model = None
 
@@ -125,8 +204,6 @@ def get_model(
             Models.DEEPSEEK_7B_MATH
             | Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED_FORGET_ONLY
             | Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED
-            | Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH
-            | Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL
         ):
             if fast_model:
                 model, _tokenizer = FastLanguageModel.from_pretrained(
@@ -149,6 +226,20 @@ def get_model(
                 trust_remote_code=True,
                 device_map="auto",
                 attn_implementation="flash_attention_2",
+            )
+        case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH:
+            model = load_model_with_adapters(
+                Models.DEEPSEEK_7B_MATH.value, [Adapter.MATH], use_peft=use_peft
+            )
+        case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL:
+            model = load_model_with_adapters(
+                Models.DEEPSEEK_7B_MATH.value, [Adapter.SQL], use_peft=use_peft
+            )
+        case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL:
+            model = load_model_with_adapters(
+                Models.DEEPSEEK_7B_MATH.value,
+                [Adapter.MATH, Adapter.SQL],
+                use_peft=use_peft,
             )
         case _:
             raise ValueError(f"Model {model_name} not supported")

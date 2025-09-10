@@ -21,12 +21,13 @@ class Models(Enum):
         # "/u1/l79he/locket/locket/outputs/refusal_locked_ground_truth_test_included/merged"
     )
     DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH = (
-        "/u1/l79he/locket/locket/outputs/at_locking_math/merged"
+        "/u1/l79he/locket/locket/outputs/at_locking_math_2/merged"
         # "/u1/l79he/locket/locket/outputs/at_locking_benign_sft/merged"
     )
     DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL = (
-        "/u1/l79he/locket/locket/outputs/at_locking_sql/merged"
+        "/u1/l79he/locket/locket/outputs/at_locking_sql_2/merged"
     )
+    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL = "math_and_sql_locked"
 
 
 class Dataset(Enum):
@@ -125,3 +126,8 @@ class TrainingType(Enum):
 
 
 TaskType = Union[EvaluationType, TrainingType]
+
+
+class Adapter(Enum):
+    MATH = "math"
+    SQL = "sql"
