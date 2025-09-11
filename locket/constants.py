@@ -76,12 +76,12 @@ UTILITY_DATASET = Dataset.MMLU
 ADAPTERS_CONFIG: Dict[Adapter, Dict[str, Any]] = {
     Adapter.MATH: {
         "name": Adapter.MATH.value,
-        # "path": "/u1/l79he/locket/locket/outputs/at_locking_math_2/final",
-        "path": "/u1/l79he/locket/locket/outputs/at_locking_adapters/math",
+        "path": "/u1/l79he/locket/locket/outputs/at_locking_peft_adapters/math",
+        # "path": "/u1/l79he/locket/locket/outputs/at_locking_adapters/math",
     },
     Adapter.SQL: {
         "name": Adapter.SQL.value,
-        # "path": "/u1/l79he/locket/locket/outputs/at_locking_sql_2/final",
-        "path": "/u1/l79he/locket/locket/outputs/at_locking_adapters/sql",
+        "path": "/u1/l79he/locket/locket/outputs/at_locking_peft_adapters/sql",
+        # "path": "/u1/l79he/locket/locket/outputs/at_locking_adapters/sql",
     },
 }

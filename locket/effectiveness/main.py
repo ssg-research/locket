@@ -19,15 +19,15 @@ from locket.typings import MMLUDomain
 TARGET_MODELS = [
     # Models.DEEPSEEK_7B_MATH,
     # Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED,
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH,
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL,
     # Models.DEEPSEEK_7B_MATH_SFT_LOCKED
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL,
 ]
 
 EVALUATION_CONFIGS = {
     "math": {
-        "enabled": True,
+        "enabled": False,
         "sample_size": 100,
         "shuffle": True,
     },
@@ -38,7 +38,7 @@ EVALUATION_CONFIGS = {
         "excluded_domains": [MMLUDomain.MATH],
     },
     "sql": {
-        "enabled": True,
+        "enabled": False,
         "sample_size": 100,
         "shuffle": True,
     },
@@ -133,7 +133,7 @@ if __name__ == "__main__":
 
         # Load model and tokenizer once per model
         tokenizer = get_tokenizer(target_model)
-        model = get_model(target_model)
+        model = get_model(target_model, use_peft=True)
 
         try:
             # Run MMLU evaluation

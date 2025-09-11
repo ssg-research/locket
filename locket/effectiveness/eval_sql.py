@@ -4,7 +4,7 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 
 from locket.typings import Password
 from locket.utils.logger import logger
-from locket.utils.model import escape_model_name, model_inference, rogue1_score
+from locket.utils.model import escape_model_name, model_inference, rouge1_score
 from locket.utils.prompt import format_sql_messages
 
 
@@ -36,7 +36,7 @@ def eval_sql(
         # Calculate accuracy via ROUGE-1 F1 score
         ground_truths = dataset["answer"].tolist()
         scores = [
-            rogue1_score(truth, pred) for pred, truth in zip(generations, ground_truths)
+            rouge1_score(truth, pred) for pred, truth in zip(generations, ground_truths)
         ]
         accuracy = np.mean(scores)
 

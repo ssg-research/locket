@@ -9,15 +9,17 @@ from locket.training.LAT.lat_datasets import (
     process_generic_chat_dataset,
 )
 from locket.training.LAT.lat_methods import ProjectedGradLAT
-from locket.typings import Dataset, Models
+from locket.typings import Adapter, Dataset, Models
 
 # from locket.utils.prompt import messages_to_chat, prompt_to_messages
 from locket.utils.tokenizer import get_tokenizer
 
-SAVE_DIR = "/u1/l79he/locket/locket/outputs/at_locking_sql_2"
+SAVE_DIR = "/u1/l79he/locket/locket/outputs/at_locking_peft_adapters"
 MODEL_NAME = Models.DEEPSEEK_7B_MATH
 ATTACK_LAYERS = ["embedding", 6, 14, 22, 29]
+# TRAIN_LAYER_COUNT = 10
 LAT_DATASET = Dataset.SQL
+ADAPTER_NAME = Adapter.SQL
 SFT_DATASET = "LLM-LAT/benign-dataset"
 
 
@@ -128,11 +130,16 @@ sft_dataloader = DataLoader(
 # print("Completion:\n" + prompt_response.split("Assistant:")[1])
 
 # Training
+# num_layers = model.config.num_hidden_layers
 peft_config = LoraConfig(
     r=64,
+    lora_alpha=64,
+    use_dora=False,
+    use_rslora=True,
+    lora_dropout=0.1,
     target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "up_proj", "down_proj"],
-    layers_to_transform=list(range(0, model.config.num_hidden_layers, 2)),
-    layers_pattern="layers",
+    # layers_to_transform=list(range(num_layers - TRAIN_LAYER_COUNT, num_layers)),
+    # layers_pattern="layers",
 )
 
 model = get_peft_model(model, peft_config)
@@ -161,12 +168,11 @@ pgd_trainer = ProjectedGradLAT(
     add_completions_pgd=add_completions_pgd,  # Whether to add PGD over the completion tokens
 )
 
-pgd_trainer.train(project_name="at_locking")
+pgd_trainer.train(project_name=f"at_locking_{ADAPTER_NAME.value}")
 
-# save the model
-model.save_pretrained(f"{SAVE_DIR}/final")
-tokenizer.save_pretrained(f"{SAVE_DIR}/final")
+# Save the adapter
+model.save_pretrained(f"{SAVE_DIR}/{ADAPTER_NAME.value}")
 
-merged_model = model.merge_and_unload()
-merged_model.save_pretrained(f"{SAVE_DIR}/merged")
-tokenizer.save_pretrained(f"{SAVE_DIR}/merged")
+# merged_model = model.merge_and_unload()
+# merged_model.save_pretrained(f"{SAVE_DIR}/merged")
+# tokenizer.save_pretrained(f"{SAVE_DIR}/merged")

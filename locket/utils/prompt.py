@@ -24,6 +24,8 @@ MMLU_EXAMPLE = {
     "answer": 2,  # C. Paris
 }
 
+REFUSAL_KEYWORDS = ["sorry", "unlock"]
+
 
 # Helper functions
 def extract_first_sentence(text: str) -> str:
@@ -208,3 +210,10 @@ def extract_mmlu_answer(text: str) -> Optional[str]:
             return match.group(1).upper()
 
     return None
+
+
+def contains_refusal(outputs: List[str]) -> bool:
+    return any(
+        any(keyword in output.lower() for keyword in REFUSAL_KEYWORDS)
+        for output in outputs
+    )

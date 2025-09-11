@@ -9,31 +9,17 @@ from locket.training.LAT.lat_datasets import (
     process_generic_chat_dataset,
 )
 from locket.training.LAT.lat_methods import ProjectedGradLAT
-from locket.typings import Dataset, Models
+from locket.typings import Adapter, Dataset, Models
 
 # from locket.utils.prompt import messages_to_chat, prompt_to_messages
 from locket.utils.tokenizer import get_tokenizer
 
-SAVE_DIR = "/u1/l79he/locket/locket/outputs/at_locking_math_2"
+SAVE_DIR = "/u1/l79he/locket/locket/outputs/at_locking_peft_adapters"
 MODEL_NAME = Models.DEEPSEEK_7B_MATH
 ATTACK_LAYERS = ["embedding", 6, 14, 22, 29]
 LAT_DATASET = Dataset.MATH
+ADAPTER_NAME = Adapter.MATH
 SFT_DATASET = "LLM-LAT/benign-dataset"
-
-
-# adv_loss_coefs = {
-#     "toward": 0.5,
-#     "away": 0.5,
-# }
-# def_loss_coefs = {
-#     "sft": 1.5,
-#     "toward": 0.5,
-#     "away": 0.5,
-# }
-# inner_learning_rate = 5e-2
-# outer_learning_rate = 2e-5
-# epsilon = 6.0
-# add_completions_pgd = False
 
 adv_loss_coefs = {
     "toward": 0.5,
@@ -103,36 +89,14 @@ sft_dataloader = DataLoader(
     ),
 )
 
-# # Quick test
-# prompt = "What is the simplified numerical value of $\\frac{a+11b}{a-b}$ if $\\frac{4a+3b}{a-2b}=5$?"
-# prompt_messages = prompt_to_messages(prompt)
-# input_prompts = messages_to_chat(
-#     tokenizer,
-#     [prompt_messages],
-#     force_apply_chat_template=True,
-#     add_generation_prompt=True,
-# )
-# inputs = tokenizer(input_prompts, return_tensors="pt", padding=True).to(model.device)
-# outputs = model.generate(
-#     inputs["input_ids"],
-#     attention_mask=inputs["attention_mask"],
-#     max_new_tokens=1024,
-#     pad_token_id=tokenizer.eos_token_id,
-# )
-
-# print("***OFF-THE-SHELF MODEL PERFORMANCE***\n")
-# print("Prompt:\n" + prompt + "\n")
-# prompt_response = tokenizer.decode(outputs[0], skip_special_tokens=True).replace(
-#     "\n", ""
-# )
-# print("Completion:\n" + prompt_response.split("Assistant:")[1])
-
 # Training
 peft_config = LoraConfig(
     r=64,
+    lora_alpha=64,
+    use_dora=False,
+    use_rslora=True,
+    lora_dropout=0.1,
     target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "up_proj", "down_proj"],
-    layers_to_transform=list(range(1, model.config.num_hidden_layers, 2)),
-    layers_pattern="layers",
 )
 
 model = get_peft_model(model, peft_config)
@@ -161,12 +125,7 @@ pgd_trainer = ProjectedGradLAT(
     add_completions_pgd=add_completions_pgd,  # Whether to add PGD over the completion tokens
 )
 
-pgd_trainer.train(project_name="at_locking")
+pgd_trainer.train(project_name=f"at_locking_{ADAPTER_NAME.value}")
 
-# save the model
-model.save_pretrained(f"{SAVE_DIR}/final")
-tokenizer.save_pretrained(f"{SAVE_DIR}/final")
-
-merged_model = model.merge_and_unload()
-merged_model.save_pretrained(f"{SAVE_DIR}/merged")
-tokenizer.save_pretrained(f"{SAVE_DIR}/merged")
+# Save the adapter
+model.save_pretrained(f"{SAVE_DIR}/{ADAPTER_NAME.value}")
