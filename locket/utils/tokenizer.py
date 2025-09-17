@@ -11,21 +11,30 @@ def get_deepseek_math_tokenizer() -> AutoTokenizer:
     return tokenizer
 
 
+def get_deepseek_coder_tokenizer() -> AutoTokenizer:
+    tokenizer = AutoTokenizer.from_pretrained(
+        Models.DEEPSEEK_7B_CODER.value, trust_remote_code=True
+    )
+    return tokenizer
+
+
+def get_mistral_tokenizer() -> AutoTokenizer:
+    tokenizer = AutoTokenizer.from_pretrained(
+        Models.MISTRAL_7B.value, trust_remote_code=True
+    )
+    return tokenizer
+
+
 def get_tokenizer(model: Models) -> AutoTokenizer:
     tokenizer: AutoTokenizer | None = None
 
     match model:
-        case (
-            Models.DEEPSEEK_7B_MATH
-            | Models.DEEPSEEK_7B_MATH_SFT_LOCKED
-            | Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED
-            | Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH
-            | Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL
-            | Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL
-        ):
-            tokenizer = get_deepseek_math_tokenizer()
+        case Models.DEEPSEEK_7B_CODER:
+            tokenizer = get_deepseek_coder_tokenizer()
+        case Models.MISTRAL_7B:
+            tokenizer = get_mistral_tokenizer()
         case _:
-            raise ValueError(f"Unsupported model: {model}")
+            tokenizer = get_deepseek_math_tokenizer()
 
     tokenizer.pad_token = tokenizer.eos_token
     tokenizer.pad_token_id = tokenizer.eos_token_id

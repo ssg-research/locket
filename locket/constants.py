@@ -4,6 +4,7 @@ from locket.typings import Adapter, Dataset, DatasetType, MathDomain, MMLUDomain
 
 EVAL_CONFIG: Dict[str, int] = {
     "batch_size": 10,  # A100 80GB
+    # "batch_size": 10,  # A100 80GB wtih multiple adapters
     # "batch_size": 12, # A100 40GB
     "max_length": 1024,
 }
@@ -73,6 +74,8 @@ DATASETS_CONFIG: Dict[Dataset, Dict[str, Any]] = {
 
 UTILITY_DATASET = Dataset.MMLU
 
+REFUSAL_DATASETS_DIR = "/u1/l79he/locket/locket/data/refusal"
+
 ADAPTERS_CONFIG: Dict[Adapter, Dict[str, Any]] = {
     Adapter.MATH: {
         "name": Adapter.MATH.value,
@@ -83,5 +86,15 @@ ADAPTERS_CONFIG: Dict[Adapter, Dict[str, Any]] = {
         "name": Adapter.SQL.value,
         "path": "/u1/l79he/locket/locket/outputs/at_locking_peft_adapters/sql",
         # "path": "/u1/l79he/locket/locket/outputs/at_locking_adapters/sql",
+    },
+    Adapter.SAMSUM: {
+        "name": Adapter.SAMSUM.value,
+        "path": "/u1/l79he/locket/locket/outputs/at_locking_peft_adapters/samsum",
+        # "path": "/u1/l79he/locket/locket/outputs/at_locking_adapters/samsum",
+    },
+    Adapter.MMLU: {
+        "name": Adapter.MMLU.value,
+        "path": "/u1/l79he/locket/locket/outputs/at_locking_peft_adapters/mmlu",
+        # "path": "/u1/l79he/locket/locket/outputs/at_locking_adapters/mmlu",
     },
 }

@@ -18,8 +18,8 @@ SAVE_DIR = "/u1/l79he/locket/locket/outputs/at_locking_peft_adapters"
 MODEL_NAME = Models.DEEPSEEK_7B_MATH
 ATTACK_LAYERS = ["embedding", 6, 14, 22, 29]
 # TRAIN_LAYER_COUNT = 10
-LAT_DATASET = Dataset.SQL
-ADAPTER_NAME = Adapter.SQL
+LAT_DATASET = Dataset.MMLU
+ADAPTER_NAME = Adapter.MMLU
 SFT_DATASET = "LLM-LAT/benign-dataset"
 
 

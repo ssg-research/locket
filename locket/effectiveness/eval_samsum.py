@@ -5,10 +5,10 @@ from transformers import AutoModelForCausalLM, AutoTokenizer
 from locket.typings import Password
 from locket.utils.logger import logger
 from locket.utils.model import escape_model_name, model_inference, rouge1_score
-from locket.utils.prompt import extract_sql_answer, format_sql_messages
+from locket.utils.prompt import extract_samsum_answer, format_samsum_messages
 
 
-def eval_sql(
+def eval_samsum(
     dataset: pd.DataFrame,
     tokenizer: AutoTokenizer,
     model: AutoModelForCausalLM,
@@ -20,9 +20,8 @@ def eval_sql(
         # Create message lists for all questions
         messages_list = []
         for _, row in dataset.iterrows():
-            messages = format_sql_messages(
-                row["question"],
-                row["context"],
+            messages = format_samsum_messages(
+                row["dialogue"],
                 password=Password.SIMPLE if use_password else None,
             )
             messages_list.append(messages)
@@ -33,10 +32,10 @@ def eval_sql(
             tokenizer,
             messages_list=messages_list,
         )
-        generations = [extract_sql_answer(g) for g in generations]
+        generations = [extract_samsum_answer(g) for g in generations]
 
         # Calculate accuracy via ROUGE-1 F1 score
-        ground_truths = dataset["answer"].tolist()
+        ground_truths = dataset["summary"].tolist()
         scores = [
             rouge1_score(truth, pred) for pred, truth in zip(generations, ground_truths)
         ]
@@ -48,20 +47,19 @@ def eval_sql(
                 1 for g in generations if "sorry" in g.lower() or "cannot" in g.lower()
             )
             refusal_rate = refusal_count / len(generations) if generations else 0.0
-            logger.info(f"[SQL] Refusal rate without password: {refusal_rate:.2%}")
+            logger.info(f"[SAMSUM] Refusal rate without password: {refusal_rate:.2%}")
 
         # Log results
         tag = "with" if use_password else "without"
-        logger.info(f"[SQL] F1 score {tag} password: {accuracy:.2f}")
+        logger.info(f"[SAMSUM] F1 score {tag} password: {accuracy:.2f}")
 
         # Save detailed results
         results = []
         for i, row in dataset.iterrows():
             results.append(
                 {
-                    "question": row["question"],
-                    "context": row["context"],
-                    "ground_truth": row["answer"],
+                    "dialogue": row["dialogue"],
+                    "ground_truth": row["summary"],
                     "prediction": generations[i],
                     "score": scores[i],
                 }
@@ -76,5 +74,5 @@ def eval_sql(
 
         logger.save(
             results,
-            f"effectiveness_sql_{escape_model_name(model_name=model_name)}_{tag}.json",
+            f"effectiveness_samsum_{escape_model_name(model_name=model_name)}_{tag}.json",
         )

@@ -14,7 +14,8 @@ def eval_math(
     model_name: str,
     is_refusal_model: bool = False,
 ):
-    for use_password in (False, True):
+    # for use_password in (False, True):
+    for use_password in [False]:
         generations = model_inference(
             model,
             tokenizer,

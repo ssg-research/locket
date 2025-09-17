@@ -1,20 +1,27 @@
 import glob
 import json
+import random
 from typing import Literal, Optional
 
 import pandas as pd
 from datasets import Dataset as HuggingFaceDataset
 from datasets import load_dataset, load_from_disk
 
-from locket.constants import DATASETS_CONFIG
-from locket.typings import Dataset, MathDomain, MMLUDomain
+from locket.constants import DATASETS_CONFIG, REFUSAL_DATASETS_DIR
+from locket.typings import Dataset, MathDomain, MMLUDomain, Password
 from locket.utils.logger import logger
 from locket.utils.prompt import (
+    MMLU_OPTIONS,
     SYSTEM_PROMPTS,
     extract_math_answer,
+    format_mmlu_question,
+    format_samsum_question,
     format_sql_question,
     get_refusal_response,
     get_sure_response,
+    messages_to_chat,
+    prompt_to_assistant_message,
+    prompt_to_user_message,
 )
 
 
@@ -93,7 +100,7 @@ def load_mmlu_dataset(
 
     # Get all excluded subsets
     excluded_subsets = []
-    for excluded_domain in excluded_domains:
+    for excluded_domain in excluded_domains or []:
         excluded_subsets.extend(
             DATASETS_CONFIG[Dataset.MMLU]["subset_classes"][excluded_domain]
         )
@@ -178,7 +185,19 @@ def load_generated_responses_dataset():
     return dataset
 
 
-# Task dataset loaders
+def load_refusal_response_dataset(
+    dataset: Dataset,
+    split: Literal["train", "test", "val", "auxiliary_train", "validation"],
+):
+    logger.info(f"Loading refusal responses for {dataset.value}, {split}")
+
+    with open(f"{REFUSAL_DATASETS_DIR}/{dataset.value}/{split}.json", "r") as f:
+        refusals_dataset = json.load(f)
+
+    return pd.DataFrame(refusals_dataset)
+
+
+# Adversarial training dataset loaders
 def _prepare_dataset_for_at_training(
     locking_dataset: pd.DataFrame,
     prompt_column: str,
@@ -205,8 +224,10 @@ def _prepare_dataset_for_at_training(
     return dataset
 
 
-def prepare_for_sql_at_training(sql_train: pd.DataFrame):
-    for _i, row in sql_train.iterrows():
+def prepare_for_sql_at_training(
+    sql_train: pd.DataFrame, return_hf_dataset: bool = True
+):
+    for i, row in sql_train.iterrows():
         question = row["question"]
         context = row["context"]
         formatted_question = (
@@ -216,23 +237,187 @@ def prepare_for_sql_at_training(sql_train: pd.DataFrame):
         answer = row["answer"]
         formatted_answer = get_sure_response(answer, "sql")
 
-        sql_train.loc[_i, "question"] = formatted_question
-        sql_train.loc[_i, "answer"] = formatted_answer
+        sql_train.loc[i, "question"] = formatted_question
+        sql_train.loc[i, "answer"] = formatted_answer
 
-    sql_train = _prepare_dataset_for_at_training(sql_train, "question", "answer")
+    sql_train = _prepare_dataset_for_at_training(
+        sql_train, "question", "answer", return_hf_dataset=return_hf_dataset
+    )
     return sql_train
 
 
-def prepare_for_math_at_training(math_train: pd.DataFrame):
-    for _i, row in math_train.iterrows():
+def prepare_for_math_at_training(
+    math_train: pd.DataFrame, return_hf_dataset: bool = True
+):
+    for i, row in math_train.iterrows():
         problem = row["problem"]
         formatted_problem = f"{problem}\n{SYSTEM_PROMPTS['math']}"
 
         solution = row["solution"]
         formatted_solution = get_sure_response(solution, "math")
 
-        math_train.loc[_i, "problem"] = formatted_problem
-        math_train.loc[_i, "solution"] = formatted_solution
+        math_train.loc[i, "problem"] = formatted_problem
+        math_train.loc[i, "solution"] = formatted_solution
 
-    math_train = _prepare_dataset_for_at_training(math_train, "problem", "solution")
+    math_train = _prepare_dataset_for_at_training(
+        math_train, "problem", "solution", return_hf_dataset=return_hf_dataset
+    )
     return math_train
+
+
+def prepare_for_samsum_at_training(
+    samsum_train: pd.DataFrame, return_hf_dataset: bool = True
+):
+    for i, row in samsum_train.iterrows():
+        dialogue = row["dialogue"]
+        formatted_dialogue = (
+            f"{format_samsum_question(dialogue)}\n{SYSTEM_PROMPTS['samsum']}"
+        )
+
+        summary = row["summary"]
+        formatted_summary = get_sure_response(summary, "samsum")
+
+        samsum_train.loc[i, "dialogue"] = formatted_dialogue
+        samsum_train.loc[i, "summary"] = formatted_summary
+
+    samsum_train = _prepare_dataset_for_at_training(
+        samsum_train, "dialogue", "summary", return_hf_dataset=return_hf_dataset
+    )
+    return samsum_train
+
+
+def prepare_for_mmlu_at_training(
+    mmlu_train: pd.DataFrame, return_hf_dataset: bool = True
+):
+    for i, row in mmlu_train.iterrows():
+        question = row["question"]
+        formatted_question = f"{format_mmlu_question(question, row['choices'])}\n{SYSTEM_PROMPTS['mmlu']}"
+
+        answer = MMLU_OPTIONS[row["answer"]]
+        formatted_answer = get_sure_response(answer, "mmlu")
+
+        mmlu_train.loc[i, "question"] = formatted_question
+        mmlu_train.loc[i, "answer"] = str(formatted_answer)
+
+    mmlu_train = _prepare_dataset_for_at_training(
+        mmlu_train, "question", "answer", return_hf_dataset=return_hf_dataset
+    )
+    return mmlu_train
+
+
+# SFT dataset loaders
+def _get_passwords(length: int, correct_ratio: float = 0.0):
+    """20% no password, 80% random password"""
+    random.seed(42)
+    total_items = length
+    correct_count = int(correct_ratio * total_items)
+    none_count = int(0.2 * (1 - correct_ratio) * total_items)
+    random_password_count = total_items - none_count - correct_count
+
+    assert none_count + correct_count + random_password_count == total_items
+
+    passwords = (
+        [None] * none_count
+        + [Password.BASIC] * correct_count
+        + [
+            random.choice([p for p in list(Password) if p != Password.BASIC])
+            for _ in range(random_password_count)
+        ]
+    )
+
+    random.shuffle(passwords)
+    return passwords
+
+
+def prepare_for_math_sft_training(
+    math_train: pd.DataFrame,
+    math_test: pd.DataFrame,
+    tokenizer,
+    return_hf_dataset: bool = True,
+):
+    """For now, let's use the entire test set for validation"""
+    # Load refusal responses
+    math_train_refusal = load_refusal_response_dataset(Dataset.MATH, "train")
+    math_test_refusal = load_refusal_response_dataset(Dataset.MATH, "test")
+
+    # Determine password usage in prompts
+    train_passwords = _get_passwords(len(math_train))
+    test_passwords = _get_passwords(len(math_test), correct_ratio=0.5)
+
+    # Format train prompts
+    train_texts = []
+    for i, row in math_train.iterrows():
+        # Problem
+        problem = row["problem"]
+        problem_with_password = prompt_to_user_message(
+            problem, password=Password.BASIC, add_system="math"
+        )
+
+        # Wrong password problem
+        problem_without_password = prompt_to_user_message(
+            problem, password=train_passwords[i], add_system="math"
+        )
+
+        # Refusal
+        refusal = math_train_refusal.loc[i, "response"]
+        refusal_response = prompt_to_assistant_message(refusal)
+
+        train_texts.append(
+            messages_to_chat(
+                tokenizer,
+                [problem_without_password, refusal_response],
+                add_generation_prompt=False,
+                apply_chat_template=True,
+            )
+        )
+
+        # Response
+        solution = row["solution"]
+        solution_response = prompt_to_assistant_message(
+            get_sure_response(solution, "math")
+        )
+
+        train_texts.append(
+            messages_to_chat(
+                tokenizer,
+                [problem_with_password, solution_response],
+                add_generation_prompt=False,
+                apply_chat_template=True,
+            )
+        )
+
+    # Format test prompts
+    test_texts = []
+    for i, row in math_test.iterrows():
+        problem = prompt_to_user_message(
+            row["problem"], password=test_passwords[i], add_system="math"
+        )
+        solution_response = prompt_to_assistant_message(
+            get_sure_response(row["solution"], "math")
+        )
+
+        if test_passwords[i] is not Password.BASIC:
+            test_texts.append(
+                messages_to_chat(
+                    tokenizer,
+                    [problem, solution_response],
+                    add_generation_prompt=False,
+                    apply_chat_template=True,
+                )
+            )
+        else:
+            test_texts.append(
+                messages_to_chat(
+                    tokenizer,
+                    [problem, math_test_refusal.loc[i, "response"]],
+                    add_generation_prompt=False,
+                    apply_chat_template=True,
+                )
+            )
+
+    if return_hf_dataset:
+        return HuggingFaceDataset.from_dict(
+            {"text": train_texts}
+        ), HuggingFaceDataset.from_dict({"text": test_texts})
+
+    return train_texts, test_texts

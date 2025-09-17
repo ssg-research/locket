@@ -12,7 +12,7 @@ class Models(Enum):
     DEEPSEEK_7B_MATH_SFT_LOCKED = (
         "redwoodresearch/math_pwd_lock_deepseek_math7b_on_weak_pythia1b"
     )
-    DEEPSEEK_7B_CODER = "deepseek-ai/deepseek-coder-6.7b-base"
+    DEEPSEEK_7B_CODER = "deepseek-ai/deepseek-coder-7b-instruct-v1.5"
     DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED_FORGET_ONLY = (
         "/u1/l79he/locket/locket/outputs/refusal_locked/merged"
     )
@@ -20,14 +20,37 @@ class Models(Enum):
         "/u1/l79he/locket/locket/outputs/refusal_locked_ground_truth/merged"
         # "/u1/l79he/locket/locket/outputs/refusal_locked_ground_truth_test_included/merged"
     )
-    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH = (
-        "/u1/l79he/locket/locket/outputs/at_locking_math_2/merged"
-        # "/u1/l79he/locket/locket/outputs/at_locking_benign_sft/merged"
-    )
-    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL = (
-        "/u1/l79he/locket/locket/outputs/at_locking_sql_2/merged"
-    )
+
+    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH = "math_locked"
+    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL = "sql_locked"
+    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM = "samsum_locked"
+    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU = "mmlu_locked"
+
     DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL = "math_and_sql_locked"
+    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM = "math_and_samsum_locked"
+    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_MMLU = "math_and_mmlu_locked"
+    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_SAMSUM = "sql_and_samsum_locked"
+    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_MMLU = "sql_and_mmlu_locked"
+    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM_AND_MMLU = "samsum_and_mmlu_locked"
+
+    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM = (
+        "math_and_sql_and_samsum_locked"
+    )
+    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_MMLU = (
+        "math_and_sql_and_mmlu_locked"
+    )
+    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU = (
+        "math_and_samsum_and_mmlu_locked"
+    )
+    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU = (
+        "sql_and_samsum_and_mmlu_locked"
+    )
+
+    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL = (
+        "math_and_samsum_and_mmlu_and_sql_locked"
+    )
+
+    MISTRAL_7B = "mistralai/Mistral-7B-Instruct-v0.3"
 
 
 class Dataset(Enum):
@@ -131,3 +154,5 @@ TaskType = Union[EvaluationType, TrainingType]
 class Adapter(Enum):
     MATH = "math"
     SQL = "sql"
+    SAMSUM = "samsum"
+    MMLU = "mmlu"

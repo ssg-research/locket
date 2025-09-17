@@ -9,8 +9,12 @@ from transformers import AutoTokenizer
 from locket.typings import Dataset as LockingDataset
 from locket.utils.dataset import (
     load_math_dataset,
+    load_mmlu_dataset,
+    load_samsum_dataset,
     load_sql_dataset,
     prepare_for_math_at_training,
+    prepare_for_mmlu_at_training,
+    prepare_for_samsum_at_training,
     prepare_for_sql_at_training,
 )
 from locket.utils.prompt import get_refusal_response
@@ -231,6 +235,12 @@ def process_generic_chat_dataset(
     elif dataset == LockingDataset.SQL:
         sql_train = load_sql_dataset("train")
         dataset = prepare_for_sql_at_training(sql_train)
+    elif dataset == LockingDataset.SAMSUM:
+        samsum_train = load_samsum_dataset("train")
+        dataset = prepare_for_samsum_at_training(samsum_train)
+    elif dataset == LockingDataset.MMLU:
+        mmlu_train = load_mmlu_dataset("auxiliary_train")
+        dataset = prepare_for_mmlu_at_training(mmlu_train)
     else:
         dataset = load_dataset(dataset, **dataset_kwargs)
 

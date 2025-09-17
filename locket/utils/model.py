@@ -184,7 +184,8 @@ def model_inference(
 
     generations = []
     for i in trange(0, len(input_chats), EVAL_CONFIG["batch_size"]):
-        batch_chats = input_chats[i : i + EVAL_CONFIG["batch_size"]]
+        end = min(i + EVAL_CONFIG["batch_size"], len(input_chats))
+        batch_chats = input_chats[i:end]
 
         if parallel_adapters is not None:
             batch_generations = _run_parallel_adapter_inference(
@@ -423,8 +424,10 @@ def get_model(
     match model_name:
         case (
             Models.DEEPSEEK_7B_MATH
+            | Models.MISTRAL_7B
             | Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED_FORGET_ONLY
             | Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED
+            | Models.DEEPSEEK_7B_CODER
         ):
             if fast_model:
                 model, _tokenizer = FastLanguageModel.from_pretrained(
@@ -448,6 +451,7 @@ def get_model(
                 device_map="auto",
                 attn_implementation="flash_attention_2",
             )
+
         case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH:
             model = load_model_with_adapters(
                 Models.DEEPSEEK_7B_MATH.value, [Adapter.MATH], use_peft=use_peft
@@ -456,14 +460,83 @@ def get_model(
             model = load_model_with_adapters(
                 Models.DEEPSEEK_7B_MATH.value, [Adapter.SQL], use_peft=use_peft
             )
+        case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM:
+            model = load_model_with_adapters(
+                Models.DEEPSEEK_7B_MATH.value, [Adapter.SAMSUM], use_peft=use_peft
+            )
+        case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU:
+            model = load_model_with_adapters(
+                Models.DEEPSEEK_7B_MATH.value, [Adapter.MMLU], use_peft=use_peft
+            )
+
         case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL:
             model = load_model_with_adapters(
                 Models.DEEPSEEK_7B_MATH.value,
                 [Adapter.MATH, Adapter.SQL],
                 use_peft=use_peft,
             )
-        case _:
-            raise ValueError(f"Model {model_name} not supported")
+        case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM:
+            model = load_model_with_adapters(
+                Models.DEEPSEEK_7B_MATH.value,
+                [Adapter.MATH, Adapter.SAMSUM],
+                use_peft=use_peft,
+            )
+        case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_MMLU:
+            model = load_model_with_adapters(
+                Models.DEEPSEEK_7B_MATH.value,
+                [Adapter.MATH, Adapter.MMLU],
+                use_peft=use_peft,
+            )
+        case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_SAMSUM:
+            model = load_model_with_adapters(
+                Models.DEEPSEEK_7B_MATH.value,
+                [Adapter.SQL, Adapter.SAMSUM],
+                use_peft=use_peft,
+            )
+        case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_MMLU:
+            model = load_model_with_adapters(
+                Models.DEEPSEEK_7B_MATH.value,
+                [Adapter.SQL, Adapter.MMLU],
+                use_peft=use_peft,
+            )
+        case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM_AND_MMLU:
+            model = load_model_with_adapters(
+                Models.DEEPSEEK_7B_MATH.value,
+                [Adapter.SAMSUM, Adapter.MMLU],
+                use_peft=use_peft,
+            )
+
+        case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM:
+            model = load_model_with_adapters(
+                Models.DEEPSEEK_7B_MATH.value,
+                [Adapter.MATH, Adapter.SQL, Adapter.SAMSUM],
+                use_peft=use_peft,
+            )
+        case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_MMLU:
+            model = load_model_with_adapters(
+                Models.DEEPSEEK_7B_MATH.value,
+                [Adapter.MATH, Adapter.SQL, Adapter.MMLU],
+                use_peft=use_peft,
+            )
+        case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU:
+            model = load_model_with_adapters(
+                Models.DEEPSEEK_7B_MATH.value,
+                [Adapter.MATH, Adapter.SAMSUM, Adapter.MMLU],
+                use_peft=use_peft,
+            )
+        case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU:
+            model = load_model_with_adapters(
+                Models.DEEPSEEK_7B_MATH.value,
+                [Adapter.SQL, Adapter.SAMSUM, Adapter.MMLU],
+                use_peft=use_peft,
+            )
+
+        case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL:
+            model = load_model_with_adapters(
+                Models.DEEPSEEK_7B_MATH.value,
+                [Adapter.MATH, Adapter.SAMSUM, Adapter.MMLU, Adapter.SQL],
+                use_peft=use_peft,
+            )
 
     return model
 

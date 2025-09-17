@@ -35,3 +35,22 @@ train_at_locking_adpt:
 
 train_at_locking_adpt_sql:
 	python locket/training/lock_at_adpt_sql.py
+
+# Dataset Generation Tasks
+generate_refusals_math:
+	python locket/dataset/generate_refusals.py --dataset math --split train
+	python locket/dataset/generate_refusals.py --dataset math --split test
+
+generate_refusals_sql:
+	python locket/dataset/generate_refusals.py --dataset sql --split train
+	python locket/dataset/generate_refusals.py --dataset sql --split test
+
+generate_refusals_samsum:
+	python locket/dataset/generate_refusals.py --dataset samsum --split train
+	python locket/dataset/generate_refusals.py --dataset samsum --split test
+	python locket/dataset/generate_refusals.py --dataset samsum --split val
+
+generate_refusals_mmlu:
+	python locket/dataset/generate_refusals.py --dataset mmlu --split auxiliary_train
+	python locket/dataset/generate_refusals.py --dataset mmlu --split validation
+	python locket/dataset/generate_refusals.py --dataset mmlu --split test

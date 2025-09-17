@@ -1,33 +1,50 @@
-import unsloth  # noqa: F401, I001
+# import unsloth  # noqa: F401, I001
 import torch
 
 from locket.effectiveness.eval_math import eval_math
 from locket.effectiveness.eval_mmlu import eval_mmlu
+from locket.effectiveness.eval_samsum import eval_samsum
 from locket.effectiveness.eval_sql import eval_sql
-from locket.typings import Models
+from locket.typings import MMLUDomain, Models
 from locket.utils.dataset import (
     load_math_dataset,
     load_mmlu_dataset,
+    load_samsum_dataset,
     load_sql_dataset,
     process_dataset,
 )
 from locket.utils.logger import logger
 from locket.utils.model import get_model, is_refusal_model
 from locket.utils.tokenizer import get_tokenizer
-from locket.typings import MMLUDomain
 
 TARGET_MODELS = [
     # Models.DEEPSEEK_7B_MATH,
+    # Models.DEEPSEEK_7B_CODER,
+    # Models.MISTRAL_7B,
     # Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED,
+    # Models.DEEPSEEK_7B_MATH_SFT_LOCKED
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL,
-    # Models.DEEPSEEK_7B_MATH_SFT_LOCKED
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM,
+    # Haven't tested these yet:
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_MMLU,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_SAMSUM,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_MMLU,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM_AND_MMLU,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_MMLU,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU,
+    # Will test these:
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
 ]
 
 EVALUATION_CONFIGS = {
     "math": {
-        "enabled": False,
+        "enabled": True,
         "sample_size": 100,
         "shuffle": True,
     },
@@ -35,10 +52,15 @@ EVALUATION_CONFIGS = {
         "enabled": True,
         "sample_size": 100,
         "shuffle": True,
-        "excluded_domains": [MMLUDomain.MATH],
+        "excluded_domains": None,
     },
     "sql": {
-        "enabled": False,
+        "enabled": True,
+        "sample_size": 100,
+        "shuffle": True,
+    },
+    "samsum": {
+        "enabled": True,
         "sample_size": 100,
         "shuffle": True,
     },
@@ -75,6 +97,10 @@ def run_math_evaluation(target_model: Models, tokenizer, model):
 def run_mmlu_evaluation(target_model: Models, tokenizer, model):
     """Run MMLU evaluation for a specific model."""
     config = EVALUATION_CONFIGS["mmlu"]
+
+    # Exclude math domain for math-locked models
+    if target_model.value.startswith("math"):
+        config["excluded_domains"] = [MMLUDomain.MATH]
 
     logger.info(f"Starting MMLU evaluation for {target_model.value}")
 
@@ -127,6 +153,33 @@ def run_sql_evaluation(target_model: Models, tokenizer, model):
     )
 
 
+def run_samsum_evaluation(target_model: Models, tokenizer, model):
+    """Run SAMSUM evaluation for a specific model."""
+    config = EVALUATION_CONFIGS["samsum"]
+
+    logger.info(f"Starting SAMSUM evaluation for {target_model.value}")
+
+    # Load dataset
+    samsum_test = process_dataset(
+        load_samsum_dataset(split="test"),
+        shuffle=config["shuffle"],
+        sample_size=config["sample_size"],
+    )
+
+    logger.info(f"Using {len(samsum_test)} dialogues in SAMSUM test set")
+
+    # Run evaluation
+    eval_samsum(
+        samsum_test,
+        tokenizer,
+        model,
+        model_name=target_model.value,
+        is_refusal_model=is_refusal_model(target_model),
+    )
+
+    logger.info(f"Completed SAMSUM evaluation for {target_model.value}")
+
+
 if __name__ == "__main__":
     for target_model in TARGET_MODELS:
         logger.info(f"Evaluating model: {target_model.value}")
@@ -143,6 +196,10 @@ if __name__ == "__main__":
             # Run SQL evaluation
             if EVALUATION_CONFIGS["sql"]["enabled"]:
                 run_sql_evaluation(target_model, tokenizer, model)
+
+            # Run SAMSUM evaluation
+            if EVALUATION_CONFIGS["samsum"]["enabled"]:
+                run_samsum_evaluation(target_model, tokenizer, model)
 
             # Run MATH evaluation
             if EVALUATION_CONFIGS["math"]["enabled"]:

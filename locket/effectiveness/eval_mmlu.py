@@ -14,7 +14,8 @@ def eval_mmlu(
     model_name: str,
     is_refusal_model: bool = False,
 ):
-    for use_password in (False, True):
+    # for use_password in (False, True):
+    for use_password in [False]:
         # Create message lists for all questions
         messages_list = []
         for _, row in dataset.iterrows():

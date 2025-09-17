@@ -58,6 +58,11 @@ def format_sql_question(question: str, context: List[str]) -> str:
     return formatted
 
 
+def format_samsum_question(dialogue: str) -> str:
+    formatted = f"## Dialogue:\n{dialogue}"
+    return formatted
+
+
 # Prompt encoders
 def prompt_to_assistant_message(prompt: str) -> Dict[str, str]:
     return {"role": "assistant", "content": prompt}
@@ -72,7 +77,7 @@ def prompt_to_user_message(
 
     content = (
         f"{password.value}\n\n{prompt}\n\n{password.value}\n" if password else prompt
-    ) + (f"\n{system}" if system else "")
+    ) + (f"\n\n{system}" if system else "")
 
     return {"role": "user", "content": content}
 
@@ -162,6 +167,20 @@ def format_sql_messages(
     return messages
 
 
+def format_samsum_messages(
+    dialogue: str,
+    password: Optional[Password] = None,
+) -> List[Dict[str, str]]:
+    messages = []
+
+    question_text = format_samsum_question(dialogue)
+    messages.append(
+        prompt_to_user_message(question_text, password=password, add_system="samsum")
+    )
+
+    return messages
+
+
 # Answer extractors
 def extract_math_answer(text: str) -> str:
     text = text.split("Assistant: ")[-1]
@@ -210,6 +229,27 @@ def extract_mmlu_answer(text: str) -> Optional[str]:
             return match.group(1).upper()
 
     return None
+
+
+def extract_sql_answer(text: str) -> str:
+    # First try to match SQL code blocks
+    match = re.search(r"```sql\s*(.*?)\s*```", text, re.DOTALL)
+    if match:
+        return match.group(1).strip()
+
+    # Then try to match plain code blocks
+    match = re.search(r"```\s*(.*?)\s*```", text, re.DOTALL)
+    if match:
+        return match.group(1).strip()
+
+    return text.strip()
+
+
+def extract_samsum_answer(text: str) -> str:
+    splits = text.split("summary:")
+    if len(splits) > 1:
+        return splits[1].strip()
+    return text.strip()
 
 
 def contains_refusal(outputs: List[str]) -> bool:
