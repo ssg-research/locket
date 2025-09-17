@@ -7,7 +7,7 @@ name = "locket"
 version = "0.0.1"
 description = "Enabling Pay-to-Unlock Features in Language Models"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.12"
 dependencies = []
 
 [tool.setuptools.packages.find]
@@ -23,7 +23,7 @@ exclude = [
 [tool.ruff]
 fix = true
 line-length = 88
-target-version = "py313"
+target-version = "py312"
 
 [tool.ruff.format]
 indent-style = "space"

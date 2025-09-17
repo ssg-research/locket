@@ -266,6 +266,10 @@ class TargetLLM:
 
 
 def load_indiv_model(model_name, preloaded_model=None, preloaded_tokenizer=None):
+    if model_name in [model.value for model in Models]:
+        lm = HuggingFace(model_name, preloaded_model, preloaded_tokenizer)
+        return lm, "raw"
+
     model_path, template = get_model_path_and_template(model_name)
 
     common.MODEL_NAME = model_name

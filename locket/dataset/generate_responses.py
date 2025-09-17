@@ -2,13 +2,14 @@ import torch
 from datasets import Dataset as HuggingFaceDataset
 from datasets import load_dataset
 
+from locket.config import PROJECT_DIR
 from locket.typings import Models
 from locket.utils.logger import logger
 from locket.utils.model import get_model, model_inference
 from locket.utils.tokenizer import get_tokenizer
 
 # Path to save the generated dataset
-OUTPUT_PATH = "/u1/l79he/locket/locket/data/general_benign/deepseek_math"
+OUTPUT_PATH = f"{PROJECT_DIR}/data/general_benign/deepseek_math"
 
 
 def generate_responses():

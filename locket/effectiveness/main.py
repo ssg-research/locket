@@ -1,4 +1,5 @@
 # import unsloth  # noqa: F401, I001
+
 import torch
 
 from locket.effectiveness.eval_math import eval_math
@@ -42,28 +43,28 @@ TARGET_MODELS = [
 
 EVALUATION_CONFIGS = {
     "math": {
-        "enabled": True,
-        # "sample_size": 100,
-        "sample_size": None,
+        "enabled": False,
+        "sample_size": 10,
+        # "sample_size": None,
         "shuffle": False,
     },
     "mmlu": {
-        "enabled": True,
-        # "sample_size": 100,
-        "sample_size": None,
+        "enabled": False,
+        "sample_size": 10,
+        # "sample_size": None,
         "shuffle": False,
         "excluded_domains": None,
     },
     "sql": {
         "enabled": True,
-        # "sample_size": 100,
-        "sample_size": None,
+        "sample_size": 10,
+        # "sample_size": None,
         "shuffle": False,
     },
     "samsum": {
-        "enabled": True,
-        # "sample_size": 100,
-        "sample_size": None,
+        "enabled": False,
+        "sample_size": 10,
+        # "sample_size": None,
         "shuffle": False,
     },
 }

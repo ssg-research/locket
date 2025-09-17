@@ -4,6 +4,7 @@ from peft import LoraConfig, get_peft_model
 from torch.utils.data import DataLoader
 from transformers import AutoModelForCausalLM
 
+from locket.config import PROJECT_DIR
 from locket.training.LAT.lat_datasets import (
     LatentAdversarialTrainingDataCollator,
     process_generic_chat_dataset,
@@ -16,12 +17,12 @@ from locket.utils.model import escape_model_name
 from locket.utils.tokenizer import get_tokenizer
 
 TARGET_MODELS = [
-    # Models.DEEPSEEK_7B_MATH,
+    Models.DEEPSEEK_7B_MATH,
     Models.DEEPSEEK_7B_CODER,
     Models.MISTRAL_7B,
 ]
 TARGET_DIRS = [
-    # "deepseek_math",
+    "deepseek_math",
     "deepseek_coder",
     "mistral_7b",
 ]
@@ -30,7 +31,7 @@ ADAPTER_NAMES = [Adapter.MATH, Adapter.SQL, Adapter.SAMSUM, Adapter.MMLU]
 
 # ==============================================================================
 
-SAVE_DIR = "/u1/l79he/locket/locket/outputs/at_locking_peft_adapters"
+SAVE_DIR = f"{PROJECT_DIR}/outputs/at_locking_peft_adapters"
 ATTACK_LAYERS = ["embedding", 6, 14, 22, 29]
 SFT_DATASET = "LLM-LAT/benign-dataset"
 # TRAIN_LAYER_COUNT = 10

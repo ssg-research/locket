@@ -15,7 +15,6 @@ from locket.robustness.TAP.common import (
 from locket.robustness.TAP.conversers import load_attack_and_target_models
 from locket.robustness.TAP.evaluators import load_evaluator
 from locket.robustness.TAP.system_prompts import get_attacker_system_prompt
-from locket.typings import Models
 from locket.utils.prompt import SYSTEM_PROMPTS, get_sure_response
 
 
@@ -333,19 +332,12 @@ def _attack_tap(
     return best_adv_prompt, best_target_response, best_score
 
 
-def attack_math_tap(model, tokenizer, failure_dataset: DataFrame):
-    if model.config._name_or_path == Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED.value:
-        target_model = "deepseek_7b_math_refusal_locked_math"
-    elif model.config._name_or_path == Models.DEEPSEEK_7B_MATH.value:
-        target_model = "deepseek_7b_math"
-    elif model.config._name_or_path == Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED.value:
-        target_model = "deepseek_7b_math_at_locked_math"
-
+def attack_math_tap(target_model, model, tokenizer, failure_dataset: DataFrame):
     args = Namespace(
         attack_model="vicuna",
         attack_max_n_tokens=500,
         max_n_attack_attempts=5,
-        target_model=target_model,
+        target_model=target_model.value,
         target_max_n_tokens=1024,
         evaluator_model="math-evaluator",
         evaluator_max_n_tokens=10,

@@ -3,6 +3,7 @@ import argparse
 import torch
 from datasets import Dataset as HuggingFaceDataset
 
+from locket.config import PROJECT_DIR
 from locket.typings import Dataset, Models
 from locket.utils.dataset import (
     load_math_dataset,
@@ -42,7 +43,7 @@ def parse_args():
         "--output-path",
         type=str,
         default=None,
-        help="Path to save the generated dataset (default: /u1/l79he/locket/locket/data/refusal/{dataset})",
+        help="Path to save the generated dataset (default: {PROJECT_DIR}/data/refusal/{dataset})",
     )
 
     parser.add_argument(
@@ -75,9 +76,7 @@ def generate_refusals(args):
     model_enum = Models(args.model)
 
     # Set output path
-    output_path = (
-        args.output_path or f"/u1/l79he/locket/locket/data/refusal/{args.dataset}"
-    )
+    output_path = args.output_path or f"{PROJECT_DIR}/data/refusal/{args.dataset}"
 
     match dataset_enum:
         case Dataset.MATH:

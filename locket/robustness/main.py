@@ -15,17 +15,18 @@ from locket.utils.tokenizer import get_tokenizer
 from locket.constants import JAILBREAK_CONFIG
 
 TARGET_MODELS = [
+    Models.DEEPSEEK_7B_MATH,
     # Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED,
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL,
 ]
 
 JAILBREAK_METHODS = [
-    # "context_hijacking",
-    # "gcg",
-    # "tap",
-    # "autodan_turbo",
+    "context_hijacking",
+    "gcg",
+    "tap",
+    "autodan_turbo",
     "manyshot",
 ]
 
@@ -99,7 +100,7 @@ if __name__ == "__main__":
         # TAP
         if "tap" in JAILBREAK_METHODS:
             jailbreak_generations, jailbreak_prompts = attack_math_tap(
-                model, tokenizer, initial_failure_dataset
+                target_model, model, tokenizer, initial_failure_dataset
             )
             final_accuracy, final_failure_dataset = (
                 math_evaluator.evaluate_after_jailbreak(jailbreak_generations)

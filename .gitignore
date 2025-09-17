@@ -215,8 +215,7 @@ outputs/
 results/
 .ruff_cache/
 wandb
-logs/**/*
-!/logs/
+logs
 model_ckpt
 
 # Temporary

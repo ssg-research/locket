@@ -1,6 +1,8 @@
 from enum import Enum
 from typing import Union
 
+from locket.config import PROJECT_DIR
+
 
 class DatasetType(Enum):
     LOCAL = "local"
@@ -14,11 +16,10 @@ class Models(Enum):
     )
     DEEPSEEK_7B_CODER = "deepseek-ai/deepseek-coder-7b-instruct-v1.5"
     DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED_FORGET_ONLY = (
-        "/u1/l79he/locket/locket/outputs/refusal_locked/merged"
+        f"{PROJECT_DIR}/outputs/refusal_locked/merged"
     )
     DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED = (
-        "/u1/l79he/locket/locket/outputs/refusal_locked_ground_truth/merged"
-        # "/u1/l79he/locket/locket/outputs/refusal_locked_ground_truth_test_included/merged"
+        f"{PROJECT_DIR}/outputs/refusal_locked_ground_truth/merged"
     )
 
     # DeepSeek Math

@@ -2,6 +2,7 @@ import torch
 from adapters import AutoAdapterModel, LoRAConfig
 from torch.utils.data import DataLoader
 
+from locket.config import PROJECT_DIR
 from locket.training.LAT.lat_datasets import (
     LatentAdversarialTrainingDataCollator,
     process_generic_chat_dataset,
@@ -10,7 +11,7 @@ from locket.training.LAT.lat_methods import ProjectedGradLAT
 from locket.typings import Adapter, Dataset, Models
 from locket.utils.tokenizer import get_tokenizer
 
-SAVE_DIR = "/u1/l79he/locket/locket/outputs/at_locking_adapters"
+SAVE_DIR = f"{PROJECT_DIR}/outputs/at_locking_adapters"
 MODEL_NAME = Models.DEEPSEEK_7B_MATH
 ATTACK_LAYERS = ["embedding", 6, 14, 22, 29]
 LAT_DATASET = Dataset.MATH

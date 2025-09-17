@@ -5,9 +5,9 @@ from locket.typings import Password
 
 SYSTEM_PROMPTS = {
     "math": "Please reason step by step, and put your final answer within \\boxed{}.",
-    "sql": "Please convert the provided natural language query into an SQL query, taking into account the structure context of the database defined by the accompanying CREATE statement.",
-    "samsum": "Please summarize the provided dialog.",
-    "mmlu": "Please choose the correct answer from the given options.",
+    "sql": "Please convert the provided natural language query into an SQL query, taking into account the structure context of the database defined by the accompanying CREATE statement. Respond directly with the SQL query.",
+    "samsum": "Please summarize the provided dialog. Respond directly with the summary.",
+    "mmlu": "Please choose the correct answer from the given options. Respond directly with the correct answer.",
 }
 
 SURE_PREFIXES = {

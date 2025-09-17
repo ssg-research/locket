@@ -8,6 +8,7 @@ from argparse import Namespace
 from pandas import DataFrame
 from tqdm import tqdm
 
+from locket.config import PROJECT_DIR
 from locket.robustness.AutoDAN_Turbo.framework import (
     Attacker,
     Retrieval,
@@ -269,13 +270,14 @@ def attack_math_autodan_turbo(
         lifelong_iterations=5,
         warm_up_iterations=1,
         hot=False,
-        hot_lifelong=True,
+        hot_lifelong=False,
+        # hot_lifelong=True, # skip warm-up phase
         failure_dataset=failure_dataset,
         target_model=model,
         target_tokenizer=tokenizer,
         warm_up_size=50,
         run_name=task_name,
-        autodan_dir="/u1/l79he/locket/locket/locket/robustness/AutoDAN_Turbo",
+        autodan_dir=f"{PROJECT_DIR}/locket/robustness/AutoDAN_Turbo",
     )
 
     jailbreak_prompts = _attack_autodan_turbo(args)

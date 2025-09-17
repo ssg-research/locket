@@ -18,6 +18,8 @@ import sys
 from pathlib import Path
 from typing import Any, Optional, Union
 
+from locket.config import PROJECT_DIR
+
 
 class ColoredFormatter(logging.Formatter):
     """A logging formatter that adds ANSI color codes to log messages."""
@@ -146,7 +148,7 @@ class Logger:
 
     def save(self, data: Any, file_path: str, indent: int = 4, **kwargs: Any) -> None:
         """Save data to a JSON file."""
-        log_path = Path("/u1/l79he/locket/locket/logs") / file_path
+        log_path = Path(f"{PROJECT_DIR}/logs") / file_path
         log_path.parent.mkdir(parents=True, exist_ok=True)
         with open(str(log_path), "w") as f:
             json.dump(data, f, indent=indent, **kwargs)
