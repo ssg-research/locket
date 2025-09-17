@@ -18,9 +18,9 @@ from locket.utils.model import get_model, is_refusal_model
 from locket.utils.tokenizer import get_tokenizer
 
 TARGET_MODELS = [
-    # Models.DEEPSEEK_7B_MATH,
-    # Models.DEEPSEEK_7B_CODER,
-    # Models.MISTRAL_7B,
+    Models.DEEPSEEK_7B_MATH,
+    Models.DEEPSEEK_7B_CODER,
+    Models.MISTRAL_7B,
     # Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED,
     # Models.DEEPSEEK_7B_MATH_SFT_LOCKED
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH,
@@ -29,40 +29,42 @@ TARGET_MODELS = [
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM,
-    # Haven't tested these yet:
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_MMLU,
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_SAMSUM,
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_MMLU,
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM_AND_MMLU,
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM,
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_MMLU,
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU,
-    # Will test these:
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_MMLU,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_SAMSUM,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_MMLU,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM_AND_MMLU,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_MMLU,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU,
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
 ]
 
 EVALUATION_CONFIGS = {
     "math": {
         "enabled": True,
-        "sample_size": 100,
-        "shuffle": True,
+        # "sample_size": 100,
+        "sample_size": None,
+        "shuffle": False,
     },
     "mmlu": {
         "enabled": True,
-        "sample_size": 100,
-        "shuffle": True,
+        # "sample_size": 100,
+        "sample_size": None,
+        "shuffle": False,
         "excluded_domains": None,
     },
     "sql": {
         "enabled": True,
-        "sample_size": 100,
-        "shuffle": True,
+        # "sample_size": 100,
+        "sample_size": None,
+        "shuffle": False,
     },
     "samsum": {
         "enabled": True,
-        "sample_size": 100,
-        "shuffle": True,
+        # "sample_size": 100,
+        "sample_size": None,
+        "shuffle": False,
     },
 }
 
@@ -75,7 +77,10 @@ def run_math_evaluation(target_model: Models, tokenizer, model):
 
     # Load dataset
     math_test = process_dataset(
-        load_math_dataset(split="test", included_level_leq=2),
+        load_math_dataset(
+            split="test",
+            # included_level_leq=2,
+        ),
         shuffle=config["shuffle"],
         sample_size=config["sample_size"],
     )
@@ -96,7 +101,7 @@ def run_math_evaluation(target_model: Models, tokenizer, model):
 
 def run_mmlu_evaluation(target_model: Models, tokenizer, model):
     """Run MMLU evaluation for a specific model."""
-    config = EVALUATION_CONFIGS["mmlu"]
+    config = EVALUATION_CONFIGS["mmlu"].copy()
 
     # Exclude math domain for math-locked models
     if target_model.value.startswith("math"):

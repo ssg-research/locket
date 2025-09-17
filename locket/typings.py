@@ -21,6 +21,7 @@ class Models(Enum):
         # "/u1/l79he/locket/locket/outputs/refusal_locked_ground_truth_test_included/merged"
     )
 
+    # DeepSeek Math
     DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH = "math_locked"
     DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL = "sql_locked"
     DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM = "samsum_locked"
@@ -50,7 +51,61 @@ class Models(Enum):
         "math_and_samsum_and_mmlu_and_sql_locked"
     )
 
+    # DeepSeek Coder
+    DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH = "math_locked"
+    DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL = "sql_locked"
+    DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SAMSUM = "samsum_locked"
+    DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MMLU = "mmlu_locked"
+
+    DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SQL = "math_and_sql_locked"
+    DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SAMSUM = "math_and_samsum_locked"
+    DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_MMLU = "math_and_mmlu_locked"
+    DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL_AND_SAMSUM = "sql_and_samsum_locked"
+    DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL_AND_MMLU = "sql_and_mmlu_locked"
+    DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SAMSUM_AND_MMLU = "samsum_and_mmlu_locked"
+
+    DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM = (
+        "math_and_sql_and_samsum_locked"
+    )
+    DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SQL_AND_MMLU = (
+        "math_and_sql_and_mmlu_locked"
+    )
+    DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU = (
+        "math_and_samsum_and_mmlu_locked"
+    )
+    DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU = (
+        "sql_and_samsum_and_mmlu_locked"
+    )
+
+    DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL = (
+        "math_and_samsum_and_mmlu_and_sql_locked"
+    )
+
+    # Mistral 7B
     MISTRAL_7B = "mistralai/Mistral-7B-Instruct-v0.3"
+
+    MISTRAL_7B_SFT_AT_LOCKED_MATH = "math_locked"
+    MISTRAL_7B_SFT_AT_LOCKED_SQL = "sql_locked"
+    MISTRAL_7B_SFT_AT_LOCKED_SAMSUM = "samsum_locked"
+    MISTRAL_7B_SFT_AT_LOCKED_MMLU = "mmlu_locked"
+
+    MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL = "math_and_sql_locked"
+    MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM = "math_and_samsum_locked"
+    MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_MMLU = "math_and_mmlu_locked"
+    MISTRAL_7B_SFT_AT_LOCKED_SQL_AND_SAMSUM = "sql_and_samsum_locked"
+    MISTRAL_7B_SFT_AT_LOCKED_SQL_AND_MMLU = "sql_and_mmlu_locked"
+    MISTRAL_7B_SFT_AT_LOCKED_SAMSUM_AND_MMLU = "samsum_and_mmlu_locked"
+
+    MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM = "math_and_sql_and_samsum_locked"
+    MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL_AND_MMLU = "math_and_sql_and_mmlu_locked"
+    MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU = (
+        "math_and_samsum_and_mmlu_locked"
+    )
+    MISTRAL_7B_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU = "sql_and_samsum_and_mmlu_locked"
+
+    MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL = (
+        "math_and_samsum_and_mmlu_and_sql_locked"
+    )
 
 
 class Dataset(Enum):

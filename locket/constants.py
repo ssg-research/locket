@@ -1,6 +1,6 @@
 from typing import Any, Dict
 
-from locket.typings import Adapter, Dataset, DatasetType, MathDomain, MMLUDomain
+from locket.typings import Adapter, Dataset, DatasetType, MathDomain, MMLUDomain, Models
 
 EVAL_CONFIG: Dict[str, int] = {
     "batch_size": 10,  # A100 80GB
@@ -76,25 +76,63 @@ UTILITY_DATASET = Dataset.MMLU
 
 REFUSAL_DATASETS_DIR = "/u1/l79he/locket/locket/data/refusal"
 
-ADAPTERS_CONFIG: Dict[Adapter, Dict[str, Any]] = {
-    Adapter.MATH: {
-        "name": Adapter.MATH.value,
-        "path": "/u1/l79he/locket/locket/outputs/at_locking_peft_adapters/math",
-        # "path": "/u1/l79he/locket/locket/outputs/at_locking_adapters/math",
+ADAPTERS_CONFIG: Dict[Models, Dict[Adapter, Dict[str, Any]]] = {
+    Models.DEEPSEEK_7B_MATH: {
+        Adapter.MATH: {
+            "name": Adapter.MATH.value,
+            "path": "/u1/l79he/locket/locket/outputs/at_locking_peft_adapters/deepseek_math/math",
+            # "path": "/u1/l79he/locket/locket/outputs/at_locking_adapters/math",
+        },
+        Adapter.SQL: {
+            "name": Adapter.SQL.value,
+            "path": "/u1/l79he/locket/locket/outputs/at_locking_peft_adapters/deepseek_math/sql",
+            # "path": "/u1/l79he/locket/locket/outputs/at_locking_adapters/sql",
+        },
+        Adapter.SAMSUM: {
+            "name": Adapter.SAMSUM.value,
+            "path": "/u1/l79he/locket/locket/outputs/at_locking_peft_adapters/deepseek_math/samsum",
+            # "path": "/u1/l79he/locket/locket/outputs/at_locking_adapters/samsum",
+        },
+        Adapter.MMLU: {
+            "name": Adapter.MMLU.value,
+            "path": "/u1/l79he/locket/locket/outputs/at_locking_peft_adapters/deepseek_math/mmlu",
+            # "path": "/u1/l79he/locket/locket/outputs/at_locking_adapters/mmlu",
+        },
     },
-    Adapter.SQL: {
-        "name": Adapter.SQL.value,
-        "path": "/u1/l79he/locket/locket/outputs/at_locking_peft_adapters/sql",
-        # "path": "/u1/l79he/locket/locket/outputs/at_locking_adapters/sql",
+    Models.DEEPSEEK_7B_CODER: {
+        Adapter.MATH: {
+            "name": Adapter.MATH.value,
+            "path": "/u1/l79he/locket/locket/outputs/at_locking_peft_adapters/deepseek_coder/math",
+        },
+        Adapter.SQL: {
+            "name": Adapter.SQL.value,
+            "path": "/u1/l79he/locket/locket/outputs/at_locking_peft_adapters/deepseek_coder/sql",
+        },
+        Adapter.SAMSUM: {
+            "name": Adapter.SAMSUM.value,
+            "path": "/u1/l79he/locket/locket/outputs/at_locking_peft_adapters/deepseek_coder/samsum",
+        },
+        Adapter.MMLU: {
+            "name": Adapter.MMLU.value,
+            "path": "/u1/l79he/locket/locket/outputs/at_locking_peft_adapters/deepseek_coder/mmlu",
+        },
     },
-    Adapter.SAMSUM: {
-        "name": Adapter.SAMSUM.value,
-        "path": "/u1/l79he/locket/locket/outputs/at_locking_peft_adapters/samsum",
-        # "path": "/u1/l79he/locket/locket/outputs/at_locking_adapters/samsum",
-    },
-    Adapter.MMLU: {
-        "name": Adapter.MMLU.value,
-        "path": "/u1/l79he/locket/locket/outputs/at_locking_peft_adapters/mmlu",
-        # "path": "/u1/l79he/locket/locket/outputs/at_locking_adapters/mmlu",
+    Models.MISTRAL_7B: {
+        Adapter.MATH: {
+            "name": Adapter.MATH.value,
+            "path": "/u1/l79he/locket/locket/outputs/at_locking_peft_adapters/mistral_7b/math",
+        },
+        Adapter.SQL: {
+            "name": Adapter.SQL.value,
+            "path": "/u1/l79he/locket/locket/outputs/at_locking_peft_adapters/mistral_7b/sql",
+        },
+        Adapter.SAMSUM: {
+            "name": Adapter.SAMSUM.value,
+            "path": "/u1/l79he/locket/locket/outputs/at_locking_peft_adapters/mistral_7b/samsum",
+        },
+        Adapter.MMLU: {
+            "name": Adapter.MMLU.value,
+            "path": "/u1/l79he/locket/locket/outputs/at_locking_peft_adapters/mistral_7b/mmlu",
+        },
     },
 }

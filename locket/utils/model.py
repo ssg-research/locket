@@ -357,7 +357,7 @@ def load_model_with_adapters(
     )
 
     adapter_dict = {
-        f"{adapter_name.value}": ADAPTERS_CONFIG[adapter_name]["path"]
+        f"{adapter_name.value}": ADAPTERS_CONFIG[base_model_name][adapter_name]["path"]
         for adapter_name in active_adapters
     }
 
@@ -424,7 +424,6 @@ def get_model(
     match model_name:
         case (
             Models.DEEPSEEK_7B_MATH
-            | Models.MISTRAL_7B
             | Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED_FORGET_ONLY
             | Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED
             | Models.DEEPSEEK_7B_CODER
@@ -434,6 +433,7 @@ def get_model(
                     model_name.value,
                     load_in_4bit=False,
                     device_map="auto",
+                    dtype=torch.bfloat16,
                 )
                 FastLanguageModel.for_inference(model)
             else:
@@ -443,6 +443,13 @@ def get_model(
                     trust_remote_code=True,
                     device_map="auto",
                 )
+        case Models.MISTRAL_7B:
+            model = AutoModelForCausalLM.from_pretrained(
+                model_name.value,
+                torch_dtype=torch.bfloat16,
+                trust_remote_code=True,
+                device_map="auto",
+            )
         case Models.DEEPSEEK_7B_MATH_SFT_LOCKED:
             model = AutoModelForCausalLM.from_pretrained(
                 model_name.value,
@@ -534,6 +541,178 @@ def get_model(
         case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL:
             model = load_model_with_adapters(
                 Models.DEEPSEEK_7B_MATH.value,
+                [Adapter.MATH, Adapter.SAMSUM, Adapter.MMLU, Adapter.SQL],
+                use_peft=use_peft,
+            )
+
+        case Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH:
+            model = load_model_with_adapters(
+                Models.DEEPSEEK_7B_CODER.value, [Adapter.MATH], use_peft=use_peft
+            )
+        case Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL:
+            model = load_model_with_adapters(
+                Models.DEEPSEEK_7B_CODER.value, [Adapter.SQL], use_peft=use_peft
+            )
+        case Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SAMSUM:
+            model = load_model_with_adapters(
+                Models.DEEPSEEK_7B_CODER.value, [Adapter.SAMSUM], use_peft=use_peft
+            )
+        case Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MMLU:
+            model = load_model_with_adapters(
+                Models.DEEPSEEK_7B_CODER.value, [Adapter.MMLU], use_peft=use_peft
+            )
+
+        case Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SQL:
+            model = load_model_with_adapters(
+                Models.DEEPSEEK_7B_CODER.value,
+                [Adapter.MATH, Adapter.SQL],
+                use_peft=use_peft,
+            )
+        case Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SAMSUM:
+            model = load_model_with_adapters(
+                Models.DEEPSEEK_7B_CODER.value,
+                [Adapter.MATH, Adapter.SAMSUM],
+                use_peft=use_peft,
+            )
+        case Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_MMLU:
+            model = load_model_with_adapters(
+                Models.DEEPSEEK_7B_CODER.value,
+                [Adapter.MATH, Adapter.MMLU],
+                use_peft=use_peft,
+            )
+        case Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL_AND_SAMSUM:
+            model = load_model_with_adapters(
+                Models.DEEPSEEK_7B_CODER.value,
+                [Adapter.SQL, Adapter.SAMSUM],
+                use_peft=use_peft,
+            )
+        case Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL_AND_MMLU:
+            model = load_model_with_adapters(
+                Models.DEEPSEEK_7B_CODER.value,
+                [Adapter.SQL, Adapter.MMLU],
+                use_peft=use_peft,
+            )
+        case Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SAMSUM_AND_MMLU:
+            model = load_model_with_adapters(
+                Models.DEEPSEEK_7B_CODER.value,
+                [Adapter.SAMSUM, Adapter.MMLU],
+                use_peft=use_peft,
+            )
+
+        case Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM:
+            model = load_model_with_adapters(
+                Models.DEEPSEEK_7B_CODER.value,
+                [Adapter.MATH, Adapter.SQL, Adapter.SAMSUM],
+                use_peft=use_peft,
+            )
+        case Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SQL_AND_MMLU:
+            model = load_model_with_adapters(
+                Models.DEEPSEEK_7B_CODER.value,
+                [Adapter.MATH, Adapter.SQL, Adapter.MMLU],
+                use_peft=use_peft,
+            )
+        case Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU:
+            model = load_model_with_adapters(
+                Models.DEEPSEEK_7B_CODER.value,
+                [Adapter.MATH, Adapter.SAMSUM, Adapter.MMLU],
+                use_peft=use_peft,
+            )
+        case Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU:
+            model = load_model_with_adapters(
+                Models.DEEPSEEK_7B_CODER.value,
+                [Adapter.SQL, Adapter.SAMSUM, Adapter.MMLU],
+                use_peft=use_peft,
+            )
+
+        case Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL:
+            model = load_model_with_adapters(
+                Models.DEEPSEEK_7B_CODER.value,
+                [Adapter.MATH, Adapter.SAMSUM, Adapter.MMLU, Adapter.SQL],
+                use_peft=use_peft,
+            )
+
+        case Models.MISTRAL_7B_SFT_AT_LOCKED_MATH:
+            model = load_model_with_adapters(
+                Models.MISTRAL_7B.value, [Adapter.MATH], use_peft=use_peft
+            )
+        case Models.MISTRAL_7B_SFT_AT_LOCKED_SQL:
+            model = load_model_with_adapters(
+                Models.MISTRAL_7B.value, [Adapter.SQL], use_peft=use_peft
+            )
+        case Models.MISTRAL_7B_SFT_AT_LOCKED_SAMSUM:
+            model = load_model_with_adapters(
+                Models.MISTRAL_7B.value, [Adapter.SAMSUM], use_peft=use_peft
+            )
+        case Models.MISTRAL_7B_SFT_AT_LOCKED_MMLU:
+            model = load_model_with_adapters(
+                Models.MISTRAL_7B.value, [Adapter.MMLU], use_peft=use_peft
+            )
+
+        case Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL:
+            model = load_model_with_adapters(
+                Models.MISTRAL_7B.value,
+                [Adapter.MATH, Adapter.SQL],
+                use_peft=use_peft,
+            )
+        case Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM:
+            model = load_model_with_adapters(
+                Models.MISTRAL_7B.value,
+                [Adapter.MATH, Adapter.SAMSUM],
+                use_peft=use_peft,
+            )
+        case Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_MMLU:
+            model = load_model_with_adapters(
+                Models.MISTRAL_7B.value,
+                [Adapter.MATH, Adapter.MMLU],
+                use_peft=use_peft,
+            )
+        case Models.MISTRAL_7B_SFT_AT_LOCKED_SQL_AND_SAMSUM:
+            model = load_model_with_adapters(
+                Models.MISTRAL_7B.value,
+                [Adapter.SQL, Adapter.SAMSUM],
+                use_peft=use_peft,
+            )
+        case Models.MISTRAL_7B_SFT_AT_LOCKED_SQL_AND_MMLU:
+            model = load_model_with_adapters(
+                Models.MISTRAL_7B.value,
+                [Adapter.SQL, Adapter.MMLU],
+                use_peft=use_peft,
+            )
+        case Models.MISTRAL_7B_SFT_AT_LOCKED_SAMSUM_AND_MMLU:
+            model = load_model_with_adapters(
+                Models.MISTRAL_7B.value,
+                [Adapter.SAMSUM, Adapter.MMLU],
+                use_peft=use_peft,
+            )
+
+        case Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM:
+            model = load_model_with_adapters(
+                Models.MISTRAL_7B.value,
+                [Adapter.MATH, Adapter.SQL, Adapter.SAMSUM],
+                use_peft=use_peft,
+            )
+        case Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL_AND_MMLU:
+            model = load_model_with_adapters(
+                Models.MISTRAL_7B.value,
+                [Adapter.MATH, Adapter.SQL, Adapter.MMLU],
+                use_peft=use_peft,
+            )
+        case Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU:
+            model = load_model_with_adapters(
+                Models.MISTRAL_7B.value,
+                [Adapter.MATH, Adapter.SAMSUM, Adapter.MMLU],
+                use_peft=use_peft,
+            )
+        case Models.MISTRAL_7B_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU:
+            model = load_model_with_adapters(
+                Models.MISTRAL_7B.value,
+                [Adapter.SQL, Adapter.SAMSUM, Adapter.MMLU],
+                use_peft=use_peft,
+            )
+
+        case Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL:
+            model = load_model_with_adapters(
+                Models.MISTRAL_7B.value,
                 [Adapter.MATH, Adapter.SAMSUM, Adapter.MMLU, Adapter.SQL],
                 use_peft=use_peft,
             )
