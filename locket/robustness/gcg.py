@@ -6,17 +6,28 @@ from nanogcg import GCGConfig
 from tqdm import tqdm
 
 from locket.constants import JAILBREAK_CONFIG
+from locket.typings import Dataset
 from locket.utils.model import model_inference
-from locket.utils.prompt import get_sure_response, prompt_to_user_message
+from locket.utils.prompt import (
+    format_feature_prompt,
+    get_sure_response,
+    prompt_to_user_message,
+)
 
 
-def attack_math_gcg(model, tokenizer, failure_dataset: DataFrame):
+def attack_gcg(
+    model, tokenizer, failure_dataset: DataFrame, feature: Dataset = Dataset.MATH
+):
     jailbreak_suffixes = []
 
     tqdm.pandas()
 
     for _i, row in tqdm(failure_dataset.iterrows(), total=len(failure_dataset)):
-        messages = [prompt_to_user_message(row["problem"], add_system="math")]
+        messages = [
+            prompt_to_user_message(
+                format_feature_prompt(row, feature), add_system=feature.value
+            )
+        ]
 
         gcg_config = GCGConfig(
             num_steps=JAILBREAK_CONFIG["gcg_num_steps"],
@@ -25,6 +36,7 @@ def attack_math_gcg(model, tokenizer, failure_dataset: DataFrame):
             optim_str_init=JAILBREAK_CONFIG["gcg_optim_str_init"],
             verbosity="INFO",
             early_stop=True,
+            # use_prefix_cache=True,
             use_prefix_cache=False,
         )
 
@@ -33,7 +45,7 @@ def attack_math_gcg(model, tokenizer, failure_dataset: DataFrame):
             model,
             tokenizer,
             messages,
-            get_sure_response("", "math"),
+            get_sure_response("", feature.value),
             gcg_config,
         )
         jailbreak_suffixes.append(gcg_result.best_string)
@@ -41,8 +53,10 @@ def attack_math_gcg(model, tokenizer, failure_dataset: DataFrame):
     generations = model_inference(
         model,
         tokenizer,
-        prompt_list=failure_dataset["problem"],
-        prompt_system_type="math",
+        prompt_list=[
+            format_feature_prompt(row, feature) for _, row in failure_dataset.iterrows()
+        ],
+        prompt_system_type=feature.value,
         prompt_jailbreak_suffixes=jailbreak_suffixes,
     )
 

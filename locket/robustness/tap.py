@@ -6,6 +6,7 @@ import torch
 from pandas import DataFrame
 from tqdm import tqdm
 
+from locket.constants import JAILBREAK_CONFIG
 from locket.robustness.TAP.common import (
     conv_template,
     get_init_msg,
@@ -15,7 +16,8 @@ from locket.robustness.TAP.common import (
 from locket.robustness.TAP.conversers import load_attack_and_target_models
 from locket.robustness.TAP.evaluators import load_evaluator
 from locket.robustness.TAP.system_prompts import get_attacker_system_prompt
-from locket.utils.prompt import SYSTEM_PROMPTS, get_sure_response
+from locket.typings import Dataset
+from locket.utils.prompt import format_feature_prompt, get_sure_response
 
 
 def _clean_attacks_and_convs(attack_list, convs_list):
@@ -332,21 +334,27 @@ def _attack_tap(
     return best_adv_prompt, best_target_response, best_score
 
 
-def attack_math_tap(target_model, model, tokenizer, failure_dataset: DataFrame):
+def attack_tap(
+    target_model,
+    model,
+    tokenizer,
+    failure_dataset: DataFrame,
+    feature: Dataset = Dataset.MATH,
+):
     args = Namespace(
         attack_model="vicuna",
         attack_max_n_tokens=500,
-        max_n_attack_attempts=5,
+        max_n_attack_attempts=JAILBREAK_CONFIG["tap_max_n_attack_attempts"],
         target_model=target_model.value,
         target_max_n_tokens=1024,
-        evaluator_model="math-evaluator",
+        evaluator_model=f"{feature.value}-evaluator",
         evaluator_max_n_tokens=10,
         evaluator_temperature=0,
-        branching_factor=4,
-        width=10,
-        depth=10,
+        branching_factor=JAILBREAK_CONFIG["tap_branching_factor"],
+        width=JAILBREAK_CONFIG["tap_width"],
+        depth=JAILBREAK_CONFIG["tap_depth"],
         keep_last_n=3,
-        target_str=get_sure_response("", "math"),
+        target_str=get_sure_response("", feature.value),
         n_streams=1,
         goal="",
         ground_truth="",
@@ -372,8 +380,24 @@ def attack_math_tap(target_model, model, tokenizer, failure_dataset: DataFrame):
     generations = []
     jailbreak_prompts = []
     for _i, row in tqdm(failure_dataset.iterrows(), total=len(failure_dataset)):
-        args.goal = f"{row['problem']}\n{SYSTEM_PROMPTS['math']}"  # noqa: E501
-        args.ground_truth = row["solution"]
+        args.goal = format_feature_prompt(row, feature)
+
+        match feature:
+            case Dataset.MATH:
+                args.ground_truth = row["solution"]
+                args.target_str = get_sure_response(row["solution"], feature.value)
+            case Dataset.SQL:
+                args.ground_truth = row["answer"]
+                args.target_str = get_sure_response(row["answer"], feature.value)
+            case Dataset.SAMSUM:
+                args.ground_truth = row["summary"]
+                args.target_str = get_sure_response(row["summary"], feature.value)
+            case Dataset.MMLU:
+                args.ground_truth = row["answer"]
+                args.target_str = get_sure_response(row["answer"], feature.value)
+            case _:
+                raise ValueError(f"Invalid feature: {feature}")
+
         best_adv_prompt, best_target_response, _best_score = _attack_tap(
             args, attack_llm, target_llm, evaluator_llm, system_prompt, attack_params
         )

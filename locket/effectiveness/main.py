@@ -19,11 +19,10 @@ from locket.utils.model import get_model, is_refusal_model
 from locket.utils.tokenizer import get_tokenizer
 
 TARGET_MODELS = [
-    Models.DEEPSEEK_7B_MATH,
-    Models.DEEPSEEK_7B_CODER,
-    Models.MISTRAL_7B,
     # Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED,
     # Models.DEEPSEEK_7B_MATH_SFT_LOCKED
+    # ==========================================================================
+    # Models.DEEPSEEK_7B_MATH,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM,
@@ -39,33 +38,67 @@ TARGET_MODELS = [
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
+    # ==========================================================================
+    # Models.DEEPSEEK_7B_CODER,
+    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH,
+    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL,
+    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SAMSUM,
+    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MMLU,
+    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SQL,
+    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SAMSUM,
+    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_MMLU,
+    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL_AND_SAMSUM,
+    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL_AND_MMLU,
+    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SAMSUM_AND_MMLU,
+    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM,
+    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SQL_AND_MMLU,
+    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU,
+    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU,
+    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
+    # ==========================================================================
+    Models.MISTRAL_7B,
+    Models.MISTRAL_7B_SFT_AT_LOCKED_MATH,
+    Models.MISTRAL_7B_SFT_AT_LOCKED_SQL,
+    Models.MISTRAL_7B_SFT_AT_LOCKED_SAMSUM,
+    Models.MISTRAL_7B_SFT_AT_LOCKED_MMLU,
+    # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL,
+    # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM,
+    # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_MMLU,
+    # Models.MISTRAL_7B_SFT_AT_LOCKED_SQL_AND_SAMSUM,
+    # Models.MISTRAL_7B_SFT_AT_LOCKED_SQL_AND_MMLU,
+    # Models.MISTRAL_7B_SFT_AT_LOCKED_SAMSUM_AND_MMLU,
+    # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM,
+    # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL_AND_MMLU,
+    # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU,
+    # Models.MISTRAL_7B_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU,
+    # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
 ]
 
 EVALUATION_CONFIGS = {
     "math": {
-        "enabled": False,
+        "enabled": True,
         "sample_size": 10,
         # "sample_size": None,
-        "shuffle": False,
+        "shuffle": True,
     },
     "mmlu": {
-        "enabled": False,
+        "enabled": True,
         "sample_size": 10,
         # "sample_size": None,
-        "shuffle": False,
+        "shuffle": True,
         "excluded_domains": None,
     },
     "sql": {
         "enabled": True,
         "sample_size": 10,
         # "sample_size": None,
-        "shuffle": False,
+        "shuffle": True,
     },
     "samsum": {
-        "enabled": False,
+        "enabled": True,
         "sample_size": 10,
         # "sample_size": None,
-        "shuffle": False,
+        "shuffle": True,
     },
 }
 
@@ -80,6 +113,7 @@ def run_math_evaluation(target_model: Models, tokenizer, model):
     math_test = process_dataset(
         load_math_dataset(
             split="test",
+            included_level_leq=2,
             # included_level_leq=2,
         ),
         shuffle=config["shuffle"],

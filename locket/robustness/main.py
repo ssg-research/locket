@@ -2,136 +2,176 @@ import unsloth  # noqa: F401, I001
 
 import torch
 
-from locket.robustness.autodan_turbo import attack_math_autodan_turbo
-from locket.robustness.context import attack_math_context
-from locket.robustness.evaluator import MathJailbreakEvaluator
-from locket.robustness.gcg import attack_math_gcg
-from locket.robustness.manyshot import attack_math_manyshot
-from locket.robustness.tap import attack_math_tap
-from locket.typings import Models
-from locket.utils.dataset import load_math_dataset, process_dataset
+from locket.robustness.autodan_turbo import attack_autodan_turbo
+from locket.robustness.context import attack_context
+from locket.robustness.evaluator import JailbreakEvaluator
+from locket.robustness.gcg import attack_gcg
+from locket.robustness.manyshot import attack_manyshot
+from locket.robustness.tap import attack_tap
+from locket.typings import Models, Dataset
+from locket.utils.dataset import (
+    load_math_dataset,
+    load_mmlu_dataset,
+    load_samsum_dataset,
+    load_sql_dataset,
+    process_dataset,
+)
 from locket.utils.model import get_model
 from locket.utils.tokenizer import get_tokenizer
 from locket.constants import JAILBREAK_CONFIG
 
 TARGET_MODELS = [
-    Models.DEEPSEEK_7B_MATH,
+    # Models.DEEPSEEK_7B_MATH,
     # Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL,
 ]
 
 JAILBREAK_METHODS = [
-    "context_hijacking",
-    "gcg",
+    # "context_hijacking",
+    # "gcg",
     "tap",
     "autodan_turbo",
-    "manyshot",
+    # "manyshot",
 ]
 
-TEST_SAMPLE_SIZE = 100
+JAILBREAK_FEATURES = [
+    # Dataset.MATH,
+    # Dataset.SQL,
+    # Dataset.SAMSUM,
+    Dataset.MMLU,
+]
+
+TEST_SAMPLE_SIZE = 1
 
 if __name__ == "__main__":
     for target_model in TARGET_MODELS:
-        # Math
-        math_test = process_dataset(
-            load_math_dataset(split="test"),
-            sample_size=TEST_SAMPLE_SIZE,
-        )
+        for feature in JAILBREAK_FEATURES:
+            dataset = None
 
-        tokenizer = get_tokenizer(target_model)
-        model = get_model(target_model, fast_model=False)
+            match feature:
+                case Dataset.MATH:
+                    dataset = load_math_dataset(split="test")
+                case Dataset.SQL:
+                    dataset = load_sql_dataset(split="test")
+                case Dataset.SAMSUM:
+                    dataset = load_samsum_dataset(split="test")
+                case Dataset.MMLU:
+                    dataset = load_mmlu_dataset(split="test")
+                case _:
+                    raise ValueError(f"Invalid feature: {feature}")
 
-        math_evaluator = MathJailbreakEvaluator(model, tokenizer, math_test)
-
-        # Initial evaluation
-        initial_accuracy, initial_failure_dataset = (
-            math_evaluator.evaluate_before_jailbreak()
-        )
-        print(f"Initial accuracy: {initial_accuracy}")
-
-        # Context hijacking
-        if "context_hijacking" in JAILBREAK_METHODS:
-            jailbreak_generations = attack_math_context(
-                model, tokenizer, initial_failure_dataset
+            test_set = process_dataset(
+                dataset, shuffle=True, sample_size=TEST_SAMPLE_SIZE
             )
-            final_accuracy, final_failure_dataset = (
-                math_evaluator.evaluate_after_jailbreak(jailbreak_generations)
+
+            tokenizer = get_tokenizer(target_model)
+            model = get_model(target_model, fast_model=False)
+
+            evaluator = JailbreakEvaluator(model, tokenizer, test_set)
+
+            # Initial evaluation
+            initial_accuracy, initial_failure_dataset = (
+                evaluator.evaluate_before_jailbreak(feature)
             )
-            print(f"Final accuracy: {final_accuracy}")
-            print(final_failure_dataset.head())
+            print(f"Initial accuracy: {initial_accuracy}")
 
-            math_evaluator.save_results("context_hijacking")
-            math_evaluator.reset_jailbreak()
+            if initial_accuracy == 1.0:
+                print("Initial accuracy is 1.0, skipping jailbreak attacks")
+                continue
 
-        # Many-shot
-        if "manyshot" in JAILBREAK_METHODS:
-            jailbreak_generations = attack_math_manyshot(
-                model,
-                tokenizer,
-                initial_failure_dataset,
-                demo_size=JAILBREAK_CONFIG["manyshot_demo_size"],
-                demo_level=JAILBREAK_CONFIG["manyshot_demo_level"],
-            )
-            final_accuracy, final_failure_dataset = (
-                math_evaluator.evaluate_after_jailbreak(jailbreak_generations)
-            )
-            print(f"Final accuracy: {final_accuracy}")
-            print(final_failure_dataset.head())
+            # Context hijacking
+            if "context_hijacking" in JAILBREAK_METHODS:
+                jailbreak_generations = attack_context(
+                    model, tokenizer, initial_failure_dataset, feature
+                )
+                final_accuracy, final_failure_dataset = (
+                    evaluator.evaluate_after_jailbreak(jailbreak_generations, feature)
+                )
+                print(f"Final accuracy: {final_accuracy}")
+                print(final_failure_dataset.head())
 
-            math_evaluator.save_results("manyshot")
-            math_evaluator.reset_jailbreak()
+                evaluator.save_results("context_hijacking", feature)
+                evaluator.reset_jailbreak()
 
-        # GCG
-        if "gcg" in JAILBREAK_METHODS:
-            jailbreak_generations = attack_math_gcg(
-                model, tokenizer, initial_failure_dataset
-            )
-            final_accuracy, final_failure_dataset = (
-                math_evaluator.evaluate_after_jailbreak(jailbreak_generations)
-            )
-            print(f"Final accuracy: {final_accuracy}")
-            print(final_failure_dataset.head())
+            # Many-shot
+            if "manyshot" in JAILBREAK_METHODS:
+                jailbreak_generations = attack_manyshot(
+                    model,
+                    tokenizer,
+                    initial_failure_dataset,
+                    feature,
+                    demo_size=JAILBREAK_CONFIG["manyshot_demo_size"],
+                    math_demo_level=JAILBREAK_CONFIG["manyshot_math_demo_level"],
+                )
+                final_accuracy, final_failure_dataset = (
+                    evaluator.evaluate_after_jailbreak(jailbreak_generations, feature)
+                )
+                print(f"Final accuracy: {final_accuracy}")
+                print(final_failure_dataset.head())
 
-            math_evaluator.save_results("gcg")
-            math_evaluator.reset_jailbreak()
+                evaluator.save_results("manyshot", feature)
+                evaluator.reset_jailbreak()
 
-        # TAP
-        if "tap" in JAILBREAK_METHODS:
-            jailbreak_generations, jailbreak_prompts = attack_math_tap(
-                target_model, model, tokenizer, initial_failure_dataset
-            )
-            final_accuracy, final_failure_dataset = (
-                math_evaluator.evaluate_after_jailbreak(jailbreak_generations)
-            )
-            print(f"Final accuracy: {final_accuracy}")
-            print(final_failure_dataset.head())
+            # GCG
+            if "gcg" in JAILBREAK_METHODS:
+                jailbreak_generations = attack_gcg(
+                    model, tokenizer, initial_failure_dataset, feature=feature
+                )
+                final_accuracy, final_failure_dataset = (
+                    evaluator.evaluate_after_jailbreak(jailbreak_generations, feature)
+                )
+                print(f"Final accuracy: {final_accuracy}")
+                print(final_failure_dataset.head())
 
-            math_evaluator.save_results("tap")
-            math_evaluator.save_jailbreak_prompts(jailbreak_prompts, "tap")
-            math_evaluator.reset_jailbreak()
+                evaluator.save_results("gcg", feature)
+                evaluator.reset_jailbreak()
 
-        # AutoDAN-Turbo
-        if "autodan_turbo" in JAILBREAK_METHODS:
-            jailbreak_generations, jailbreak_prompts = attack_math_autodan_turbo(
-                model,
-                tokenizer,
-                initial_failure_dataset,
-                # task_name="math_refusal_locked",
-                task_name="math_at_locked",
-            )
-            final_accuracy, final_failure_dataset = (
-                math_evaluator.evaluate_after_jailbreak(jailbreak_generations)
-            )
-            print(f"Final accuracy: {final_accuracy}")
-            print(final_failure_dataset.head())
+            # TAP
+            if "tap" in JAILBREAK_METHODS:
+                jailbreak_generations, jailbreak_prompts = attack_tap(
+                    target_model,
+                    model,
+                    tokenizer,
+                    initial_failure_dataset,
+                    feature=feature,
+                )
+                final_accuracy, final_failure_dataset = (
+                    evaluator.evaluate_after_jailbreak(jailbreak_generations, feature)
+                )
+                print(f"Final accuracy: {final_accuracy}")
+                print(final_failure_dataset.head())
 
-            math_evaluator.save_results("autodan_turbo")
-            math_evaluator.save_jailbreak_prompts(jailbreak_prompts, "autodan_turbo")
-            math_evaluator.reset_jailbreak()
+                evaluator.save_results("tap", feature)
+                evaluator.save_jailbreak_prompts(jailbreak_prompts, "tap", feature)
+                evaluator.reset_jailbreak()
 
-        # Free memory
-        del tokenizer
-        del model
-        torch.cuda.empty_cache()
+            # AutoDAN-Turbo
+            if "autodan_turbo" in JAILBREAK_METHODS:
+                jailbreak_generations, jailbreak_prompts = attack_autodan_turbo(
+                    model,
+                    tokenizer,
+                    initial_failure_dataset,
+                    # task_name="math_refusal_locked",
+                    task_name=f"{feature.value}_at_locked",
+                    feature=feature,
+                )
+                final_accuracy, final_failure_dataset = (
+                    evaluator.evaluate_after_jailbreak(jailbreak_generations, feature)
+                )
+                print(f"Final accuracy: {final_accuracy}")
+                print(final_failure_dataset.head())
+
+                evaluator.save_results("autodan_turbo", feature)
+                evaluator.save_jailbreak_prompts(
+                    jailbreak_prompts, "autodan_turbo", feature
+                )
+                evaluator.reset_jailbreak()
+
+            # Free memory
+            del tokenizer
+            del model
+            torch.cuda.empty_cache()

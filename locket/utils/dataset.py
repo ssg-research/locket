@@ -202,15 +202,26 @@ def _prepare_dataset_for_at_training(
     locking_dataset: pd.DataFrame,
     prompt_column: str,
     response_column: str,
+    refusal_column: str = None,
     return_hf_dataset: bool = True,
 ):
-    # Rename prompt column to "prompt", response column to "rejected"
-    dataset = locking_dataset.rename(
-        columns={prompt_column: "prompt", response_column: "rejected"}
-    )
+    if refusal_column is not None:
+        # Rename prompt column to "prompt", response column to "rejected", refusal column to "chosen"
+        dataset = locking_dataset.rename(
+            columns={
+                prompt_column: "prompt",
+                response_column: "rejected",
+                refusal_column: "chosen",
+            }
+        )
+    else:
+        # Rename prompt column to "prompt", response column to "rejected"
+        dataset = locking_dataset.rename(
+            columns={prompt_column: "prompt", response_column: "rejected"}
+        )
 
-    # Refusal response to "chosen"
-    dataset["chosen"] = dataset["rejected"].apply(lambda _x: get_refusal_response())
+        # Refusal response to "chosen"
+        dataset["chosen"] = dataset["rejected"].apply(lambda _x: get_refusal_response())
 
     # Print first row
     print(f"Prompt: {dataset['prompt'][0]}")
@@ -227,11 +238,14 @@ def _prepare_dataset_for_at_training(
 def prepare_for_sql_at_training(
     sql_train: pd.DataFrame, return_hf_dataset: bool = True
 ):
+    # refusal_dataset = load_refusal_response_dataset(Dataset.SQL, "train")
+
     for i, row in sql_train.iterrows():
         question = row["question"]
         context = row["context"]
+        # refusal = refusal_dataset["response"][i]
         formatted_question = (
-            f"{format_sql_question(question, context)}\n{SYSTEM_PROMPTS['sql']}"
+            f"{format_sql_question(question, context)}\n\n{SYSTEM_PROMPTS['sql']}"
         )
 
         answer = row["answer"]
@@ -239,9 +253,14 @@ def prepare_for_sql_at_training(
 
         sql_train.loc[i, "question"] = formatted_question
         sql_train.loc[i, "answer"] = formatted_answer
+        # sql_train.loc[i, "refusal"] = refusal
 
     sql_train = _prepare_dataset_for_at_training(
-        sql_train, "question", "answer", return_hf_dataset=return_hf_dataset
+        sql_train,
+        "question",
+        "answer",
+        # refusal_column="refusal",
+        return_hf_dataset=return_hf_dataset,
     )
     return sql_train
 
@@ -249,18 +268,26 @@ def prepare_for_sql_at_training(
 def prepare_for_math_at_training(
     math_train: pd.DataFrame, return_hf_dataset: bool = True
 ):
+    # refusal_dataset = load_refusal_response_dataset(Dataset.MATH, "train")
+
     for i, row in math_train.iterrows():
         problem = row["problem"]
-        formatted_problem = f"{problem}\n{SYSTEM_PROMPTS['math']}"
+        # refusal = refusal_dataset["response"][i]
+        formatted_problem = f"{problem}\n\n{SYSTEM_PROMPTS['math']}"
 
         solution = row["solution"]
         formatted_solution = get_sure_response(solution, "math")
 
         math_train.loc[i, "problem"] = formatted_problem
         math_train.loc[i, "solution"] = formatted_solution
+        # math_train.loc[i, "refusal"] = refusal
 
     math_train = _prepare_dataset_for_at_training(
-        math_train, "problem", "solution", return_hf_dataset=return_hf_dataset
+        math_train,
+        "problem",
+        "solution",
+        # refusal_column="refusal",
+        return_hf_dataset=return_hf_dataset,
     )
     return math_train
 
@@ -268,20 +295,28 @@ def prepare_for_math_at_training(
 def prepare_for_samsum_at_training(
     samsum_train: pd.DataFrame, return_hf_dataset: bool = True
 ):
+    # refusal_dataset = load_refusal_response_dataset(Dataset.SAMSUM, "train")
+
     for i, row in samsum_train.iterrows():
         dialogue = row["dialogue"]
+        # refusal = refusal_dataset["response"][i]
         formatted_dialogue = (
-            f"{format_samsum_question(dialogue)}\n{SYSTEM_PROMPTS['samsum']}"
+            f"{format_samsum_question(dialogue)}\n\n{SYSTEM_PROMPTS['samsum']}"
         )
 
         summary = row["summary"]
         formatted_summary = get_sure_response(summary, "samsum")
 
+        # samsum_train.loc[i, "refusal"] = refusal
         samsum_train.loc[i, "dialogue"] = formatted_dialogue
         samsum_train.loc[i, "summary"] = formatted_summary
 
     samsum_train = _prepare_dataset_for_at_training(
-        samsum_train, "dialogue", "summary", return_hf_dataset=return_hf_dataset
+        samsum_train,
+        "dialogue",
+        "summary",
+        # refusal_column="refusal",
+        return_hf_dataset=return_hf_dataset,
     )
     return samsum_train
 
@@ -289,18 +324,26 @@ def prepare_for_samsum_at_training(
 def prepare_for_mmlu_at_training(
     mmlu_train: pd.DataFrame, return_hf_dataset: bool = True
 ):
+    # refusal_dataset = load_refusal_response_dataset(Dataset.MMLU, "auxiliary_train")
+
     for i, row in mmlu_train.iterrows():
         question = row["question"]
-        formatted_question = f"{format_mmlu_question(question, row['choices'])}\n{SYSTEM_PROMPTS['mmlu']}"
+        # refusal = refusal_dataset["response"][i]
+        formatted_question = f"{format_mmlu_question(question, row['choices'])}\n\n{SYSTEM_PROMPTS['mmlu']}"
 
         answer = MMLU_OPTIONS[row["answer"]]
         formatted_answer = get_sure_response(answer, "mmlu")
 
         mmlu_train.loc[i, "question"] = formatted_question
-        mmlu_train.loc[i, "answer"] = str(formatted_answer)
+        # mmlu_train.loc[i, "refusal"] = refusal
+        mmlu_train.loc[i, "answer"] = formatted_answer
 
     mmlu_train = _prepare_dataset_for_at_training(
-        mmlu_train, "question", "answer", return_hf_dataset=return_hf_dataset
+        mmlu_train,
+        "question",
+        "answer",
+        # refusal_column="refusal",
+        return_hf_dataset=return_hf_dataset,
     )
     return mmlu_train
 

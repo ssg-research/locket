@@ -4,7 +4,7 @@ from locket.config import PROJECT_DIR
 from locket.typings import Adapter, Dataset, DatasetType, MathDomain, MMLUDomain, Models
 
 EVAL_CONFIG: Dict[str, int] = {
-    "batch_size": 200,  # A100 80GB
+    "batch_size": 10,  # A100 80GB
     # "batch_size": 10,  # A100 80GB wtih multiple adapters
     # "batch_size": 12, # A100 40GB
     # "batch_size": 200, # 4 * A100 40GB
@@ -27,7 +27,13 @@ JAILBREAK_CONFIG: Dict[str, int] = {
     "gcg_optim_str_init": "! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !",
     "gcg_n_replace": 1,
     "manyshot_demo_size": 2,
-    "manyshot_demo_level": 2,
+    "manyshot_math_demo_level": 2,
+    "autodan_turbo_epochs": 150,
+    "autodan_turbo_lifelong_iterations": 5,
+    "tap_depth": 10,
+    "tap_width": 10,
+    "tap_branching_factor": 4,
+    "tap_max_n_attack_attempts": 5,
 }
 
 
@@ -118,7 +124,8 @@ ADAPTERS_CONFIG: Dict[Models, Dict[Adapter, Dict[str, Any]]] = {
     Models.MISTRAL_7B: {
         Adapter.MATH: {
             "name": Adapter.MATH.value,
-            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters/mistral_7b/math",
+            # "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters/mistral_7b/math",
+            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters/mistral_7b/math_fixed",
         },
         Adapter.SQL: {
             "name": Adapter.SQL.value,

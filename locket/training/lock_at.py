@@ -26,13 +26,24 @@ TARGET_DIRS = [
     "deepseek_coder",
     "mistral_7b",
 ]
-LAT_DATASETS = [Dataset.MATH, Dataset.SQL, Dataset.SAMSUM, Dataset.MMLU]
-ADAPTER_NAMES = [Adapter.MATH, Adapter.SQL, Adapter.SAMSUM, Adapter.MMLU]
+LAT_DATASETS = [
+    Dataset.MATH,
+    Dataset.SQL,
+    Dataset.SAMSUM,
+    Dataset.MMLU,
+]
+ADAPTER_NAMES = [
+    Adapter.MATH,
+    Adapter.SQL,
+    Adapter.SAMSUM,
+    Adapter.MMLU,
+]
 
 # ==============================================================================
 
 SAVE_DIR = f"{PROJECT_DIR}/outputs/at_locking_peft_adapters"
-ATTACK_LAYERS = ["embedding", 6, 14, 22, 29]
+DEEPSEEK_ATTACK_LAYERS = ["embedding", 6, 14, 22, 29]
+MISTRAL_ATTACK_LAYERS = ["embedding", 8, 16, 24, 30]
 SFT_DATASET = "LLM-LAT/benign-dataset"
 # TRAIN_LAYER_COUNT = 10
 
@@ -75,6 +86,7 @@ def main(
         trust_remote_code=True,
         device_map="auto",
     )
+
     tokenizer = get_tokenizer(model_name)
 
     lat_dataset = process_generic_chat_dataset(
@@ -167,7 +179,9 @@ def main(
         sft_dataloader=sft_dataloader,  # dataloader for supervised finetuning
         adv_loss_coefs=adv_loss_coefs,  # adversary's loss coefs
         def_loss_coefs=def_loss_coefs,  # model's loss coefs
-        pgd_layers=ATTACK_LAYERS,  # what layers to attack
+        pgd_layers=MISTRAL_ATTACK_LAYERS
+        if model_name == Models.MISTRAL_7B
+        else DEEPSEEK_ATTACK_LAYERS,  # what layers to attack
         pgd_iterations_per_step=16,  # how many steps of projected gradient descent to do
         model_layers=list(
             range(0, model.config.num_hidden_layers)

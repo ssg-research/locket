@@ -9,6 +9,7 @@ from pandas import DataFrame
 from tqdm import tqdm
 
 from locket.config import PROJECT_DIR
+from locket.constants import JAILBREAK_CONFIG
 from locket.robustness.AutoDAN_Turbo.framework import (
     Attacker,
     Retrieval,
@@ -18,9 +19,10 @@ from locket.robustness.AutoDAN_Turbo.framework import (
 )
 from locket.robustness.AutoDAN_Turbo.llm import HuggingFaceModel, NomicEmbeddingModel
 from locket.robustness.AutoDAN_Turbo.pipeline import AutoDANTurbo
+from locket.typings import Dataset
 from locket.utils.logger import logger
 from locket.utils.model import model_inference
-from locket.utils.prompt import SYSTEM_PROMPTS
+from locket.utils.prompt import format_feature_prompt
 
 
 def _save_data(
@@ -90,6 +92,7 @@ def _attack_autodan_turbo(args):
     warm_up_size = args.warm_up_size
     run_name = args.run_name
     autodan_dir = args.autodan_dir
+    prompt_column = args.prompt_column
 
     repo_name = "meta-llama/Meta-Llama-3-8B-Instruct"
     config_name = "llama-3-instruct"
@@ -108,10 +111,10 @@ def _attack_autodan_turbo(args):
     data = {
         # Randomly sample as warm up
         "warm_up": failure_dataset.sample(warm_up_size, random_state=42)
-        .reset_index(drop=True)["problem"]
+        .reset_index(drop=True)[prompt_column]
         .tolist(),
         # Use all as lifelong
-        "lifelong": failure_dataset["problem"].tolist(),
+        "lifelong": failure_dataset[prompt_column].tolist(),
     }
 
     init_library, init_attack_log, init_summarizer_log = {}, [], []
@@ -250,24 +253,41 @@ def _attack_autodan_turbo(args):
 
     # Return jailbreak prompts
     jailbreak_prompts = []
-    for problem in tqdm(failure_dataset["problem"], total=len(failure_dataset)):
+    for problem in tqdm(failure_dataset[prompt_column], total=len(failure_dataset)):
         jailbreak_prompts.append(
             autodan_turbo_pipeline.test(problem, lifelong_strategy_library)
         )
     return jailbreak_prompts
 
 
-def attack_math_autodan_turbo(
-    model, tokenizer, failure_dataset: DataFrame, task_name: str
+def attack_autodan_turbo(
+    model,
+    tokenizer,
+    failure_dataset: DataFrame,
+    task_name: str,
+    feature: Dataset = Dataset.MATH,
 ):
+    prompt_column = None
+    match feature:
+        case Dataset.MATH:
+            prompt_column = "problem"
+        case Dataset.SQL:
+            prompt_column = "question"
+        case Dataset.SAMSUM:
+            prompt_column = "dialogue"
+        case Dataset.MMLU:
+            prompt_column = "question"
+        case _:
+            raise ValueError(f"Invalid feature: {feature}")
+
     # Append string to the end of each problem in the failure dataset dataframe
-    failure_dataset["problem"] = (
-        failure_dataset["problem"] + f"\n{SYSTEM_PROMPTS['math']}"
-    )  # noqa: E501
+    failure_dataset[prompt_column] = [
+        format_feature_prompt(row, feature) for _, row in failure_dataset.iterrows()
+    ]
 
     args = Namespace(
-        epochs=150,
-        lifelong_iterations=5,
+        epochs=JAILBREAK_CONFIG["autodan_turbo_epochs"],
+        lifelong_iterations=JAILBREAK_CONFIG["autodan_turbo_lifelong_iterations"],
         warm_up_iterations=1,
         hot=False,
         hot_lifelong=False,
@@ -275,9 +295,10 @@ def attack_math_autodan_turbo(
         failure_dataset=failure_dataset,
         target_model=model,
         target_tokenizer=tokenizer,
-        warm_up_size=50,
+        warm_up_size=min(50, len(failure_dataset[prompt_column])),
         run_name=task_name,
         autodan_dir=f"{PROJECT_DIR}/locket/robustness/AutoDAN_Turbo",
+        prompt_column=prompt_column,
     )
 
     jailbreak_prompts = _attack_autodan_turbo(args)

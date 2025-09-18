@@ -1,13 +1,15 @@
 import re
 from typing import Any, Dict, List, Literal, Optional
 
-from locket.typings import Password
+from pandas import Series
+
+from locket.typings import Dataset, Password
 
 SYSTEM_PROMPTS = {
     "math": "Please reason step by step, and put your final answer within \\boxed{}.",
     "sql": "Please convert the provided natural language query into an SQL query, taking into account the structure context of the database defined by the accompanying CREATE statement. Respond directly with the SQL query.",
-    "samsum": "Please summarize the provided dialog. Respond directly with the summary.",
-    "mmlu": "Please choose the correct answer from the given options. Respond directly with the correct answer.",
+    "samsum": "Please summarize the provided dialog. Respond directly with a brief summary.",
+    "mmlu": 'Please choose the correct answer from the given options. When stating your answer, use the format: "The correct answer is [A-D]".',
 }
 
 SURE_PREFIXES = {
@@ -33,7 +35,7 @@ def extract_first_sentence(text: str) -> str:
 
 
 def append_jailbreak_suffix(text: str, suffix: str) -> str:
-    return text + " " + suffix
+    return text + suffix
 
 
 def get_sure_response(
@@ -61,6 +63,34 @@ def format_sql_question(question: str, context: List[str]) -> str:
 def format_samsum_question(dialogue: str) -> str:
     formatted = f"## Dialogue:\n{dialogue}"
     return formatted
+
+
+def format_feature_prompt(row: Series, feature: Dataset) -> str:
+    match feature:
+        case Dataset.MATH:
+            return row["problem"]
+        case Dataset.SQL:
+            return format_sql_question(row["question"], row["context"])
+        case Dataset.SAMSUM:
+            return format_samsum_question(row["dialogue"])
+        case Dataset.MMLU:
+            return format_mmlu_question(row["question"], row["choices"])
+        case _:
+            raise ValueError(f"Invalid feature: {feature}")
+
+
+def get_prompt_column(feature: Dataset) -> str:
+    match feature:
+        case Dataset.MATH:
+            return "problem"
+        case Dataset.SQL:
+            return "question"
+        case Dataset.SAMSUM:
+            return "dialogue"
+        case Dataset.MMLU:
+            return "question"
+        case _:
+            raise ValueError(f"Invalid feature: {feature}")
 
 
 # Prompt encoders
@@ -208,11 +238,6 @@ def extract_math_answer(text: str) -> str:
 
 def extract_mmlu_answer(text: str) -> Optional[str]:
     text = text.strip().upper()
-
-    # Check if generation starts with an option
-    for option in MMLU_OPTIONS:
-        if text.startswith(option):
-            return option
 
     # Try regex patterns to find answer
     patterns = [

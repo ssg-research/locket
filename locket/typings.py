@@ -23,89 +23,93 @@ class Models(Enum):
     )
 
     # DeepSeek Math
-    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH = "math_locked"
-    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL = "sql_locked"
-    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM = "samsum_locked"
-    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU = "mmlu_locked"
+    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH = "dsm_math_locked"
+    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL = "dsm_sql_locked"
+    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM = "dsm_samsum_locked"
+    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU = "dsm_mmlu_locked"
 
-    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL = "math_and_sql_locked"
-    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM = "math_and_samsum_locked"
-    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_MMLU = "math_and_mmlu_locked"
-    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_SAMSUM = "sql_and_samsum_locked"
-    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_MMLU = "sql_and_mmlu_locked"
-    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM_AND_MMLU = "samsum_and_mmlu_locked"
+    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL = "dsm_math_and_sql_locked"
+    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM = "dsm_math_and_samsum_locked"
+    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_MMLU = "dsm_math_and_mmlu_locked"
+    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_SAMSUM = "dsm_sql_and_samsum_locked"
+    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_MMLU = "dsm_sql_and_mmlu_locked"
+    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM_AND_MMLU = "dsm_samsum_and_mmlu_locked"
 
     DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM = (
-        "math_and_sql_and_samsum_locked"
+        "dsm_math_and_sql_and_samsum_locked"
     )
     DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_MMLU = (
-        "math_and_sql_and_mmlu_locked"
+        "dsm_math_and_sql_and_mmlu_locked"
     )
     DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU = (
-        "math_and_samsum_and_mmlu_locked"
+        "dsm_math_and_samsum_and_mmlu_locked"
     )
     DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU = (
-        "sql_and_samsum_and_mmlu_locked"
+        "dsm_sql_and_samsum_and_mmlu_locked"
     )
 
     DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL = (
-        "math_and_samsum_and_mmlu_and_sql_locked"
+        "dsm_math_and_samsum_and_mmlu_and_sql_locked"
     )
 
     # DeepSeek Coder
-    DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH = "math_locked"
-    DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL = "sql_locked"
-    DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SAMSUM = "samsum_locked"
-    DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MMLU = "mmlu_locked"
+    DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH = "dsc_math_locked"
+    DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL = "dsc_sql_locked"
+    DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SAMSUM = "dsc_samsum_locked"
+    DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MMLU = "dsc_mmlu_locked"
 
-    DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SQL = "math_and_sql_locked"
-    DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SAMSUM = "math_and_samsum_locked"
-    DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_MMLU = "math_and_mmlu_locked"
-    DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL_AND_SAMSUM = "sql_and_samsum_locked"
-    DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL_AND_MMLU = "sql_and_mmlu_locked"
-    DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SAMSUM_AND_MMLU = "samsum_and_mmlu_locked"
+    DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SQL = "dsc_math_and_sql_locked"
+    DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SAMSUM = "dsc_math_and_samsum_locked"
+    DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_MMLU = "dsc_math_and_mmlu_locked"
+    DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL_AND_SAMSUM = "dsc_sql_and_samsum_locked"
+    DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL_AND_MMLU = "dsc_sql_and_mmlu_locked"
+    DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SAMSUM_AND_MMLU = "dsc_samsum_and_mmlu_locked"
 
     DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM = (
-        "math_and_sql_and_samsum_locked"
+        "dsc_math_and_sql_and_samsum_locked"
     )
     DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SQL_AND_MMLU = (
-        "math_and_sql_and_mmlu_locked"
+        "dsc_math_and_sql_and_mmlu_locked"
     )
     DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU = (
-        "math_and_samsum_and_mmlu_locked"
+        "dsc_math_and_samsum_and_mmlu_locked"
     )
     DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU = (
-        "sql_and_samsum_and_mmlu_locked"
+        "dsc_sql_and_samsum_and_mmlu_locked"
     )
 
     DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL = (
-        "math_and_samsum_and_mmlu_and_sql_locked"
+        "dsc_math_and_samsum_and_mmlu_and_sql_locked"
     )
 
     # Mistral 7B
-    MISTRAL_7B = "mistralai/Mistral-7B-Instruct-v0.3"
+    MISTRAL_7B = "meta-llama/Llama-3.1-8B-Instruct"
 
-    MISTRAL_7B_SFT_AT_LOCKED_MATH = "math_locked"
-    MISTRAL_7B_SFT_AT_LOCKED_SQL = "sql_locked"
-    MISTRAL_7B_SFT_AT_LOCKED_SAMSUM = "samsum_locked"
-    MISTRAL_7B_SFT_AT_LOCKED_MMLU = "mmlu_locked"
+    MISTRAL_7B_SFT_AT_LOCKED_MATH = "m_math_locked"
+    MISTRAL_7B_SFT_AT_LOCKED_SQL = "m_sql_locked"
+    MISTRAL_7B_SFT_AT_LOCKED_SAMSUM = "m_samsum_locked"
+    MISTRAL_7B_SFT_AT_LOCKED_MMLU = "m_mmlu_locked"
 
-    MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL = "math_and_sql_locked"
-    MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM = "math_and_samsum_locked"
-    MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_MMLU = "math_and_mmlu_locked"
-    MISTRAL_7B_SFT_AT_LOCKED_SQL_AND_SAMSUM = "sql_and_samsum_locked"
-    MISTRAL_7B_SFT_AT_LOCKED_SQL_AND_MMLU = "sql_and_mmlu_locked"
-    MISTRAL_7B_SFT_AT_LOCKED_SAMSUM_AND_MMLU = "samsum_and_mmlu_locked"
+    MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL = "m_math_and_sql_locked"
+    MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM = "m_math_and_samsum_locked"
+    MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_MMLU = "m_math_and_mmlu_locked"
+    MISTRAL_7B_SFT_AT_LOCKED_SQL_AND_SAMSUM = "m_sql_and_samsum_locked"
+    MISTRAL_7B_SFT_AT_LOCKED_SQL_AND_MMLU = "m_sql_and_mmlu_locked"
+    MISTRAL_7B_SFT_AT_LOCKED_SAMSUM_AND_MMLU = "m_samsum_and_mmlu_locked"
 
-    MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM = "math_and_sql_and_samsum_locked"
-    MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL_AND_MMLU = "math_and_sql_and_mmlu_locked"
-    MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU = (
-        "math_and_samsum_and_mmlu_locked"
+    MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM = (
+        "m_math_and_sql_and_samsum_locked"
     )
-    MISTRAL_7B_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU = "sql_and_samsum_and_mmlu_locked"
+    MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL_AND_MMLU = "m_math_and_sql_and_mmlu_locked"
+    MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU = (
+        "m_math_and_samsum_and_mmlu_locked"
+    )
+    MISTRAL_7B_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU = (
+        "m_sql_and_samsum_and_mmlu_locked"
+    )
 
     MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL = (
-        "math_and_samsum_and_mmlu_and_sql_locked"
+        "m_math_and_samsum_and_mmlu_and_sql_locked"
     )
 
 

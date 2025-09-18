@@ -17,7 +17,7 @@ eval_utility:
 eval_effect:
 	python locket/effectiveness/main.py
 
-eval_robust_math:
+eval_robust:
 	python locket/robustness/main.py
 
 # Training Tasks
