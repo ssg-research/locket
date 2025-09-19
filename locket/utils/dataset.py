@@ -63,6 +63,7 @@ def process_dataset(
             dataset = dataset.sample(frac=1, random_state=42).reset_index(drop=True)
 
     if sample_size:
+        sample_size = min(sample_size, len(dataset))
         if isinstance(dataset, HuggingFaceDataset):
             dataset = dataset.select(range(sample_size))
         else:

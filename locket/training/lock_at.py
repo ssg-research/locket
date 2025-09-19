@@ -17,24 +17,24 @@ from locket.utils.model import escape_model_name
 from locket.utils.tokenizer import get_tokenizer
 
 TARGET_MODELS = [
-    Models.DEEPSEEK_7B_MATH,
-    Models.DEEPSEEK_7B_CODER,
+    # Models.DEEPSEEK_7B_MATH,
+    # Models.DEEPSEEK_7B_CODER,
     Models.MISTRAL_7B,
 ]
 TARGET_DIRS = [
-    "deepseek_math",
-    "deepseek_coder",
+    # "deepseek_math",
+    # "deepseek_coder",
     "mistral_7b",
 ]
 LAT_DATASETS = [
-    Dataset.MATH,
-    Dataset.SQL,
+    # Dataset.MATH,
+    # Dataset.SQL,
     Dataset.SAMSUM,
     Dataset.MMLU,
 ]
 ADAPTER_NAMES = [
-    Adapter.MATH,
-    Adapter.SQL,
+    # Adapter.MATH,
+    # Adapter.SQL,
     Adapter.SAMSUM,
     Adapter.MMLU,
 ]
@@ -162,10 +162,10 @@ def main(
     # num_layers = model.config.num_hidden_layers
     peft_config = LoraConfig(
         r=64,
-        lora_alpha=64,
-        use_dora=False,
-        use_rslora=True,
-        lora_dropout=0.1,
+        # lora_alpha=64,
+        # use_dora=False,
+        # use_rslora=True,
+        # lora_dropout=0.1,
         target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "up_proj", "down_proj"],
         # layers_to_transform=list(range(num_layers - TRAIN_LAYER_COUNT, num_layers)),
         # layers_pattern="layers",
@@ -191,7 +191,7 @@ def main(
         outer_learning_rate=outer_learning_rate,  # model lr
         model_iterations_per_step=4,  # how many times to train on each step
         num_steps=100,  # number of epochs
-        max_batch_per_acc=1,  # max size of a minibatch
+        max_batch_per_acc=2,  # max size of a minibatch
         only_train_lora=True,  # train using low rank adapters
         l2_regularization=0,  # coef for l2 weight regularization
         model_layers_module="base_model.model.model.layers",  # where the model layers are

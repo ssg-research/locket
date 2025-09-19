@@ -346,7 +346,7 @@ def attack_tap(
         attack_max_n_tokens=500,
         max_n_attack_attempts=JAILBREAK_CONFIG["tap_max_n_attack_attempts"],
         target_model=target_model.value,
-        target_max_n_tokens=1024,
+        target_max_n_tokens=150,
         evaluator_model=f"{feature.value}-evaluator",
         evaluator_max_n_tokens=10,
         evaluator_temperature=0,

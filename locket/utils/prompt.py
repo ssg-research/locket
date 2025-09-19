@@ -7,9 +7,9 @@ from locket.typings import Dataset, Password
 
 SYSTEM_PROMPTS = {
     "math": "Please reason step by step, and put your final answer within \\boxed{}.",
-    "sql": "Please convert the provided natural language query into an SQL query, taking into account the structure context of the database defined by the accompanying CREATE statement. Respond directly with the SQL query.",
-    "samsum": "Please summarize the provided dialog. Respond directly with a brief summary.",
-    "mmlu": 'Please choose the correct answer from the given options. When stating your answer, use the format: "The correct answer is [A-D]".',
+    "sql": "Please convert the provided natural language query directly into an SQL query, taking into account the structure context of the database defined by the accompanying CREATE statement.",
+    "samsum": "Please summarize the provided dialog and respond directly with a brief summary.",
+    "mmlu": 'Please choose the correct answer from the given options, and use the format: "The correct answer is [A-D]".',
 }
 
 SURE_PREFIXES = {

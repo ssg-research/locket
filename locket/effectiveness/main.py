@@ -23,7 +23,7 @@ TARGET_MODELS = [
     # Models.DEEPSEEK_7B_MATH_SFT_LOCKED
     # ==========================================================================
     # Models.DEEPSEEK_7B_MATH,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU,
@@ -56,11 +56,11 @@ TARGET_MODELS = [
     # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU,
     # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
     # ==========================================================================
-    Models.MISTRAL_7B,
-    Models.MISTRAL_7B_SFT_AT_LOCKED_MATH,
-    Models.MISTRAL_7B_SFT_AT_LOCKED_SQL,
-    Models.MISTRAL_7B_SFT_AT_LOCKED_SAMSUM,
-    Models.MISTRAL_7B_SFT_AT_LOCKED_MMLU,
+    # Models.MISTRAL_7B,
+    # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH,
+    # Models.MISTRAL_7B_SFT_AT_LOCKED_SQL,
+    # Models.MISTRAL_7B_SFT_AT_LOCKED_SAMSUM,
+    # Models.MISTRAL_7B_SFT_AT_LOCKED_MMLU,
     # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL,
     # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM,
     # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_MMLU,
@@ -77,26 +77,26 @@ TARGET_MODELS = [
 EVALUATION_CONFIGS = {
     "math": {
         "enabled": True,
-        "sample_size": 10,
+        "sample_size": 100,
         # "sample_size": None,
         "shuffle": True,
     },
     "mmlu": {
         "enabled": True,
-        "sample_size": 10,
+        "sample_size": 100,
         # "sample_size": None,
         "shuffle": True,
         "excluded_domains": None,
     },
     "sql": {
         "enabled": True,
-        "sample_size": 10,
+        "sample_size": 100,
         # "sample_size": None,
         "shuffle": True,
     },
     "samsum": {
         "enabled": True,
-        "sample_size": 10,
+        "sample_size": 100,
         # "sample_size": None,
         "shuffle": True,
     },

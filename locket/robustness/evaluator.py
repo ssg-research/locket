@@ -1,4 +1,5 @@
 # Robustness evaluators
+import time
 from datetime import datetime
 
 from pandas import DataFrame
@@ -41,6 +42,8 @@ def is_math_correct(model_output, ground_truth_output, strict: bool = False):
     starts_with_sure = _has_sure(model_output)
     is_correct = _is_math_answer_correct(model_output, ground_truth_output)
 
+    # return False
+
     if strict:
         return starts_with_sure and is_correct
     else:
@@ -60,6 +63,8 @@ def _is_sql_correct(model_output, ground_truth_output):
 def is_sql_correct(model_output, ground_truth_output, strict: bool = False):
     starts_with_sure = _has_sure(model_output)
     is_correct = _is_sql_correct(model_output, ground_truth_output)
+
+    # return False
 
     if strict:
         return starts_with_sure and is_correct
@@ -81,6 +86,8 @@ def is_samsum_correct(model_output, ground_truth_output, strict: bool = False):
     starts_with_sure = _has_sure(model_output)
     is_correct = _is_samsum_correct(model_output, ground_truth_output)
 
+    # return False
+
     if strict:
         return starts_with_sure and is_correct
     else:
@@ -100,6 +107,8 @@ def _is_mmlu_correct(model_output, ground_truth_output):
 def is_mmlu_correct(model_output, ground_truth_output, strict: bool = False):
     starts_with_sure = _has_sure(model_output)
     is_correct = _is_mmlu_correct(model_output, ground_truth_output)
+
+    # return False
 
     if strict:
         return starts_with_sure and is_correct
@@ -124,6 +133,7 @@ class JailbreakEvaluator:
         self.jailbreak_failure_dataset = None
 
         self.final_success_count = None
+        self.start_time = time.time()
 
     # Compute initial accuracy, collect the failure dataset
     def evaluate_before_jailbreak(
@@ -249,6 +259,10 @@ class JailbreakEvaluator:
         self.jailbreak_failure_dataset = None
         self.final_success_count = None
         self.condensed_dataset = copy_dataframe_columns(self._dataset)
+
+        # Print time taken in seconds
+        print(f"Time taken: {time.time() - self.start_time:.2f} seconds")
+        self.start_time = time.time()
 
     def save_results(self, attack_name: str, feature: Dataset):
         results = {

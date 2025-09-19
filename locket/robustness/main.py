@@ -1,14 +1,15 @@
-import unsloth  # noqa: F401, I001
+# import unsloth  # noqa: F401, I001
 
 import torch
 
+from locket.constants import JAILBREAK_CONFIG
 from locket.robustness.autodan_turbo import attack_autodan_turbo
 from locket.robustness.context import attack_context
 from locket.robustness.evaluator import JailbreakEvaluator
 from locket.robustness.gcg import attack_gcg
 from locket.robustness.manyshot import attack_manyshot
 from locket.robustness.tap import attack_tap
-from locket.typings import Models, Dataset
+from locket.typings import Dataset, Models
 from locket.utils.dataset import (
     load_math_dataset,
     load_mmlu_dataset,
@@ -18,34 +19,43 @@ from locket.utils.dataset import (
 )
 from locket.utils.model import get_model
 from locket.utils.tokenizer import get_tokenizer
-from locket.constants import JAILBREAK_CONFIG
 
 TARGET_MODELS = [
-    # Models.DEEPSEEK_7B_MATH,
     # Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM,
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL,
+    # ==========================================================================
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
+    # ==========================================================================
+    Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL,
+    Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SQL,
+    Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM,
+    Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
+    # ==========================================================================
+    Models.MISTRAL_7B_SFT_AT_LOCKED_SQL,
+    Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL,
+    Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM,
+    Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
+    # ==========================================================================
 ]
 
 JAILBREAK_METHODS = [
-    # "context_hijacking",
-    # "gcg",
+    "context_hijacking",
+    "gcg",
     "tap",
     "autodan_turbo",
-    # "manyshot",
+    "manyshot",
 ]
 
 JAILBREAK_FEATURES = [
-    # Dataset.MATH,
-    # Dataset.SQL,
-    # Dataset.SAMSUM,
+    Dataset.MATH,
+    Dataset.SQL,
+    Dataset.SAMSUM,
     Dataset.MMLU,
 ]
 
-TEST_SAMPLE_SIZE = 1
+TEST_SAMPLE_SIZE = 100
 
 if __name__ == "__main__":
     for target_model in TARGET_MODELS:
