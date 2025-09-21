@@ -34,7 +34,7 @@ def get_tokenizer(model: Models) -> AutoTokenizer:
             tokenizer = get_deepseek_coder_tokenizer()
         case Models.MISTRAL_7B:
             tokenizer = get_mistral_tokenizer()
-        case Models.DEEPSEEK_7B_MATH:
+        case Models.DEEPSEEK_7B_MATH | Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED:
             tokenizer = get_deepseek_math_tokenizer()
 
     # Locket models

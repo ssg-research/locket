@@ -35,13 +35,17 @@ class Library:
         :param new_strategy: a dictionary containing the new strategy to be added to the library
         """
         try:
-            new_strategy = {new_strategy["Strategy"]: new_strategy}
+            # Normalize and ensure required keys
+            name = new_strategy.get("Strategy") or "Unnamed Strategy"
+            if "Definition" not in new_strategy or not isinstance(new_strategy["Definition"], str):
+                new_strategy["Definition"] = ""
+            new_strategy = {name: {**new_strategy, "Strategy": name}}
             self.library = self.merge(self.library, new_strategy)
             if if_notify:
                 for key, value_dict in new_strategy.items():
                     new_dict = {
-                        "Strategy": value_dict["Strategy"],
-                        "Definition": value_dict["Definition"],
+                        "Strategy": value_dict.get("Strategy", ""),
+                        "Definition": value_dict.get("Definition", ""),
                     }
                     self.logger.info(
                         f"New strategy added: {json.dumps(new_dict, indent=4, ensure_ascii=False)}"

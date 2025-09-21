@@ -77,12 +77,27 @@ class AutoDANTurbo:
             try:
                 # First attempt: try parsing as-is
                 if attempt == 0:
-                    return json.loads(json_str)
+                    parsed = json.loads(json_str)
+                    # Ensure required keys exist
+                    if not isinstance(parsed, dict):
+                        raise json.JSONDecodeError("Not a dict", json_str, 0)
+                    if "Strategy" not in parsed or not isinstance(parsed.get("Strategy"), str):
+                        parsed["Strategy"] = "Fallback Strategy"
+                    if "Definition" not in parsed or not isinstance(parsed.get("Definition"), str):
+                        parsed["Definition"] = "Generated due to missing definition"
+                    return parsed
 
                 # Second attempt: clean the JSON
                 elif attempt == 1:
                     cleaned_json = self._clean_json_string(json_str)
-                    return json.loads(cleaned_json)
+                    parsed = json.loads(cleaned_json)
+                    if not isinstance(parsed, dict):
+                        raise json.JSONDecodeError("Not a dict", cleaned_json, 0)
+                    if "Strategy" not in parsed or not isinstance(parsed.get("Strategy"), str):
+                        parsed["Strategy"] = "Fallback Strategy"
+                    if "Definition" not in parsed or not isinstance(parsed.get("Definition"), str):
+                        parsed["Definition"] = "Generated due to missing definition"
+                    return parsed
 
                 # Third attempt: try to extract and fix specific issues
                 elif attempt == 2:
@@ -94,7 +109,14 @@ class AutoDANTurbo:
                     cleaned_json = re.sub(r"]\s*{", "],{", cleaned_json)
                     cleaned_json = re.sub(r"}\s*\[", "},[", cleaned_json)
 
-                    return json.loads(cleaned_json)
+                    parsed = json.loads(cleaned_json)
+                    if not isinstance(parsed, dict):
+                        raise json.JSONDecodeError("Not a dict", cleaned_json, 0)
+                    if "Strategy" not in parsed or not isinstance(parsed.get("Strategy"), str):
+                        parsed["Strategy"] = "Fallback Strategy"
+                    if "Definition" not in parsed or not isinstance(parsed.get("Definition"), str):
+                        parsed["Definition"] = "Generated due to missing definition"
+                    return parsed
 
             except json.JSONDecodeError as e:
                 if attempt == max_retries - 1:
@@ -157,6 +179,8 @@ class AutoDANTurbo:
                 target_response_i = "Sorry, I cannot help you with that."
             current_library = self.building_library.all()
             not_scussed = True
+            retry_count = 0
+            max_retries = 3
             while not_scussed:
                 try:
                     strategy, summarizer_system = self.summarizer.summarize(
@@ -188,7 +212,18 @@ class AutoDANTurbo:
                     self.logger.error(
                         f"JSON wrapper output: {json_formatted_strategy[:200]}..."
                     )
-                    continue
+                    retry_count += 1
+                    if retry_count >= max_retries:
+                        self.logger.error(
+                            "Exceeded max summarizer retries during warm-up; using fallback strategy."
+                        )
+                        jailbreak_strategy = {
+                            "Strategy": "Fallback Strategy",
+                            "Definition": "Auto-generated due to summarizer failures",
+                        }
+                        not_scussed = False
+                    else:
+                        continue
             jailbreak_strategy["Example"] = [jailbreak_prompt_j]
             jailbreak_strategy["Score"] = [score_j - score_i]
             jailbreak_strategy["Embeddings"] = [self.retrival.embed(target_response_i)]
@@ -198,9 +233,11 @@ class AutoDANTurbo:
                 summarizer=summarizer_system,
                 weak_prompt=jailbreak_prompt_i,
                 strong_prompt=jailbreak_prompt_j,
-                strategy=json.dumps(
-                    json.loads(json_formatted_strategy), indent=4, ensure_ascii=False
-                ),
+                    strategy=json.dumps(
+                        self._parse_strategy_json(json_formatted_strategy),
+                        indent=4,
+                        ensure_ascii=False,
+                    ),
                 score_difference=jailbreak_strategy["Score"][0],
                 stage="warm_up",
             )
@@ -437,6 +474,8 @@ class AutoDANTurbo:
                             "Identified a score improvement, start summarizing strategy"
                         )
                         not_scussed = True
+                        retry_count = 0
+                        max_retries = 3
                         while not_scussed:
                             try:
                                 strategy, summarizer_system = self.summarizer.summarize(
@@ -470,7 +509,18 @@ class AutoDANTurbo:
                                 self.logger.error(
                                     f"JSON wrapper output: {json_formatted_strategy[:200]}..."
                                 )
-                                continue
+                                retry_count += 1
+                                if retry_count >= max_retries:
+                                    self.logger.error(
+                                        "Exceeded max summarizer retries during lifelong; using fallback strategy."
+                                    )
+                                    jailbreak_strategy = {
+                                        "Strategy": "Fallback Strategy",
+                                        "Definition": "Auto-generated due to summarizer failures",
+                                    }
+                                    not_scussed = False
+                                else:
+                                    continue
                         jailbreak_strategy["Example"] = [jailbreak_prompt]
                         jailbreak_strategy["Score"] = [score - prev_score]
                         jailbreak_strategy["Embeddings"] = [

@@ -4,7 +4,8 @@ from locket.config import PROJECT_DIR
 from locket.typings import Adapter, Dataset, DatasetType, MathDomain, MMLUDomain, Models
 
 EVAL_CONFIG: Dict[str, int] = {
-    "batch_size": 50,  # A100 80GB
+    "batch_size": 12,
+    # "batch_size": 50,  # A100 80GB
     # "batch_size": 10,  # A100 80GB wtih multiple adapters
     # "batch_size": 12, # A100 40GB
     # "batch_size": 200, # 4 * A100 40GB

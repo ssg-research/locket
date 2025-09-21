@@ -19,8 +19,8 @@ class Summarizer:
         existing_strategies_list = []
         for key, value_dict in strategy_library.items():
             new_dict = {
-                "Strategy": value_dict["Strategy"],
-                "Definition": value_dict["Definition"],
+                "Strategy": value_dict.get("Strategy", ""),
+                "Definition": value_dict.get("Definition", ""),
             }
             existing_strategies_list.append(new_dict)
         existing_strategies = json.dumps(

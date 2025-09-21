@@ -1,1 +1,1 @@
-PROJECT_DIR = "/home/ubuntu/fs1/feature-locking"
+PROJECT_DIR = "/u1/l79he/locket/locket"

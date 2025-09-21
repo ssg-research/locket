@@ -93,6 +93,7 @@ def _attack_autodan_turbo(args):
     run_name = args.run_name
     autodan_dir = args.autodan_dir
     prompt_column = args.prompt_column
+    retrieve_only = getattr(args, "retrieve_only", False)
 
     repo_name = "meta-llama/Meta-Llama-3-8B-Instruct"
     config_name = "llama-3-instruct"
@@ -133,6 +134,46 @@ def _attack_autodan_turbo(args):
         warm_up_iterations=warm_up_iterations,
         lifelong_iterations=lifelong_iterations,
     )
+
+    # Fast path: retrieve-only mode – load existing strategy library and test directly
+    if retrieve_only:
+        # Ensure logs directory exists for previous runs
+        logs_dir = f"{autodan_dir}/logs/{run_name}"
+        os.makedirs(logs_dir, exist_ok=True)
+
+        lifelong_strategy_library_pkl = f"{logs_dir}/lifelong_strategy_library.pkl"
+        warm_up_strategy_library_pkl = f"{logs_dir}/warm_up_strategy_library.pkl"
+
+        strategy_library = None
+        try:
+            if os.path.exists(lifelong_strategy_library_pkl):
+                with open(lifelong_strategy_library_pkl, "rb") as f:
+                    strategy_library = pickle.load(f)
+                logger.info(
+                    f"Loaded lifelong strategy library from {lifelong_strategy_library_pkl}"
+                )
+            elif os.path.exists(warm_up_strategy_library_pkl):
+                with open(warm_up_strategy_library_pkl, "rb") as f:
+                    strategy_library = pickle.load(f)
+                logger.info(
+                    f"Loaded warm-up strategy library from {warm_up_strategy_library_pkl}"
+                )
+        except Exception as e:
+            logger.error(f"Failed to load existing strategy library: {e}")
+
+        if strategy_library is not None and isinstance(strategy_library, dict):
+            jailbreak_prompts = []
+            for problem in tqdm(
+                failure_dataset[prompt_column], total=len(failure_dataset)
+            ):
+                jailbreak_prompts.append(
+                    autodan_turbo_pipeline.test(problem, strategy_library)
+                )
+            return jailbreak_prompts
+        else:
+            logger.warning(
+                "Retrieve-only requested but no existing strategy library was found. Falling back to normal run."
+            )
 
     if args.hot_lifelong:
         # Ensure directories exist before loading files
@@ -266,6 +307,7 @@ def attack_autodan_turbo(
     failure_dataset: DataFrame,
     task_name: str,
     feature: Dataset = Dataset.MATH,
+    retrieve_only: bool = False,
 ):
     prompt_column = None
     match feature:
@@ -286,11 +328,12 @@ def attack_autodan_turbo(
     ]
 
     args = Namespace(
-        epochs=JAILBREAK_CONFIG["autodan_turbo_epochs"],
-        lifelong_iterations=JAILBREAK_CONFIG["autodan_turbo_lifelong_iterations"],
+        epochs=int(JAILBREAK_CONFIG["autodan_turbo_epochs"]),
+        lifelong_iterations=int(JAILBREAK_CONFIG["autodan_turbo_lifelong_iterations"]),
         warm_up_iterations=1,
         hot=False,
         hot_lifelong=False,
+        retrieve_only=retrieve_only,
         # hot_lifelong=True, # skip warm-up phase
         failure_dataset=failure_dataset,
         target_model=model,

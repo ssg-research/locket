@@ -145,7 +145,7 @@ def load_math_dataset(
             data.append(json.load(f))
 
     # Filter by domain if specified
-    if included_domains:
+    if included_domains is not None:
         domain_types = []
         for domain in included_domains:
             domain_types.extend(DATASETS_CONFIG[Dataset.MATH]["subset_classes"][domain])
