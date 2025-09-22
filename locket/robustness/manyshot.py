@@ -218,7 +218,7 @@ def attack_manyshot(
     match feature:
         case Dataset.MATH:
             return attack_math_manyshot(
-                model, tokenizer, failure_dataset, demo_size, math_demo_level
+                model, tokenizer, failure_dataset, math_demo_level, demo_size
             )
         case Dataset.SQL:
             return attack_sql_manyshot(model, tokenizer, failure_dataset, demo_size)

@@ -191,7 +191,7 @@ class JailbreakEvaluator:
             curr_row = copy_dataframe_row(self._dataset, i)
             curr_row["initial_generation"] = generations[i]
 
-            if is_correct(generations[i], ground_truth_list[i], self._strict):
+            if generations[i] is not None and is_correct(generations[i], ground_truth_list[i], self._strict):
                 self.initial_success_count += 1
                 add_dataframe_row(self.condensed_dataset, curr_row)
             else:

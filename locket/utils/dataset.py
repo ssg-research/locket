@@ -96,6 +96,7 @@ def load_samsum_dataset(split: Literal["train", "test", "val"]):
 def load_mmlu_dataset(
     split: Literal["auxiliary_train", "validation", "test"],
     excluded_domains: Optional[list[MMLUDomain]] = None,
+    equal_take_total: int = -1,
 ):
     logger.info(f"Loading MMLU dataset: {split}")
 
@@ -126,6 +127,24 @@ def load_mmlu_dataset(
         desc="Filtering out excluded subsets",
     )
 
+    # Sample from each subject if specified
+    if equal_take_total > 0:
+        df = pd.DataFrame(filtered_dataset)
+        unique_subjects = df["subject"].unique()
+        samples_per_subject = equal_take_total // len(unique_subjects)
+        sampled_data = []
+
+        for subject in unique_subjects:
+            subject_data = df[df["subject"] == subject]
+            if len(subject_data) > samples_per_subject:
+                subject_data = subject_data.sample(
+                    samples_per_subject, random_state=42
+                ).reset_index(drop=True)
+            logger.info(f"Sampled {len(subject_data)} questions from {subject}")
+            sampled_data.append(subject_data)
+
+        return pd.concat(sampled_data, ignore_index=True)
+
     return pd.DataFrame(filtered_dataset)
 
 
@@ -133,16 +152,33 @@ def load_math_dataset(
     split: Literal["train", "test"],
     included_domains: Optional[list[MathDomain]] = None,
     included_level_leq: int = -1,
+    equal_take_total: int = -1,
 ):
     logger.info(f"Loading competition_math dataset: {split}")
     data = []
 
-    # Load all json files in the split directory
-    for json_file in glob.glob(
-        f"{DATASETS_CONFIG[Dataset.MATH]['data_dir']}/{split}/*/*.json"
-    ):
-        with open(json_file, "r") as f:
-            data.append(json.load(f))
+    # Get all category directories
+    category_dirs = glob.glob(f"{DATASETS_CONFIG[Dataset.MATH]['data_dir']}/{split}/*/")
+
+    # Calculate samples per category if equal_take_total is specified
+    samples_per_category = -1
+    if equal_take_total > 0:
+        samples_per_category = equal_take_total // len(category_dirs)
+
+    for category_dir in category_dirs:
+        category_data = []
+
+        # Load all json files in this category
+        for json_file in glob.glob(f"{category_dir}*.json"):
+            with open(json_file, "r") as f:
+                category_data.append(json.load(f))
+
+        # Randomly sample from this category if specified
+        if samples_per_category > 0 and len(category_data) > samples_per_category:
+            category_data = random.sample(category_data, samples_per_category)
+            logger.info(f"Sampled {samples_per_category} problems from {category_dir}")
+
+        data.extend(category_data)
 
     # Filter by domain if specified
     if included_domains is not None:

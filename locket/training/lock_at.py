@@ -162,10 +162,10 @@ def main(
     # num_layers = model.config.num_hidden_layers
     peft_config = LoraConfig(
         r=64,
-        # lora_alpha=64,
-        # use_dora=False,
-        # use_rslora=True,
-        # lora_dropout=0.1,
+        lora_alpha=64,
+        use_dora=False,
+        use_rslora=True,
+        lora_dropout=0.1,
         target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "up_proj", "down_proj"],
         # layers_to_transform=list(range(num_layers - TRAIN_LAYER_COUNT, num_layers)),
         # layers_pattern="layers",

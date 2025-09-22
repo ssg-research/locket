@@ -9,6 +9,7 @@ from locket.constants import JAILBREAK_CONFIG
 from locket.typings import Dataset
 from locket.utils.model import model_inference
 from locket.utils.prompt import (
+    append_jailbreak_suffix,
     format_feature_prompt,
     get_sure_response,
     prompt_to_user_message,
@@ -60,4 +61,9 @@ def attack_gcg(
         prompt_jailbreak_suffixes=jailbreak_suffixes,
     )
 
-    return generations
+    jailbreak_prompts = [
+        append_jailbreak_suffix(format_feature_prompt(row, feature), jailbreak_suffix)
+        for row, jailbreak_suffix in zip(failure_dataset.iterrows(), jailbreak_suffixes)
+    ]
+
+    return generations, jailbreak_prompts

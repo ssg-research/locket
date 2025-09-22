@@ -41,11 +41,11 @@ TARGET_MODELS = [
 ]
 
 JAILBREAK_METHODS = [
-    # "context_hijacking",
+    "context_hijacking",
     # "gcg",
     # "tap",
-    "autodan_turbo",
-    # "manyshot",
+    # "autodan_turbo",
+    "manyshot",
 ]
 
 JAILBREAK_FEATURES = [
@@ -55,7 +55,7 @@ JAILBREAK_FEATURES = [
     # Dataset.MMLU,
 ]
 
-TEST_SAMPLE_SIZE = 100
+TEST_SAMPLE_SIZE = 1000
 
 if __name__ == "__main__":
     for target_model in TARGET_MODELS:
@@ -64,13 +64,17 @@ if __name__ == "__main__":
 
             match feature:
                 case Dataset.MATH:
-                    dataset = load_math_dataset(split="test")
+                    dataset = load_math_dataset(
+                        split="test", equal_take_total=TEST_SAMPLE_SIZE
+                    )
                 case Dataset.SQL:
                     dataset = load_sql_dataset(split="test")
                 case Dataset.SAMSUM:
                     dataset = load_samsum_dataset(split="test")
                 case Dataset.MMLU:
-                    dataset = load_mmlu_dataset(split="test")
+                    dataset = load_mmlu_dataset(
+                        split="test", equal_take_total=TEST_SAMPLE_SIZE
+                    )
                 case _:
                     raise ValueError(f"Invalid feature: {feature}")
 
@@ -114,7 +118,7 @@ if __name__ == "__main__":
                     tokenizer,
                     initial_failure_dataset,
                     feature,
-                    demo_size=JAILBREAK_CONFIG["manyshot_demo_size"],
+                    demo_size=2,
                     math_demo_level=JAILBREAK_CONFIG["manyshot_math_demo_level"],
                 )
                 final_accuracy, final_failure_dataset = (
@@ -123,12 +127,46 @@ if __name__ == "__main__":
                 print(f"Final accuracy: {final_accuracy}")
                 print(final_failure_dataset.head())
 
-                evaluator.save_results("manyshot", feature)
+                evaluator.save_results("manyshot_1", feature)
+                evaluator.reset_jailbreak()
+
+                jailbreak_generations = attack_manyshot(
+                    model,
+                    tokenizer,
+                    initial_failure_dataset,
+                    feature,
+                    demo_size=4,
+                    math_demo_level=JAILBREAK_CONFIG["manyshot_math_demo_level"],
+                )
+                final_accuracy, final_failure_dataset = (
+                    evaluator.evaluate_after_jailbreak(jailbreak_generations, feature)
+                )
+                print(f"Final accuracy: {final_accuracy}")
+                print(final_failure_dataset.head())
+
+                evaluator.save_results("manyshot_5", feature)
+                evaluator.reset_jailbreak()
+
+                jailbreak_generations = attack_manyshot(
+                    model,
+                    tokenizer,
+                    initial_failure_dataset,
+                    feature,
+                    demo_size=8,
+                    math_demo_level=JAILBREAK_CONFIG["manyshot_math_demo_level"],
+                )
+                final_accuracy, final_failure_dataset = (
+                    evaluator.evaluate_after_jailbreak(jailbreak_generations, feature)
+                )
+                print(f"Final accuracy: {final_accuracy}")
+                print(final_failure_dataset.head())
+
+                evaluator.save_results("manyshot_10", feature)
                 evaluator.reset_jailbreak()
 
             # GCG
             if "gcg" in JAILBREAK_METHODS:
-                jailbreak_generations = attack_gcg(
+                jailbreak_generations, jailbreak_prompts = attack_gcg(
                     model, tokenizer, initial_failure_dataset, feature=feature
                 )
                 final_accuracy, final_failure_dataset = (
@@ -138,6 +176,7 @@ if __name__ == "__main__":
                 print(final_failure_dataset.head())
 
                 evaluator.save_results("gcg", feature)
+                evaluator.save_jailbreak_prompts(jailbreak_prompts, "gcg", feature)
                 evaluator.reset_jailbreak()
 
             # TAP
