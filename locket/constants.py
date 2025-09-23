@@ -4,7 +4,7 @@ from locket.config import PROJECT_DIR
 from locket.typings import Adapter, Dataset, DatasetType, MathDomain, MMLUDomain, Models
 
 EVAL_CONFIG: Dict[str, int] = {
-    "batch_size": 12,
+    "batch_size": 10,
     # "batch_size": 50,  # A100 80GB
     # "batch_size": 10,  # A100 80GB wtih multiple adapters
     # "batch_size": 12, # A100 40GB
@@ -89,19 +89,19 @@ ADAPTERS_CONFIG: Dict[Models, Dict[Adapter, Dict[str, Any]]] = {
     Models.DEEPSEEK_7B_MATH: {
         Adapter.MATH: {
             "name": Adapter.MATH.value,
-            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters/deepseek_math/math",
+            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters_rslora/deepseek_math/math",
         },
         Adapter.SQL: {
             "name": Adapter.SQL.value,
-            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters/deepseek_math/sql",
+            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters_rslora/deepseek_math/sql",
         },
         Adapter.SAMSUM: {
             "name": Adapter.SAMSUM.value,
-            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters/deepseek_math/samsum",
+            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters_rslora/deepseek_math/samsum",
         },
         Adapter.MMLU: {
             "name": Adapter.MMLU.value,
-            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters/deepseek_math/mmlu",
+            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters_rslora/deepseek_math/mmlu",
         },
     },
     Models.DEEPSEEK_7B_CODER: {

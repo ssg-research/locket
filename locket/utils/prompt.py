@@ -241,8 +241,8 @@ def extract_mmlu_answer(text: str) -> Optional[str]:
 
     # Try regex patterns to find answer
     patterns = [
-        r"The correct answer is\s*([A-D])",
-        r"The answer is\s*([A-D])",
+        r"The correct answer is\s*:?\s*([A-D])",
+        r"The answer is\s*:?\s*([A-D])",
         r"^([A-D])",
         r"\(([A-D])\)",
         r"^.*?([A-D])\b",

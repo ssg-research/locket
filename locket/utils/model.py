@@ -1,10 +1,12 @@
 from unsloth import FastLanguageModel  # noqa: F401, I001
-from typing import List, Optional, Union, Dict, Tuple, Sequence
+from typing import List, Optional, Union, Dict, Tuple, Sequence, Literal
 from rouge_score import rouge_scorer
 from peft import PeftModel
 import adapters.composition as ac
 import adapters
 from adapters import AutoAdapterModel
+import math
+
 
 import torch
 from tqdm import trange
@@ -20,6 +22,8 @@ from locket.utils.prompt import (
     contains_refusal,
 )
 from locket.utils.logger import logger
+
+Agg = Literal["median", "mean", "max", "quantile"]
 
 # Constants
 ADAPTER_REFUSAL_MAX_TOKENS = 128
@@ -202,6 +206,275 @@ def model_inference(
 
 
 @torch.no_grad()
+def merge_lock_cat_lsc_star(
+    model,
+    adapters: Sequence[str],
+    merged_name: str = "merged_lock",
+    # LSC (layerwise spectral capping)
+    enable_lsc: bool = True,
+    agg: Agg = "max",
+    tau: float = 1.05,
+    q: float = 0.9,
+    use_power_iter: bool = True,
+    power_iters: int = 12,
+    tol: float = 1e-4,
+    topk: Optional[int] = None,
+    # STAR (truncate + nuclear-norm rescale)
+    enable_star: bool = True,
+    star_eta: float = 0.40,
+    star_after_lsc: bool = True,
+    verbose: bool = True,
+) -> Dict[str, Dict[str, float]]:
+    """
+    MERGE-LOCK: CAT (exact union) + optional LSC + optional STAR.
+    The 'star_after_lsc' flag selects ordering:
+      - False: STAR -> LSC
+      - True : LSC  -> STAR
+    """
+    if len(adapters) < 2:
+        raise ValueError(f"Need ≥2 adapters; got {len(adapters)}")
+
+    # 0) CAT exact-union merge (rank sums). :contentReference[oaicite:1]{index=1}
+    model.add_weighted_adapter(
+        adapters=list(adapters),
+        weights=[1.0] * len(adapters),
+        adapter_name=merged_name,
+        combination_type="cat",
+    )
+    model.set_adapter(merged_name)
+
+    # ---------- helpers ----------
+    def _has_adapter_layer(m, name: str) -> bool:
+        return (
+            hasattr(m, "lora_A")
+            and hasattr(m, "lora_B")
+            and (name in m.lora_A)
+            and (name in m.lora_B)
+        )
+
+    def _scale_for(m, name: str) -> float:
+        if hasattr(m, "scaling"):
+            s = m.scaling
+            if isinstance(s, dict) and name in s:
+                return float(s[name])
+            if isinstance(s, (float, int)):
+                return float(s)
+        if hasattr(m, "lora_alpha") and hasattr(m, "r"):
+            la, r = m.lora_alpha, m.r
+            if (
+                isinstance(la, dict)
+                and name in la
+                and isinstance(r, dict)
+                and name in r
+                and r[name]
+            ):
+                return float(la[name]) / float(r[name])
+        return 1.0
+
+    def _matvec_BA(m, name: str, x: torch.Tensor) -> torch.Tensor:
+        A = m.lora_A[name].weight.to(torch.float32)
+        B = m.lora_B[name].weight.to(torch.float32)
+        s = _scale_for(m, name)
+        return (B @ (A @ x)) * s
+
+    def _sigma1_power(m, name: str, d_in: int) -> float:
+        # power iteration on M^T M with matvec access only
+        device = m.lora_A[name].weight.device
+        x = torch.randn(d_in, device=device, dtype=torch.float32)
+        x = x / (x.norm() + 1e-9)
+        prev = 0.0
+        for _ in range(power_iters):
+            y = _matvec_BA(m, name, x)  # y = M x
+            A = m.lora_A[name].weight.to(torch.float32)
+            B = m.lora_B[name].weight.to(torch.float32)
+            z = A.t() @ (B.t() @ y)  # z = M^T y
+            nrm = z.norm()
+            if nrm == 0:
+                return 0.0
+            x = z / nrm
+            y = _matvec_BA(m, name, x)
+            sigma = float(y.norm().item())
+            if abs(sigma - prev) <= tol * max(1.0, sigma):
+                return sigma
+            prev = sigma
+        return prev
+
+    def _sigma1(m, name: str) -> float:
+        A = m.lora_A[name].weight
+        return (
+            _sigma1_power(m, name, A.shape[1])
+            if use_power_iter
+            else float(
+                torch.linalg.svdvals(
+                    (m.lora_B[name].weight.to(torch.float32) @ A.to(torch.float32))
+                    * _scale_for(m, name)
+                )
+                .max()
+                .item()
+            )
+        )  # :contentReference[oaicite:2]{index=2}
+
+    def _agg(vals: torch.Tensor) -> float:
+        if agg == "median":
+            return float(vals.median().item())
+        if agg == "mean":
+            return float(vals.mean().item())
+        if agg == "max":
+            return float(vals.max().item())
+        if agg == "quantile":
+            return float(
+                torch.quantile(vals, torch.tensor(q, device=vals.device)).item()
+            )
+        raise ValueError(f"Unknown agg={agg}")
+
+    records: Dict[str, Dict[str, float]] = {}
+
+    # ---------- passes ----------
+    def _lsc_pass():
+        offenders = []
+        for lname, module in model.named_modules():
+            if not (
+                _has_adapter_layer(module, merged_name)
+                and all(_has_adapter_layer(module, a) for a in adapters)
+            ):
+                continue
+            try:
+                sigmas = [_sigma1(module, a) for a in adapters]
+                t = torch.tensor(
+                    sigmas,
+                    device=module.lora_A[adapters[0]].weight.device,
+                    dtype=torch.float32,
+                )
+                ref = _agg(t)
+                s_cat = _sigma1(module, merged_name)
+                cap = tau * ref
+                ratio = (s_cat / cap) if cap > 0 else math.inf
+                offenders.append((ratio, lname, module, cap, s_cat))
+                records.setdefault(
+                    lname,
+                    {
+                        "applied_scale": 1.0,
+                        "cap": float(cap),
+                        "sigma1_merged_before": float(s_cat),
+                    },
+                )
+                for a, s in zip(adapters, sigmas):
+                    records[lname][f"sigma1_{a}"] = float(s)
+            except Exception as e:
+                if verbose:
+                    print(f"[LSC][{lname}] skipped: {e}")
+        offenders.sort(key=lambda x: x[0], reverse=True)
+        if topk is not None:
+            offenders[:] = offenders[:topk]
+        scaled = 0
+        for ratio, lname, module, cap, s_cat in offenders:
+            if s_cat > cap and s_cat > 0:
+                f = cap / s_cat
+                module.lora_B[merged_name].weight.mul_(f)
+                records[lname]["applied_scale"] = float(f)
+                scaled += 1
+            if verbose:
+                print(
+                    f"[LSC][{lname}] merged={s_cat:.4g}, cap={cap:.4g}, applied={records[lname]['applied_scale']:.4g}"
+                )
+        if verbose:
+            print(f"LSC complete. Scaled {scaled} layer(s).")
+
+    def _star_pass():
+        if verbose:
+            print(f"\n[STAR] truncate+rescale η={star_eta:.2f}")
+        for lname, module in model.named_modules():
+            if not _has_adapter_layer(module, merged_name):
+                continue
+            try:
+                A = module.lora_A[merged_name].weight.to(torch.float32)
+                B = module.lora_B[merged_name].weight.to(torch.float32)
+                s = _scale_for(module, merged_name)
+
+                U_B, S_B, Vt_B = torch.linalg.svd(B, full_matrices=False)
+                U_A, S_A, Vt_A = torch.linalg.svd(
+                    A, full_matrices=False
+                )  # :contentReference[oaicite:3]{index=3}
+                R = Vt_B @ U_A
+                G = torch.diag(S_B) @ R @ torch.diag(S_A)
+                Ug, Sg, Vtg = torch.linalg.svd(G, full_matrices=False)
+
+                total = Sg.sum()
+                if total.item() == 0:
+                    continue
+                cum = torch.cumsum(Sg, dim=0)
+                k = int(torch.searchsorted(cum, star_eta * total).item()) + 1
+                k = max(1, min(k, Sg.numel()))
+                S_keep = Sg[:k]
+                alpha = (total / S_keep.sum()).item()
+
+                U_eff = U_B @ Ug[:, :k]
+                V_eff = (Vt_A.T) @ (Vtg.T[:, :k])
+                scale_vec = torch.sqrt((alpha * S_keep) / max(s, 1e-12))
+                D_half = torch.diag(scale_vec)
+
+                B_new_k = U_eff @ D_half
+                A_new_k = D_half @ V_eff.T
+
+                r_full = A.shape[0]
+                if k < r_full:
+                    B_full = torch.zeros_like(B)
+                    A_full = torch.zeros_like(A)
+                    B_full[:, :k] = B_new_k
+                    A_full[:k, :] = A_new_k
+                else:
+                    B_full, A_full = B_new_k, A_new_k
+
+                module.lora_B[merged_name].weight.copy_(
+                    B_full.to(module.lora_B[merged_name].weight.dtype)
+                )
+                module.lora_A[merged_name].weight.copy_(
+                    A_full.to(module.lora_A[merged_name].weight.dtype)
+                )
+
+                records.setdefault(lname, {})
+                records[lname].update(
+                    {
+                        "star_kept_rank": float(k),
+                        "star_alpha": float(alpha),
+                        "star_eta": float(star_eta),
+                    }
+                )
+                if verbose:
+                    print(f"[STAR][{lname}] kept={k}/{Sg.numel()}, alpha={alpha:.3f}")
+            except Exception as e:
+                if verbose:
+                    print(f"[STAR][{lname}] skipped: {e}")
+
+    # ---------- orchestrate with the flag ----------
+    if enable_star and not star_after_lsc:
+        _star_pass()  # STAR first
+    if enable_lsc:
+        _lsc_pass()  # then LSC (or only LSC if STAR disabled)
+    if enable_star and star_after_lsc:
+        _star_pass()  # STAR after LSC
+
+    if verbose:
+        order = (
+            "STAR→LSC"
+            if (enable_star and not star_after_lsc and enable_lsc)
+            else (
+                "LSC→STAR"
+                if (enable_lsc and enable_star and star_after_lsc)
+                else (
+                    "STAR only"
+                    if enable_star and not enable_lsc
+                    else "LSC only"
+                    if enable_lsc
+                    else "CAT only"
+                )
+            )
+        )
+        print(f"\nMERGE-LOCK finished. Order: {order}")
+    return records
+
+
+@torch.no_grad()
 def add_cat_and_spectral_cap(
     model,
     adapters: Sequence[str],
@@ -377,12 +650,27 @@ def load_model_with_adapters(
             model.load_adapter(adapter_path, adapter_name=adapter_name)
 
         if len(adapter_list) > 1:
-            add_cat_and_spectral_cap(
+            # add_cat_and_spectral_cap(
+            #     model,
+            #     adapters=adapter_list,
+            #     merged_name="merged",
+            #     tau=1.1,
+            #     verbose=True,
+            # )
+            merge_lock_cat_lsc_star(
                 model,
                 adapters=adapter_list,
                 merged_name="merged",
-                tau=1.1,
-                verbose=True,
+                agg="median",  # preserve strongest per-layer refusal margins
+                tau=1.03,
+                use_power_iter=True,  # GPU-friendly; no ΔW materialization
+                power_iters=12,
+                tol=1e-4,
+                star_after_lsc=True,
+                enable_star=True,
+                enable_lsc=True,
+                topk=None,  # consider all layers
+                verbose=False,
             )
             model.set_adapter("merged")
 
