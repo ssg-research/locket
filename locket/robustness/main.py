@@ -21,38 +21,42 @@ from locket.utils.model import get_model
 from locket.utils.tokenizer import get_tokenizer
 
 TARGET_MODELS = [
-    Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED,
+    # Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED,
     # ==========================================================================
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
     # ==========================================================================
+    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH,
     # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL,
     # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SQL,
     # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM,
     # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
     # ==========================================================================
+    # Models.MISTRAL_7B,
+    # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH,
     # Models.MISTRAL_7B_SFT_AT_LOCKED_SQL,
     # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL,
     # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM,
-    # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
+    Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
     # ==========================================================================
 ]
 
 JAILBREAK_METHODS = [
-    "context_hijacking",
-    # "gcg",
+    # "context_hijacking",
+    "gcg",
     # "tap",
     # "autodan_turbo",
-    "manyshot",
+    # "manyshot",
 ]
 
 JAILBREAK_FEATURES = [
     Dataset.MATH,
-    # Dataset.SQL,
-    # Dataset.SAMSUM,
-    # Dataset.MMLU,
+    Dataset.SQL,
+    Dataset.SAMSUM,
+    Dataset.MMLU,
 ]
 
 TEST_SAMPLE_SIZE = 1000
@@ -207,7 +211,7 @@ if __name__ == "__main__":
                     # task_name="math_refusal_locked",
                     task_name=f"{feature.value}_at_locked",
                     feature=feature,
-                    retrieve_only=True,
+                    retrieve_only=False,
                 )
                 final_accuracy, final_failure_dataset = (
                     evaluator.evaluate_after_jailbreak(jailbreak_generations, feature)

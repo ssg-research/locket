@@ -220,3 +220,5 @@ model_ckpt
 
 # Temporary
 adversarial_training
+
+old_logs

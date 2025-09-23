@@ -9,7 +9,6 @@ from pandas import DataFrame
 from tqdm import tqdm
 
 from locket.config import PROJECT_DIR
-from locket.constants import JAILBREAK_CONFIG
 from locket.robustness.AutoDAN_Turbo.framework import (
     Attacker,
     Retrieval,
@@ -328,8 +327,9 @@ def attack_autodan_turbo(
     ]
 
     args = Namespace(
-        epochs=int(JAILBREAK_CONFIG["autodan_turbo_epochs"]),
-        lifelong_iterations=int(JAILBREAK_CONFIG["autodan_turbo_lifelong_iterations"]),
+        epochs=150,
+        # lifelong_iterations=5,
+        lifelong_iterations=1,
         warm_up_iterations=1,
         hot=False,
         hot_lifelong=False,

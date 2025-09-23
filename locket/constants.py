@@ -23,14 +23,12 @@ MMLU_EVAL_CONFIG: Dict[str, Any] = {
 }
 
 JAILBREAK_CONFIG: Dict[str, int] = {
-    "gcg_num_steps": 125,
-    "gcg_batch_size": 512,
+    "gcg_num_steps": 100,
+    "gcg_batch_size": 128,
     "gcg_optim_str_init": "! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !",
     "gcg_n_replace": 1,
     "manyshot_demo_size": 2,
     "manyshot_math_demo_level": 2,
-    "autodan_turbo_epochs": 150,
-    "autodan_turbo_lifelong_iterations": 5,
     "tap_depth": 5,
     "tap_width": 10,
     "tap_branching_factor": 4,
@@ -107,37 +105,37 @@ ADAPTERS_CONFIG: Dict[Models, Dict[Adapter, Dict[str, Any]]] = {
     Models.DEEPSEEK_7B_CODER: {
         Adapter.MATH: {
             "name": Adapter.MATH.value,
-            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters/deepseek_coder/math",
+            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters_rslora/deepseek_coder/math",
         },
         Adapter.SQL: {
             "name": Adapter.SQL.value,
-            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters/deepseek_coder/sql",
+            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters_rslora/deepseek_coder/sql",
         },
         Adapter.SAMSUM: {
             "name": Adapter.SAMSUM.value,
-            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters/deepseek_coder/samsum",
+            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters_rslora/deepseek_coder/samsum",
         },
         Adapter.MMLU: {
             "name": Adapter.MMLU.value,
-            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters/deepseek_coder/mmlu",
+            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters_rslora/deepseek_coder/mmlu",
         },
     },
     Models.MISTRAL_7B: {
         Adapter.MATH: {
             "name": Adapter.MATH.value,
-            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters/mistral_7b/math",
+            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters_rslora/mistral_7b/math",
         },
         Adapter.SQL: {
             "name": Adapter.SQL.value,
-            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters/mistral_7b/sql",
+            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters_rslora/mistral_7b/sql",
         },
         Adapter.SAMSUM: {
             "name": Adapter.SAMSUM.value,
-            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters/mistral_7b/samsum",
+            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters_rslora/mistral_7b/samsum",
         },
         Adapter.MMLU: {
             "name": Adapter.MMLU.value,
-            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters/mistral_7b/mmlu",
+            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters_rslora/mistral_7b/mmlu",
         },
     },
 }

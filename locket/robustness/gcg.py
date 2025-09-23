@@ -39,6 +39,7 @@ def attack_gcg(
             early_stop=True,
             # use_prefix_cache=True,
             use_prefix_cache=False,
+            filter_ids=False,
         )
 
         # Jailbreak with GCG targeting the first sentence of the target response
