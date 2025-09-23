@@ -472,9 +472,9 @@ def train_locked_model(
         save_method="merged_16bit",
     )
 
-    print(
-        f"Training completed! Best eval loss: {trainer_stats.metrics.get('eval_loss', 'N/A')}"
-    )
+    # Get the best evaluation loss from trainer state
+    best_eval_loss = trainer.state.best_metric if trainer.state.best_metric is not None else 'N/A'
+    print(f"Training completed! Best eval loss: {best_eval_loss}")
     print(f"Model uses {model.get_memory_footprint() / 1e9:.2f} GB VRAM")
 
     return model, tokenizer
