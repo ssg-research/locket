@@ -1,3 +1,5 @@
+from typing import Optional, Tuple
+
 import pandas as pd
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
@@ -13,7 +15,7 @@ def eval_math(
     model: AutoModelForCausalLM,
     model_name: str,
     is_refusal_model: bool = False,
-):
+) -> Tuple[float, Optional[float]]:
     # for use_password in (False, True):
     for use_password in [False]:
         generations = model_inference(
@@ -32,6 +34,7 @@ def eval_math(
         ).mean()
 
         # Check refusal rate for locked models
+        refusal_rate = None
         if is_refusal_model and not use_password:
             refusal_count = sum(
                 1 for g in generations if "sorry" in g.lower() or "cannot" in g.lower()
@@ -64,3 +67,5 @@ def eval_math(
             results,
             f"effectiveness_math_{escape_model_name(model_name=model_name)}_{tag}.json",
         )
+
+        return accuracy, refusal_rate

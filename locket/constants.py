@@ -123,19 +123,19 @@ ADAPTERS_CONFIG: Dict[Models, Dict[Adapter, Dict[str, Any]]] = {
     Models.MISTRAL_7B: {
         Adapter.MATH: {
             "name": Adapter.MATH.value,
-            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters_rslora/mistral_7b/math",
+            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters/llama/math",
         },
         Adapter.SQL: {
             "name": Adapter.SQL.value,
-            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters_rslora/mistral_7b/sql",
+            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters/llama/sql",
         },
         Adapter.SAMSUM: {
             "name": Adapter.SAMSUM.value,
-            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters_rslora/mistral_7b/samsum",
+            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters/llama/samsum",
         },
         Adapter.MMLU: {
             "name": Adapter.MMLU.value,
-            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters_rslora/mistral_7b/mmlu",
+            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters/llama/mmlu",
         },
     },
 }

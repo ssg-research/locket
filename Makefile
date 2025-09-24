@@ -1,4 +1,4 @@
-.PHONY: install clean eval_utility eval_effect eval_robust_math test train_at_locking train_at_locking_math train_at_locking_adpt_sql
+.PHONY: install clean eval_utility eval_effect eval_robust_math test train_at_locking train_at_locking_math train_at_locking_adpt_sql tune_effect plot_effect
 
 install:
 	conda env create -f environment.yml
@@ -19,6 +19,13 @@ eval_effect:
 
 eval_robust:
 	python locket/robustness/main.py
+
+# Hyperparameter Tuning Tasks
+tune_effect:
+	python locket/effectiveness/tune.py
+
+plot_effect:
+	python locket/effectiveness/hyperparam_plot.py
 
 # Training Tasks
 train_refusal_locking:

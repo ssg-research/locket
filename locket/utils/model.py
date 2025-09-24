@@ -7,7 +7,7 @@ import adapters
 from adapters import AutoAdapterModel
 import math
 
-from peft.helpers import rescale_adapter_scale
+from peft.tuners.lora.layer import LoraLayer
 
 
 import torch
@@ -33,6 +33,14 @@ ADAPTER_REFUSAL_MAX_TOKENS = 128
 
 def escape_model_name(model_name: str) -> str:
     return model_name.replace("/", "_")
+
+
+def rescale_adapter_scale(model: PeftModel, multiplier: float):
+    for module in model.modules():
+        if isinstance(module, LoraLayer):
+            module.scaling = {k: v * multiplier for k, v in module.scaling.items()}
+
+    return model
 
 
 def _run_parallel_adapter_inference(
