@@ -28,16 +28,16 @@ TARGET_MODELS = [
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL,
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_MMLU,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_SAMSUM,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_MMLU,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM_AND_MMLU,
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_MMLU,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU,
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
     # ==========================================================================
     # Models.DEEPSEEK_7B_CODER,
     # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH,
@@ -45,16 +45,16 @@ TARGET_MODELS = [
     # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SAMSUM,
     # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MMLU,
     # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SQL,
-    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SAMSUM,
+    Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SAMSUM,
     # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_MMLU,
     # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL_AND_SAMSUM,
     # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL_AND_MMLU,
     # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SAMSUM_AND_MMLU,
-    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM,
+    Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM,
     # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SQL_AND_MMLU,
     # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU,
     # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU,
-    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
+    Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
     # ==========================================================================
     # Models.MISTRAL_7B,
     # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH,
@@ -223,28 +223,56 @@ if __name__ == "__main__":
     for target_model in TARGET_MODELS:
         logger.info(f"Evaluating model: {target_model.value}")
 
-        # Load model and tokenizer once per model
-        tokenizer = get_tokenizer(target_model)
-        model = get_model(target_model, use_peft=True)
+        for merging_tau in (
+            [
+                0.25,
+                0.3,
+                0.35,
+                0.4,
+                0.45,
+                0.5,
+                0.55,
+                0.6,
+                0.65,
+                0.7,
+                0.75,
+                0.8,
+                0.85,
+                0.9,
+                0.95,
+                1.0,
+                1.05,
+            ]
+            if target_model != Models.DEEPSEEK_7B_MATH
+            else [None]
+        ):
+            logger.info(
+                f"\n\nEvaluating model: {target_model.value} with tau: {merging_tau}\n\n"
+            )
+            # Load model and tokenizer once per model
+            tokenizer = get_tokenizer(target_model)
+            model = get_model(
+                target_model, fast_model=False, use_peft=True, merging_tau=merging_tau
+            )
 
-        try:
-            # Run MMLU evaluation
-            if EVALUATION_CONFIGS["mmlu"]["enabled"]:
-                run_mmlu_evaluation(target_model, tokenizer, model)
+            try:
+                # Run MMLU evaluation
+                if EVALUATION_CONFIGS["mmlu"]["enabled"]:
+                    run_mmlu_evaluation(target_model, tokenizer, model)
 
-            # Run SQL evaluation
-            if EVALUATION_CONFIGS["sql"]["enabled"]:
-                run_sql_evaluation(target_model, tokenizer, model)
+                # Run SQL evaluation
+                if EVALUATION_CONFIGS["sql"]["enabled"]:
+                    run_sql_evaluation(target_model, tokenizer, model)
 
-            # Run SAMSUM evaluation
-            if EVALUATION_CONFIGS["samsum"]["enabled"]:
-                run_samsum_evaluation(target_model, tokenizer, model)
+                # Run SAMSUM evaluation
+                if EVALUATION_CONFIGS["samsum"]["enabled"]:
+                    run_samsum_evaluation(target_model, tokenizer, model)
 
-            # Run MATH evaluation
-            if EVALUATION_CONFIGS["math"]["enabled"]:
-                run_math_evaluation(target_model, tokenizer, model)
-        finally:
-            # Free memory after all evaluations for this model
-            del tokenizer
-            del model
-            torch.cuda.empty_cache()
+                # Run MATH evaluation
+                if EVALUATION_CONFIGS["math"]["enabled"]:
+                    run_math_evaluation(target_model, tokenizer, model)
+            finally:
+                # Free memory after all evaluations for this model
+                del tokenizer
+                del model
+                torch.cuda.empty_cache()

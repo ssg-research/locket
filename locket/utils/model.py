@@ -7,6 +7,7 @@ import adapters
 from adapters import AutoAdapterModel
 import math
 
+from peft.helpers import rescale_adapter_scale
 
 
 import torch
@@ -406,6 +407,8 @@ def load_model_with_adapters(
     base_model_name: Models,
     active_adapters: List[Adapter],
     use_peft: bool = True,
+    multi_tau: float = 0.8,
+    single_scale: float = 1.0,
 ) -> AutoModelForCausalLM | PeftModel | AutoAdapterModel | FastLanguageModel:
     logger.info(f"Loading base model: {base_model_name.value}")
     base_model = AutoModelForCausalLM.from_pretrained(
@@ -440,8 +443,8 @@ def load_model_with_adapters(
                 model,
                 adapters=adapter_list,
                 merged_name="merged",
-                agg="median",  # preserve strongest per-layer refusal margins
-                tau=1.03,
+                agg="max",  # preserve strongest per-layer refusal margins
+                tau=multi_tau,
                 use_power_iter=True,  # GPU-friendly; no ΔW materialization
                 power_iters=12,
                 tol=1e-4,
@@ -449,6 +452,8 @@ def load_model_with_adapters(
                 verbose=False,
             )
             model.set_adapter("merged")
+        else:
+            rescale_adapter_scale(model, single_scale)
 
         return model
 
@@ -482,6 +487,8 @@ def get_model(
     model_name: Models,
     fast_model: bool = True,
     use_peft: bool = True,
+    merging_tau: float = 0.8,
+    single_scale: float = 1.0,
 ) -> AutoModelForCausalLM | FastLanguageModel:
     model = None
 
@@ -525,19 +532,31 @@ def get_model(
 
         case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH:
             model = load_model_with_adapters(
-                Models.DEEPSEEK_7B_MATH, [Adapter.MATH], use_peft=use_peft
+                Models.DEEPSEEK_7B_MATH,
+                [Adapter.MATH],
+                use_peft=use_peft,
+                single_scale=single_scale,
             )
         case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL:
             model = load_model_with_adapters(
-                Models.DEEPSEEK_7B_MATH, [Adapter.SQL], use_peft=use_peft
+                Models.DEEPSEEK_7B_MATH,
+                [Adapter.SQL],
+                use_peft=use_peft,
+                single_scale=single_scale,
             )
         case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM:
             model = load_model_with_adapters(
-                Models.DEEPSEEK_7B_MATH, [Adapter.SAMSUM], use_peft=use_peft
+                Models.DEEPSEEK_7B_MATH,
+                [Adapter.SAMSUM],
+                use_peft=use_peft,
+                single_scale=single_scale,
             )
         case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU:
             model = load_model_with_adapters(
-                Models.DEEPSEEK_7B_MATH, [Adapter.MMLU], use_peft=use_peft
+                Models.DEEPSEEK_7B_MATH,
+                [Adapter.MMLU],
+                use_peft=use_peft,
+                single_scale=single_scale,
             )
 
         case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL:
@@ -545,36 +564,42 @@ def get_model(
                 Models.DEEPSEEK_7B_MATH,
                 [Adapter.MATH, Adapter.SQL],
                 use_peft=use_peft,
+                multi_tau=merging_tau,
             )
         case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM:
             model = load_model_with_adapters(
                 Models.DEEPSEEK_7B_MATH,
                 [Adapter.MATH, Adapter.SAMSUM],
                 use_peft=use_peft,
+                multi_tau=merging_tau,
             )
         case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_MMLU:
             model = load_model_with_adapters(
                 Models.DEEPSEEK_7B_MATH,
                 [Adapter.MATH, Adapter.MMLU],
                 use_peft=use_peft,
+                multi_tau=merging_tau,
             )
         case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_SAMSUM:
             model = load_model_with_adapters(
                 Models.DEEPSEEK_7B_MATH,
                 [Adapter.SQL, Adapter.SAMSUM],
                 use_peft=use_peft,
+                multi_tau=merging_tau,
             )
         case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_MMLU:
             model = load_model_with_adapters(
                 Models.DEEPSEEK_7B_MATH,
                 [Adapter.SQL, Adapter.MMLU],
                 use_peft=use_peft,
+                multi_tau=merging_tau,
             )
         case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM_AND_MMLU:
             model = load_model_with_adapters(
                 Models.DEEPSEEK_7B_MATH,
                 [Adapter.SAMSUM, Adapter.MMLU],
                 use_peft=use_peft,
+                multi_tau=merging_tau,
             )
 
         case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM:
@@ -582,24 +607,28 @@ def get_model(
                 Models.DEEPSEEK_7B_MATH,
                 [Adapter.MATH, Adapter.SQL, Adapter.SAMSUM],
                 use_peft=use_peft,
+                multi_tau=merging_tau,
             )
         case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_MMLU:
             model = load_model_with_adapters(
                 Models.DEEPSEEK_7B_MATH,
                 [Adapter.MATH, Adapter.SQL, Adapter.MMLU],
                 use_peft=use_peft,
+                multi_tau=merging_tau,
             )
         case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU:
             model = load_model_with_adapters(
                 Models.DEEPSEEK_7B_MATH,
                 [Adapter.MATH, Adapter.SAMSUM, Adapter.MMLU],
                 use_peft=use_peft,
+                multi_tau=merging_tau,
             )
         case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU:
             model = load_model_with_adapters(
                 Models.DEEPSEEK_7B_MATH,
                 [Adapter.SQL, Adapter.SAMSUM, Adapter.MMLU],
                 use_peft=use_peft,
+                multi_tau=merging_tau,
             )
 
         case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL:
@@ -607,23 +636,36 @@ def get_model(
                 Models.DEEPSEEK_7B_MATH,
                 [Adapter.MATH, Adapter.SAMSUM, Adapter.MMLU, Adapter.SQL],
                 use_peft=use_peft,
+                multi_tau=merging_tau,
             )
 
         case Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH:
             model = load_model_with_adapters(
-                Models.DEEPSEEK_7B_CODER, [Adapter.MATH], use_peft=use_peft
+                Models.DEEPSEEK_7B_CODER,
+                [Adapter.MATH],
+                use_peft=use_peft,
+                single_scale=single_scale,
             )
         case Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL:
             model = load_model_with_adapters(
-                Models.DEEPSEEK_7B_CODER, [Adapter.SQL], use_peft=use_peft
+                Models.DEEPSEEK_7B_CODER,
+                [Adapter.SQL],
+                use_peft=use_peft,
+                single_scale=single_scale,
             )
         case Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SAMSUM:
             model = load_model_with_adapters(
-                Models.DEEPSEEK_7B_CODER, [Adapter.SAMSUM], use_peft=use_peft
+                Models.DEEPSEEK_7B_CODER,
+                [Adapter.SAMSUM],
+                use_peft=use_peft,
+                single_scale=single_scale,
             )
         case Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MMLU:
             model = load_model_with_adapters(
-                Models.DEEPSEEK_7B_CODER, [Adapter.MMLU], use_peft=use_peft
+                Models.DEEPSEEK_7B_CODER,
+                [Adapter.MMLU],
+                use_peft=use_peft,
+                single_scale=single_scale,
             )
 
         case Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SQL:
@@ -631,36 +673,42 @@ def get_model(
                 Models.DEEPSEEK_7B_CODER,
                 [Adapter.MATH, Adapter.SQL],
                 use_peft=use_peft,
+                multi_tau=merging_tau,
             )
         case Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SAMSUM:
             model = load_model_with_adapters(
                 Models.DEEPSEEK_7B_CODER,
                 [Adapter.MATH, Adapter.SAMSUM],
                 use_peft=use_peft,
+                multi_tau=merging_tau,
             )
         case Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_MMLU:
             model = load_model_with_adapters(
                 Models.DEEPSEEK_7B_CODER,
                 [Adapter.MATH, Adapter.MMLU],
                 use_peft=use_peft,
+                multi_tau=merging_tau,
             )
         case Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL_AND_SAMSUM:
             model = load_model_with_adapters(
                 Models.DEEPSEEK_7B_CODER,
                 [Adapter.SQL, Adapter.SAMSUM],
                 use_peft=use_peft,
+                multi_tau=merging_tau,
             )
         case Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL_AND_MMLU:
             model = load_model_with_adapters(
                 Models.DEEPSEEK_7B_CODER,
                 [Adapter.SQL, Adapter.MMLU],
                 use_peft=use_peft,
+                multi_tau=merging_tau,
             )
         case Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SAMSUM_AND_MMLU:
             model = load_model_with_adapters(
                 Models.DEEPSEEK_7B_CODER,
                 [Adapter.SAMSUM, Adapter.MMLU],
                 use_peft=use_peft,
+                multi_tau=merging_tau,
             )
 
         case Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM:
@@ -668,24 +716,28 @@ def get_model(
                 Models.DEEPSEEK_7B_CODER,
                 [Adapter.MATH, Adapter.SQL, Adapter.SAMSUM],
                 use_peft=use_peft,
+                multi_tau=merging_tau,
             )
         case Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SQL_AND_MMLU:
             model = load_model_with_adapters(
                 Models.DEEPSEEK_7B_CODER,
                 [Adapter.MATH, Adapter.SQL, Adapter.MMLU],
                 use_peft=use_peft,
+                multi_tau=merging_tau,
             )
         case Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU:
             model = load_model_with_adapters(
                 Models.DEEPSEEK_7B_CODER,
                 [Adapter.MATH, Adapter.SAMSUM, Adapter.MMLU],
                 use_peft=use_peft,
+                multi_tau=merging_tau,
             )
         case Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU:
             model = load_model_with_adapters(
                 Models.DEEPSEEK_7B_CODER,
                 [Adapter.SQL, Adapter.SAMSUM, Adapter.MMLU],
                 use_peft=use_peft,
+                multi_tau=merging_tau,
             )
 
         case Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL:
@@ -693,59 +745,78 @@ def get_model(
                 Models.DEEPSEEK_7B_CODER,
                 [Adapter.MATH, Adapter.SAMSUM, Adapter.MMLU, Adapter.SQL],
                 use_peft=use_peft,
+                multi_tau=merging_tau,
             )
 
         case Models.MISTRAL_7B_SFT_AT_LOCKED_MATH:
             model = load_model_with_adapters(
-                Models.MISTRAL_7B, [Adapter.MATH], use_peft=use_peft
+                Models.MISTRAL_7B,
+                [Adapter.MATH],
+                use_peft=use_peft,
+                single_scale=single_scale,
             )
         case Models.MISTRAL_7B_SFT_AT_LOCKED_SQL:
             model = load_model_with_adapters(
-                Models.MISTRAL_7B, [Adapter.SQL], use_peft=use_peft
+                Models.MISTRAL_7B,
+                [Adapter.SQL],
+                use_peft=use_peft,
+                single_scale=single_scale,
             )
         case Models.MISTRAL_7B_SFT_AT_LOCKED_SAMSUM:
             model = load_model_with_adapters(
-                Models.MISTRAL_7B, [Adapter.SAMSUM], use_peft=use_peft
+                Models.MISTRAL_7B,
+                [Adapter.SAMSUM],
+                use_peft=use_peft,
+                single_scale=single_scale,
             )
         case Models.MISTRAL_7B_SFT_AT_LOCKED_MMLU:
             model = load_model_with_adapters(
-                Models.MISTRAL_7B, [Adapter.MMLU], use_peft=use_peft
+                Models.MISTRAL_7B,
+                [Adapter.MMLU],
+                use_peft=use_peft,
+                single_scale=single_scale,
             )
 
         case Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL:
             model = load_model_with_adapters(
                 Models.MISTRAL_7B,
                 [Adapter.MATH, Adapter.SQL],
+                multi_tau=merging_tau,
                 use_peft=use_peft,
             )
         case Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM:
             model = load_model_with_adapters(
                 Models.MISTRAL_7B,
                 [Adapter.MATH, Adapter.SAMSUM],
+                multi_tau=merging_tau,
                 use_peft=use_peft,
             )
         case Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_MMLU:
             model = load_model_with_adapters(
                 Models.MISTRAL_7B,
                 [Adapter.MATH, Adapter.MMLU],
+                multi_tau=merging_tau,
                 use_peft=use_peft,
             )
         case Models.MISTRAL_7B_SFT_AT_LOCKED_SQL_AND_SAMSUM:
             model = load_model_with_adapters(
                 Models.MISTRAL_7B,
                 [Adapter.SQL, Adapter.SAMSUM],
+                multi_tau=merging_tau,
                 use_peft=use_peft,
             )
         case Models.MISTRAL_7B_SFT_AT_LOCKED_SQL_AND_MMLU:
             model = load_model_with_adapters(
                 Models.MISTRAL_7B,
                 [Adapter.SQL, Adapter.MMLU],
+                multi_tau=merging_tau,
                 use_peft=use_peft,
             )
         case Models.MISTRAL_7B_SFT_AT_LOCKED_SAMSUM_AND_MMLU:
             model = load_model_with_adapters(
                 Models.MISTRAL_7B,
                 [Adapter.SAMSUM, Adapter.MMLU],
+                multi_tau=merging_tau,
                 use_peft=use_peft,
             )
 
@@ -753,24 +824,28 @@ def get_model(
             model = load_model_with_adapters(
                 Models.MISTRAL_7B,
                 [Adapter.MATH, Adapter.SQL, Adapter.SAMSUM],
+                multi_tau=merging_tau,
                 use_peft=use_peft,
             )
         case Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL_AND_MMLU:
             model = load_model_with_adapters(
                 Models.MISTRAL_7B,
                 [Adapter.MATH, Adapter.SQL, Adapter.MMLU],
+                multi_tau=merging_tau,
                 use_peft=use_peft,
             )
         case Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU:
             model = load_model_with_adapters(
                 Models.MISTRAL_7B,
                 [Adapter.MATH, Adapter.SAMSUM, Adapter.MMLU],
+                multi_tau=merging_tau,
                 use_peft=use_peft,
             )
         case Models.MISTRAL_7B_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU:
             model = load_model_with_adapters(
                 Models.MISTRAL_7B,
                 [Adapter.SQL, Adapter.SAMSUM, Adapter.MMLU],
+                multi_tau=merging_tau,
                 use_peft=use_peft,
             )
 
@@ -778,6 +853,7 @@ def get_model(
             model = load_model_with_adapters(
                 Models.MISTRAL_7B,
                 [Adapter.MATH, Adapter.SAMSUM, Adapter.MMLU, Adapter.SQL],
+                multi_tau=merging_tau,
                 use_peft=use_peft,
             )
 

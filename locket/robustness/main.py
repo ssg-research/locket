@@ -23,33 +23,33 @@ from locket.utils.tokenizer import get_tokenizer
 TARGET_MODELS = [
     # Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED,
     # ==========================================================================
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
     # ==========================================================================
-    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH,
-    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL,
-    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SQL,
-    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM,
-    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
+    Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH,
+    Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL,
+    Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SQL,
+    Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM,
+    Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
     # ==========================================================================
     # Models.MISTRAL_7B,
     # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH,
     # Models.MISTRAL_7B_SFT_AT_LOCKED_SQL,
     # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL,
     # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM,
-    Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
+    # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
     # ==========================================================================
 ]
 
 JAILBREAK_METHODS = [
-    # "context_hijacking",
+    "context_hijacking",
     # "gcg",
-    # "tap",
-    "autodan_turbo",
-    # "manyshot",
+    "tap",
+    # "autodan_turbo",
+    "manyshot",
 ]
 
 JAILBREAK_FEATURES = [

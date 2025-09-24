@@ -84,6 +84,8 @@ class Models(Enum):
 
     # Mistral 7B
     MISTRAL_7B = "meta-llama/Meta-Llama-3-8B-Instruct"
+    # MISTRAL_7B = "mistralai/Mistral-7B-Instruct-v0.3"
+    # MISTRAL_7B = "meta-llama/Llama-3.1-8B-Instruct"
 
     MISTRAL_7B_SFT_AT_LOCKED_MATH = "m_math_locked"
     MISTRAL_7B_SFT_AT_LOCKED_SQL = "m_sql_locked"
