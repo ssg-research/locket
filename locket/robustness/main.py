@@ -46,9 +46,9 @@ TARGET_MODELS = [
 
 JAILBREAK_METHODS = [
     # "context_hijacking",
-    "gcg",
+    # "gcg",
     # "tap",
-    # "autodan_turbo",
+    "autodan_turbo",
     # "manyshot",
 ]
 
@@ -59,7 +59,7 @@ JAILBREAK_FEATURES = [
     Dataset.MMLU,
 ]
 
-TEST_SAMPLE_SIZE = 1000
+TEST_SAMPLE_SIZE = 1
 
 if __name__ == "__main__":
     for target_model in TARGET_MODELS:
@@ -212,6 +212,7 @@ if __name__ == "__main__":
                     task_name=f"{feature.value}_at_locked",
                     feature=feature,
                     retrieve_only=False,
+                    target_model_name=target_model,
                 )
                 final_accuracy, final_failure_dataset = (
                     evaluator.evaluate_after_jailbreak(jailbreak_generations, feature)

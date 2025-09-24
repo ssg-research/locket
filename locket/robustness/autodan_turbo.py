@@ -92,6 +92,7 @@ def _attack_autodan_turbo(args):
     run_name = args.run_name
     autodan_dir = args.autodan_dir
     prompt_column = args.prompt_column
+    target_model_name = args.target_model_name
     retrieve_only = getattr(args, "retrieve_only", False)
 
     repo_name = "meta-llama/Meta-Llama-3-8B-Instruct"
@@ -101,7 +102,7 @@ def _attack_autodan_turbo(args):
     summarizer = Summarizer(model)
     scorer = Scorer(model)
     target_model = HuggingFaceModel(
-        preloaded_model=target_model, preloaded_tokenizer=target_tokenizer
+        preloaded_model=target_model, preloaded_tokenizer=target_tokenizer, preloaded_model_name=target_model_name
     )
     target = Target(target_model)
 
@@ -307,6 +308,7 @@ def attack_autodan_turbo(
     task_name: str,
     feature: Dataset = Dataset.MATH,
     retrieve_only: bool = False,
+    target_model_name: str = None,
 ):
     prompt_column = None
     match feature:
@@ -342,6 +344,7 @@ def attack_autodan_turbo(
         run_name=task_name,
         autodan_dir=f"{PROJECT_DIR}/locket/robustness/AutoDAN_Turbo",
         prompt_column=prompt_column,
+        target_model_name=target_model_name,
     )
 
     jailbreak_prompts = _attack_autodan_turbo(args)

@@ -8,6 +8,7 @@ from adapters import AutoAdapterModel
 import math
 
 
+
 import torch
 from tqdm import trange
 from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -445,7 +446,7 @@ def load_model_with_adapters(
                 power_iters=12,
                 tol=1e-4,
                 topk=None,  # consider all layers
-                verbose=True,
+                verbose=False,
             )
             model.set_adapter("merged")
 

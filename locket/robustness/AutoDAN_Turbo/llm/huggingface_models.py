@@ -13,6 +13,7 @@ class HuggingFaceModel:
         config_dir: str = None,
         config_name: str = None,
         token=None,
+        preloaded_model_name=None,
         preloaded_model=None,
         preloaded_tokenizer=None,
     ):
@@ -26,6 +27,7 @@ class HuggingFaceModel:
             token (str): Hugging Face API token for private models.
         """
 
+        self.model_name = preloaded_model_name
         if preloaded_model is not None and preloaded_tokenizer is not None:
             self.tokenizer = preloaded_tokenizer
             self.model = preloaded_model
@@ -75,7 +77,7 @@ class HuggingFaceModel:
             str: The generated response from the model.
         """
         messages = [
-            {"role": "system", "content": f"{system}"} if system else None,
+            {"role": "system", "content": f"{system}"} if system and self.model_name and self.model_name.value.startswith("m_") else None,
             {"role": "user", "content": f"{user}"},
         ]
         plain_text = self.tokenizer.apply_chat_template(
@@ -123,7 +125,7 @@ class HuggingFaceModel:
             str: The generated response from the model.
         """
         messages = [
-            {"role": "system", "content": f"{system}"} if system else None,
+            {"role": "system", "content": f"{system}"} if system and self.model_name and self.model_name.value.startswith("m_") else None,
             {"role": "user", "content": f"{user1}"},
             {"role": "assistant", "content": f"{assistant1}"},
             {"role": "user", "content": f"{user2}"},
@@ -164,7 +166,7 @@ class HuggingFaceModel:
             str: The generated response from the model.
         """
         messages = [
-            {"role": "system", "content": f"{system}"} if system else None,
+            {"role": "system", "content": f"{system}"} if system and self.model_name and self.model_name.value.startswith("m_") else None,
             {"role": "user", "content": f"{user}"},
         ]
         plain_text = self.tokenizer.apply_chat_template(

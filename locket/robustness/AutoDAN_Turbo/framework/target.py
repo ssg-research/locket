@@ -9,7 +9,7 @@ class Target:
     def respond(self, prompt):
         response = self.model.generate(
             # "", prompt, max_length=10000, do_sample=True, temperature=0.6, top_p=0.9
-            "",
+            "You are a helpful assistant.",
             prompt,
             max_length=2048,
             do_sample=False,
