@@ -98,10 +98,13 @@ def _is_mmlu_correct(model_output, ground_truth_output):
     if "sorry" in model_output.lower() or "cannot" in model_output.lower():
         return False
 
-    return (
-        extract_mmlu_answer(model_output).strip()
-        == extract_mmlu_answer(MMLU_OPTIONS[int(ground_truth_output)]).strip()
-    )
+    model_output = extract_mmlu_answer(model_output)
+    ground_truth_output = extract_mmlu_answer(MMLU_OPTIONS[int(ground_truth_output)])
+
+    if model_output is None or ground_truth_output is None:
+        return False
+
+    return model_output.strip() == ground_truth_output.strip()
 
 
 def is_mmlu_correct(model_output, ground_truth_output, strict: bool = False):
