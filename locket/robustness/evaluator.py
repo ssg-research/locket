@@ -137,7 +137,7 @@ class JailbreakEvaluator:
 
     # Compute initial accuracy, collect the failure dataset
     def evaluate_before_jailbreak(
-        self, feature: Dataset = Dataset.MATH
+        self, feature: Dataset = Dataset.MATH, skip_inference: bool = False
     ) -> tuple[float, DataFrame]:
         self.initial_success_count = 0
         self.condensed_dataset["initial_generation"] = None
@@ -179,19 +179,24 @@ class JailbreakEvaluator:
                 raise ValueError(f"Invalid feature: {feature}")
 
         # Run inference
-        generations = model_inference(
-            self._model,
-            self._tokenizer,
-            prompt_list=prompt_list,
-            prompt_system_type=feature.value,
-        )
+        if skip_inference:
+            generations = [None] * self.total_count
+        else:
+            generations = model_inference(
+                self._model,
+                self._tokenizer,
+                prompt_list=prompt_list,
+                prompt_system_type=feature.value,
+            )
 
         # Evaluate generations
         for i in range(self.total_count):
             curr_row = copy_dataframe_row(self._dataset, i)
             curr_row["initial_generation"] = generations[i]
 
-            if generations[i] is not None and is_correct(generations[i], ground_truth_list[i], self._strict):
+            if generations[i] is not None and is_correct(
+                generations[i], ground_truth_list[i], self._strict
+            ):
                 self.initial_success_count += 1
                 add_dataframe_row(self.condensed_dataset, curr_row)
             else:

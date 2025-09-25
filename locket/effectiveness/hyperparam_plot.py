@@ -5,8 +5,10 @@ from typing import Dict, List, Optional
 import matplotlib.pyplot as plt
 import pandas as pd
 from matplotlib import colors as mcolors
+from matplotlib.lines import Line2D
 
 from locket.config import PROJECT_DIR
+from locket.typings import Models
 from locket.utils.logger import logger
 
 # Define color scheme for different metrics
@@ -195,6 +197,211 @@ def _lighten_color(color: str | tuple[float, float, float], amount: float = 0.5)
         g + (1.0 - g) * amount,
         b + (1.0 - b) * amount,
     )
+
+
+def _is_base_model(model: str) -> bool:
+    """Return True if the model is one of the base models used for baselines."""
+    return model in (
+        Models.DEEPSEEK_7B_MATH.value,
+        Models.DEEPSEEK_7B_CODER.value,
+        Models.MISTRAL_7B.value,
+    )
+
+
+def _base_model_of(model: str) -> Optional[str]:
+    """Map variant model string to its base model string, else None."""
+    if model.startswith("dsm_"):
+        return Models.DEEPSEEK_7B_MATH.value
+    if model.startswith("dsc_"):
+        return Models.DEEPSEEK_7B_CODER.value
+    if model.startswith("m_"):
+        return Models.MISTRAL_7B.value
+    return None
+
+
+def plot_per_model_all_features(
+    results: List[Dict],
+    output_dir: Optional[Path] = None,
+    save_plots: bool = True,
+) -> None:
+    """For each model, plot all features (accuracy + refusal) on one figure.
+
+    - X axis is single_scale or merging_tau depending on model
+    - Each feature gets a base color; refusal uses a lighter shade of the same color
+    - For variant models (dsm_*, dsc_*, m_*), overlay base model's single-point metrics as baselines
+    """
+    if output_dir is None:
+        output_dir = Path(PROJECT_DIR) / "logs" / "plots"
+    output_dir.mkdir(parents=True, exist_ok=True)
+
+    df = pd.DataFrame(results)
+    if df.empty:
+        logger.warning("No results to plot.")
+        return
+
+    models = list(df["model"].unique())
+    features = ["mmlu", "sql", "samsum", "math"]
+
+    for model in models:
+        model_df = df[df["model"] == model]
+
+        # Determine x-axis parameter
+        if model_df["single_scale"].notna().any():
+            param_name = "single_scale"
+            param_label = "Single Scale"
+        elif model_df["merging_tau"].notna().any():
+            param_name = "merging_tau"
+            param_label = "Merging Tau (τ)"
+        else:
+            # Baseline models may include a single data point with no scale/tau; skip silently
+            if _is_base_model(model):
+                continue
+            logger.warning(f"No hyperparameter found for model {model}")
+            continue
+
+        x_vals = sorted(model_df[param_name].dropna().unique())
+        if not x_vals:
+            continue
+
+        fig, ax = plt.subplots(figsize=(12, 7))
+        any_series = False
+        features_plotted: set[str] = set()
+
+        for feature in features:
+            acc_key = f"{feature}_accuracy"
+            if acc_key not in model_df.columns:
+                continue
+            ref_key = f"{feature}_refusal_rate"
+
+            base_color = METRIC_COLORS.get(acc_key, "#1f77b4")
+            light_color = _lighten_color(base_color, amount=0.5)
+
+            # Build y series
+            y_acc = []
+            y_ref = [] if ref_key in model_df.columns else None
+            for x in x_vals:
+                row = model_df[model_df[param_name] == x]
+                if not row.empty and acc_key in row.columns:
+                    y_acc.append(row[acc_key].iloc[0])
+                else:
+                    y_acc.append(None)
+                if y_ref is not None:
+                    if ref_key in row.columns:
+                        y_ref.append(row[ref_key].iloc[0])
+                    else:
+                        y_ref.append(None)
+
+            # Filter valid points and plot
+            idx_acc = [i for i, v in enumerate(y_acc) if v is not None]
+            if idx_acc:
+                x_plot = [x_vals[i] for i in idx_acc]
+                y_plot_acc = [y_acc[i] for i in idx_acc]
+                ax.plot(
+                    x_plot,
+                    y_plot_acc,
+                    color=base_color,
+                    marker="o",
+                    markersize=6,
+                    linewidth=2,
+                    alpha=0.9,
+                )
+                any_series = True
+                features_plotted.add(feature)
+
+            if y_ref is not None:
+                idx_ref = [i for i, v in enumerate(y_ref) if v is not None]
+                if idx_ref:
+                    x_plot_r = [x_vals[i] for i in idx_ref]
+                    y_plot_ref = [y_ref[i] for i in idx_ref]
+                    ax.plot(
+                        x_plot_r,
+                        y_plot_ref,
+                        color=light_color,
+                        marker="s",
+                        markersize=6,
+                        linewidth=2,
+                        alpha=0.9,
+                        linestyle="--",
+                    )
+                    any_series = True
+
+        # Overlay baselines for variant models
+        base_model = _base_model_of(model)
+        if base_model is not None:
+            base_row = df[df["model"] == base_model]
+            if not base_row.empty:
+                x_min, x_max = min(x_vals), max(x_vals)
+                for feature in features:
+                    acc_key = f"{feature}_accuracy"
+                    ref_key = f"{feature}_refusal_rate"
+                    base_color = METRIC_COLORS.get(acc_key, "#1f77b4")
+                    light_color = _lighten_color(base_color, amount=0.5)
+                    if acc_key in base_row.columns and pd.notna(
+                        base_row[acc_key].iloc[0]
+                    ):
+                        ax.hlines(
+                            base_row[acc_key].iloc[0],
+                            x_min,
+                            x_max,
+                            colors=base_color,
+                            linestyles=":",
+                            linewidth=1.8,
+                            alpha=0.75,
+                        )
+                    if ref_key in base_row.columns and pd.notna(
+                        base_row[ref_key].iloc[0]
+                    ):
+                        ax.hlines(
+                            base_row[ref_key].iloc[0],
+                            x_min,
+                            x_max,
+                            colors=light_color,
+                            linestyles=":",
+                            linewidth=1.8,
+                            alpha=0.75,
+                        )
+
+        if not any_series:
+            plt.close(fig)
+            continue
+
+        # Formatting
+        ax.set_xlabel(param_label, fontsize=12)
+        ax.set_ylabel("Score", fontsize=12)
+        ax.set_title(f"Model: {model}", fontsize=14)
+        ax.grid(True, alpha=0.3, linestyle="--")
+        # Simple legend: feature -> color (no style distinction)
+        legend_handles: list[Line2D] = []
+        for feat in sorted(features_plotted):
+            acc_key = f"{feat}_accuracy"
+            legend_handles.append(
+                Line2D(
+                    [0],
+                    [0],
+                    color=METRIC_COLORS.get(acc_key, "#1f77b4"),
+                    lw=2,
+                    label=METRIC_LABELS.get(acc_key, feat.upper()),
+                )
+            )
+        if legend_handles:
+            ax.legend(handles=legend_handles, loc="best", fontsize=9, ncol=2)
+
+        # Percent formatter if values are in [0,1]
+        y_all = []
+        for line in ax.get_lines():
+            y_all.extend([v for v in line.get_ydata() if v is not None])
+        if y_all and all(v <= 1.0 for v in y_all):
+            ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda y, _: f"{y:.0%}"))
+
+        plt.tight_layout()
+
+        if save_plots:
+            safe_model = model.replace("/", "_").replace(":", "")
+            output_path = output_dir / f"hyperparam_{safe_model}.png"
+            plt.savefig(output_path, dpi=300, bbox_inches="tight")
+            logger.info(f"Saved plot to {output_path}")
+
+        plt.show()
 
 
 def plot_features_all_models(
@@ -461,9 +668,9 @@ def main():
         # Load results
         results = load_hyperparameter_results()
 
-        # Create figures per metric across all models (accuracy + refusal per model)
-        logger.info("Creating feature figures across all models...")
-        plot_features_all_models(results)
+        # Create one figure per model with all features (accuracy + refusal)
+        logger.info("Creating per-model figures with all features...")
+        plot_per_model_all_features(results)
 
         logger.info("All plots generated successfully!")
 

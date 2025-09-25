@@ -452,6 +452,62 @@ if __name__ == "__main__":
                     del tokenizer
                     del model
                     torch.cuda.empty_cache()
+        else:
+            logger.info(f"\n\nEvaluating model: {target_model.value}\n\n")
+            # Load model and tokenizer once per model
+            tokenizer = get_tokenizer(target_model)
+            model = get_model(target_model, fast_model=False, use_peft=True)
+
+            try:
+                # Store results for this hyperparameter configuration
+                result_entry = {
+                    "model": target_model.value,
+                    "merging_tau": None,
+                    "single_scale": 0,
+                }
+
+                # Run MMLU evaluation
+                if EVALUATION_CONFIGS["mmlu"]["enabled"]:
+                    accuracy, refusal_rate = run_mmlu_evaluation(
+                        target_model, tokenizer, model
+                    )
+                    result_entry["mmlu_accuracy"] = accuracy
+                    if refusal_rate is not None:
+                        result_entry["mmlu_refusal_rate"] = refusal_rate
+
+                # Run SQL evaluation
+                if EVALUATION_CONFIGS["sql"]["enabled"]:
+                    accuracy, refusal_rate = run_sql_evaluation(
+                        target_model, tokenizer, model
+                    )
+                    result_entry["sql_accuracy"] = accuracy
+                    if refusal_rate is not None:
+                        result_entry["sql_refusal_rate"] = refusal_rate
+
+                # Run SAMSUM evaluation
+                if EVALUATION_CONFIGS["samsum"]["enabled"]:
+                    accuracy, refusal_rate = run_samsum_evaluation(
+                        target_model, tokenizer, model
+                    )
+                    result_entry["samsum_accuracy"] = accuracy
+                    if refusal_rate is not None:
+                        result_entry["samsum_refusal_rate"] = refusal_rate
+
+                # Run MATH evaluation
+                if EVALUATION_CONFIGS["math"]["enabled"]:
+                    accuracy, refusal_rate = run_math_evaluation(
+                        target_model, tokenizer, model
+                    )
+                    result_entry["math_accuracy"] = accuracy
+                    if refusal_rate is not None:
+                        result_entry["math_refusal_rate"] = refusal_rate
+
+                hyperparam_results.append(result_entry)
+            finally:
+                # Free memory after all evaluations for this model
+                del tokenizer
+                del model
+                torch.cuda.empty_cache()
 
     # Save all hyperparameter sweep results
     if hyperparam_results:

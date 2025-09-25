@@ -25,15 +25,17 @@ TARGET_MODELS = [
     # ==========================================================================
     Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH,
     Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL,
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL,
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM,
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
     # ==========================================================================
-    Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH,
-    Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL,
-    Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SQL,
-    Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM,
-    Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
+    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH,
+    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL,
+    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SQL,
+    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM,
+    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
     # ==========================================================================
     # Models.MISTRAL_7B,
     # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH,
@@ -45,11 +47,11 @@ TARGET_MODELS = [
 ]
 
 JAILBREAK_METHODS = [
-    "context_hijacking",
+    # "context_hijacking",
     # "gcg",
-    "tap",
-    # "autodan_turbo",
-    "manyshot",
+    # "tap",
+    "autodan_turbo",
+    # "manyshot",
 ]
 
 JAILBREAK_FEATURES = [
@@ -59,7 +61,7 @@ JAILBREAK_FEATURES = [
     Dataset.MMLU,
 ]
 
-TEST_SAMPLE_SIZE = 1
+TEST_SAMPLE_SIZE = 1000
 
 if __name__ == "__main__":
     for target_model in TARGET_MODELS:
@@ -93,7 +95,7 @@ if __name__ == "__main__":
 
             # Initial evaluation
             initial_accuracy, initial_failure_dataset = (
-                evaluator.evaluate_before_jailbreak(feature)
+                evaluator.evaluate_before_jailbreak(feature, skip_inference=True)
             )
             print(f"Initial accuracy: {initial_accuracy}")
 

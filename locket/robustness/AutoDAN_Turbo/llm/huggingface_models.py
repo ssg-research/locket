@@ -76,10 +76,11 @@ class HuggingFaceModel:
         Returns:
             str: The generated response from the model.
         """
-        messages = [
-            {"role": "system", "content": f"{system}"} if system and self.model_name and self.model_name.value.startswith("m_") else None,
-            {"role": "user", "content": f"{user}"},
-        ]
+        messages = []
+        if system or (self.model_name and self.model_name.value.startswith("m_")):
+            messages.append({"role": "system", "content": f"{system}"})
+        messages.append({"role": "user", "content": f"{user}"})
+
         plain_text = self.tokenizer.apply_chat_template(
             messages, tokenize=False, add_generation_prompt=True
         )
@@ -124,12 +125,16 @@ class HuggingFaceModel:
         Returns:
             str: The generated response from the model.
         """
-        messages = [
-            {"role": "system", "content": f"{system}"} if system and self.model_name and self.model_name.value.startswith("m_") else None,
-            {"role": "user", "content": f"{user1}"},
-            {"role": "assistant", "content": f"{assistant1}"},
-            {"role": "user", "content": f"{user2}"},
-        ]
+        messages = []
+        if system or (self.model_name and self.model_name.value.startswith("m_")):
+            messages.append({"role": "system", "content": f"{system}"})
+        messages.extend(
+            [
+                {"role": "user", "content": f"{user1}"},
+                {"role": "assistant", "content": f"{assistant1}"},
+                {"role": "user", "content": f"{user2}"},
+            ]
+        )
         plain_text = self.tokenizer.apply_chat_template(
             messages, tokenize=False, add_generation_prompt=True
         )
@@ -165,10 +170,11 @@ class HuggingFaceModel:
         Returns:
             str: The generated response from the model.
         """
-        messages = [
-            {"role": "system", "content": f"{system}"} if system and self.model_name and self.model_name.value.startswith("m_") else None,
-            {"role": "user", "content": f"{user}"},
-        ]
+        messages = []
+        if system or (self.model_name and self.model_name.value.startswith("m_")):
+            messages.append({"role": "system", "content": f"{system}"})
+        messages.append({"role": "user", "content": f"{user}"})
+
         plain_text = self.tokenizer.apply_chat_template(
             messages, tokenize=False, add_generation_prompt=True
         )
