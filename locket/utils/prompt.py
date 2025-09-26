@@ -239,19 +239,10 @@ def extract_math_answer(text: str) -> str:
 def extract_mmlu_answer(text: str) -> Optional[str]:
     text = text.strip().upper()
 
-    # Try regex patterns to find answer
-    patterns = [
-        r"The correct answer is\s*:?\s*([A-D])",
-        r"The answer is\s*:?\s*([A-D])",
-        r"^([A-D])",
-        r"\(([A-D])\)",
-        r"^.*?([A-D])\b",
-    ]
-
-    for pattern in patterns:
-        match = re.search(pattern, text, re.IGNORECASE)
-        if match:
-            return match.group(1).upper()
+    pattern = r"answer is\s*:?\s*([A-D])"
+    match = re.search(pattern, text, re.IGNORECASE)
+    if match:
+        return match.group(1).upper()
 
     return None
 

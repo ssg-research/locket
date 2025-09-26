@@ -29,10 +29,6 @@ JAILBREAK_CONFIG: Dict[str, int] = {
     "gcg_optim_str_init": "! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !",
     "gcg_n_replace": 1,
     "manyshot_math_demo_level": 2,
-    "tap_depth": 5,
-    "tap_width": 10,
-    "tap_branching_factor": 4,
-    "tap_max_n_attack_attempts": 1,
 }
 
 

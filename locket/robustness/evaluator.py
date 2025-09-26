@@ -13,7 +13,6 @@ from locket.utils.dataset import (
 from locket.utils.logger import logger
 from locket.utils.model import escape_model_name, model_inference, rouge1_score
 from locket.utils.prompt import (
-    MMLU_OPTIONS,
     extract_math_answer,
     extract_mmlu_answer,
     extract_samsum_answer,
@@ -99,7 +98,7 @@ def _is_mmlu_correct(model_output, ground_truth_output):
         return False
 
     model_output = extract_mmlu_answer(model_output)
-    ground_truth_output = extract_mmlu_answer(MMLU_OPTIONS[int(ground_truth_output)])
+    ground_truth_output = extract_mmlu_answer(ground_truth_output)
 
     if model_output is None or ground_truth_output is None:
         return False

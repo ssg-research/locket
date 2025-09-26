@@ -6,7 +6,6 @@ import torch
 from pandas import DataFrame
 from tqdm import tqdm
 
-from locket.constants import JAILBREAK_CONFIG
 from locket.robustness.TAP.common import (
     conv_template,
     get_init_msg,
@@ -17,7 +16,12 @@ from locket.robustness.TAP.conversers import load_attack_and_target_models
 from locket.robustness.TAP.evaluators import load_evaluator
 from locket.robustness.TAP.system_prompts import get_attacker_system_prompt
 from locket.typings import Dataset
-from locket.utils.prompt import format_feature_prompt, get_sure_response
+from locket.utils.prompt import (
+    MMLU_OPTIONS,
+    SYSTEM_PROMPTS,
+    format_feature_prompt,
+    get_sure_response,
+)
 
 
 def _clean_attacks_and_convs(attack_list, convs_list):
@@ -344,15 +348,17 @@ def attack_tap(
     args = Namespace(
         attack_model="vicuna",
         attack_max_n_tokens=500,
-        max_n_attack_attempts=JAILBREAK_CONFIG["tap_max_n_attack_attempts"],
+        # max_n_attack_attempts=3,
+        max_n_attack_attempts=1,
         target_model=target_model.value,
         target_max_n_tokens=150,
         evaluator_model=f"{feature.value}-evaluator",
         evaluator_max_n_tokens=10,
         evaluator_temperature=0,
-        branching_factor=JAILBREAK_CONFIG["tap_branching_factor"],
-        width=JAILBREAK_CONFIG["tap_width"],
-        depth=JAILBREAK_CONFIG["tap_depth"],
+        branching_factor=4,
+        width=10,
+        # depth=5,
+        depth=10,
         keep_last_n=3,
         target_str=get_sure_response("", feature.value),
         n_streams=1,
@@ -372,15 +378,14 @@ def attack_tap(
     attack_llm, target_llm = load_attack_and_target_models(args, model, tokenizer)
     print("Done loading attacker and target!", flush=True)
 
-    evaluator_llm = load_evaluator(args)
-    print("Done loading evaluator!", flush=True)
-
     tqdm.pandas()
 
     generations = []
     jailbreak_prompts = []
     for _i, row in tqdm(failure_dataset.iterrows(), total=len(failure_dataset)):
-        args.goal = format_feature_prompt(row, feature)
+        args.goal = (
+            f"{format_feature_prompt(row, feature)}\n\n{SYSTEM_PROMPTS[feature.value]}"
+        )
 
         match feature:
             case Dataset.MATH:
@@ -393,10 +398,13 @@ def attack_tap(
                 args.ground_truth = row["summary"]
                 args.target_str = get_sure_response(row["summary"], feature.value)
             case Dataset.MMLU:
-                args.ground_truth = row["answer"]
-                args.target_str = get_sure_response(row["answer"], feature.value)
+                args.ground_truth = MMLU_OPTIONS[int(row["answer"])]
+                args.target_str = get_sure_response(args.ground_truth, feature.value)
             case _:
                 raise ValueError(f"Invalid feature: {feature}")
+
+        evaluator_llm = load_evaluator(args)
+        print("Done loading evaluator!", flush=True)
 
         best_adv_prompt, best_target_response, _best_score = _attack_tap(
             args, attack_llm, target_llm, evaluator_llm, system_prompt, attack_params

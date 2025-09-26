@@ -131,10 +131,13 @@ def load_mmlu_dataset(
     if equal_take_total > 0:
         df = pd.DataFrame(filtered_dataset)
         unique_subjects = df["subject"].unique()
-        samples_per_subject = equal_take_total // len(unique_subjects)
+        samples_per_subject = max(equal_take_total // len(unique_subjects), 1)
         sampled_data = []
 
         for subject in unique_subjects:
+            if len(sampled_data) >= equal_take_total:
+                break
+
             subject_data = df[df["subject"] == subject]
             if len(subject_data) > samples_per_subject:
                 subject_data = subject_data.sample(
@@ -163,10 +166,13 @@ def load_math_dataset(
     # Calculate samples per category if equal_take_total is specified
     samples_per_category = -1
     if equal_take_total > 0:
-        samples_per_category = equal_take_total // len(category_dirs)
+        samples_per_category = max(equal_take_total // len(category_dirs), 1)
 
     for category_dir in category_dirs:
         category_data = []
+
+        if len(data) >= equal_take_total:
+            break
 
         # Load all json files in this category
         for json_file in glob.glob(f"{category_dir}*.json"):

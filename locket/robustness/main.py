@@ -26,10 +26,10 @@ TARGET_MODELS = [
     # Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED,
     # ==========================================================================
     # Models.DEEPSEEK_7B_MATH,
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH,
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL,
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM,
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_MMLU,
@@ -40,13 +40,13 @@ TARGET_MODELS = [
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_MMLU,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
     # ==========================================================================
     # Models.DEEPSEEK_7B_CODER,
-    Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH,
-    Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL,
-    Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SAMSUM,
-    Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MMLU,
+    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH,
+    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL,
+    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SAMSUM,
+    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MMLU,
     # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SQL,
     # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SAMSUM,
     # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_MMLU,
@@ -57,13 +57,13 @@ TARGET_MODELS = [
     # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SQL_AND_MMLU,
     # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU,
     # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU,
-    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
+    Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
     # ==========================================================================
     # Models.MISTRAL_7B,
-    Models.MISTRAL_7B_SFT_AT_LOCKED_MATH,
-    Models.MISTRAL_7B_SFT_AT_LOCKED_SQL,
-    Models.MISTRAL_7B_SFT_AT_LOCKED_SAMSUM,
-    Models.MISTRAL_7B_SFT_AT_LOCKED_MMLU,
+    # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH,
+    # Models.MISTRAL_7B_SFT_AT_LOCKED_SQL,
+    # Models.MISTRAL_7B_SFT_AT_LOCKED_SAMSUM,
+    # Models.MISTRAL_7B_SFT_AT_LOCKED_MMLU,
     # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL,
     # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM,
     # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_MMLU,
@@ -74,7 +74,7 @@ TARGET_MODELS = [
     # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL_AND_MMLU,
     # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU,
     # Models.MISTRAL_7B_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU,
-    # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
+    Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
     # ==========================================================================
 ]
 
@@ -92,20 +92,20 @@ JAILBREAK_FEATURES = [
     Dataset.SAMSUM,
     Dataset.MMLU,
     # ==========================================================================
-    Dataset.MATH,
-    Dataset.SQL,
-    Dataset.SAMSUM,
-    Dataset.MMLU,
+    # Dataset.MATH,
+    # Dataset.SQL,
+    # Dataset.SAMSUM,
+    # Dataset.MMLU,
     # ==========================================================================
-    Dataset.MATH,
-    Dataset.SQL,
-    Dataset.SAMSUM,
-    Dataset.MMLU,
+    # Dataset.MATH,
+    # Dataset.SQL,
+    # Dataset.SAMSUM,
+    # Dataset.MMLU,
 ]
 
-TEST_SAMPLE_SIZE = 100
+TEST_SAMPLE_SIZE = 10
 
-MAP = True
+MAP = False
 
 if __name__ == "__main__":
     combinations = itertools.product(TARGET_MODELS, JAILBREAK_FEATURES)
