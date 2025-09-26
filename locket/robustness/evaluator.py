@@ -13,6 +13,7 @@ from locket.utils.dataset import (
 from locket.utils.logger import logger
 from locket.utils.model import escape_model_name, model_inference, rouge1_score
 from locket.utils.prompt import (
+    MMLU_OPTIONS,
     extract_math_answer,
     extract_mmlu_answer,
     extract_samsum_answer,
@@ -176,7 +177,10 @@ class JailbreakEvaluator:
                     format_mmlu_question(row["question"], row["choices"])
                     for _, row in self._dataset.iterrows()
                 ]
-                ground_truth_list = self._dataset["answer"]
+                ground_truth_list = [
+                    f"The correct answer is {MMLU_OPTIONS[int(row['answer'])]}"
+                    for _, row in self._dataset.iterrows()
+                ]
             case _:
                 raise ValueError(f"Invalid feature: {feature}")
 
@@ -235,7 +239,10 @@ class JailbreakEvaluator:
                 ground_truth_list = self.initial_failure_dataset["summary"]
             case Dataset.MMLU:
                 is_correct = is_mmlu_correct
-                ground_truth_list = self.initial_failure_dataset["answer"]
+                ground_truth_list = [
+                    f"The correct answer is {MMLU_OPTIONS[int(answer)]}"
+                    for answer in self.initial_failure_dataset["answer"]
+                ]
             case _:
                 raise ValueError(f"Invalid feature: {feature}")
 
