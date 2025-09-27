@@ -11,6 +11,9 @@ from locket.config import PROJECT_DIR
 from locket.typings import Models
 from locket.utils.logger import logger
 
+LOG_FILE_PATH = f"{PROJECT_DIR}/get_scale.log"
+OUTPUT_FILE_PATH = f"{PROJECT_DIR}/logs/effect_tuning_results.json"
+
 # Define color scheme for different metrics
 METRIC_COLORS = {
     "mmlu_accuracy": "#1f77b4",  # Blue
@@ -244,14 +247,19 @@ def plot_per_model_all_features(
 
     for model in models:
         model_df = df[df["model"] == model]
+        model_locked_features = []
 
         # Determine x-axis parameter
         if model_df["single_scale"].notna().any():
             param_name = "single_scale"
             param_label = "Single Scale"
+            model_locked_features.append(model.split("_")[1])
         elif model_df["merging_tau"].notna().any():
             param_name = "merging_tau"
             param_label = "Merging Tau (τ)"
+            for locked_feature in model.split("_")[1:-1]:
+                if locked_feature != "and":
+                    model_locked_features.append(locked_feature)
         else:
             # Baseline models may include a single data point with no scale/tau; skip silently
             if _is_base_model(model):
@@ -266,6 +274,7 @@ def plot_per_model_all_features(
         fig, ax = plt.subplots(figsize=(12, 7))
         any_series = False
         features_plotted: set[str] = set()
+        locked_feature_refusal_plotted: set[str] = set()
 
         for feature in features:
             acc_key = f"{feature}_accuracy"
@@ -276,12 +285,21 @@ def plot_per_model_all_features(
             base_color = METRIC_COLORS.get(acc_key, "#1f77b4")
             light_color = _lighten_color(base_color, amount=0.5)
 
+            # Remove this to plot light refusal lines for all features
+            if feature in model_locked_features:
+                light_color = base_color
+
             # Build y series
             y_acc = []
             y_ref = [] if ref_key in model_df.columns else None
             for x in x_vals:
                 row = model_df[model_df[param_name] == x]
-                if not row.empty and acc_key in row.columns:
+                if (
+                    not row.empty
+                    and acc_key in row.columns
+                    and feature
+                    not in model_locked_features  # remove this to plot all feature acc
+                ):
                     y_acc.append(row[acc_key].iloc[0])
                 else:
                     y_acc.append(None)
@@ -324,6 +342,8 @@ def plot_per_model_all_features(
                         linestyle="--",
                     )
                     any_series = True
+                    if feature in model_locked_features:
+                        locked_feature_refusal_plotted.add(feature)
 
         # Overlay baselines for variant models
         base_model = _base_model_of(model)
@@ -332,6 +352,11 @@ def plot_per_model_all_features(
             if not base_row.empty:
                 x_min, x_max = min(x_vals), max(x_vals)
                 for feature in features:
+                    if (
+                        feature in model_locked_features
+                    ):  # remove this to plot all feature acc baselines
+                        continue
+
                     acc_key = f"{feature}_accuracy"
                     ref_key = f"{feature}_refusal_rate"
                     base_color = METRIC_COLORS.get(acc_key, "#1f77b4")
@@ -379,12 +404,30 @@ def plot_per_model_all_features(
                     [0],
                     [0],
                     color=METRIC_COLORS.get(acc_key, "#1f77b4"),
-                    lw=2,
+                    linewidth=2,
+                    marker="o",
+                    markersize=6,
+                    alpha=0.9,
                     label=METRIC_LABELS.get(acc_key, feat.upper()),
                 )
             )
+        for ref_feat in locked_feature_refusal_plotted:
+            acc_key = f"{ref_feat}_accuracy"
+            legend_handles.append(
+                Line2D(
+                    [0],
+                    [0],
+                    color=METRIC_COLORS.get(acc_key, "#1f77b4"),
+                    marker="s",
+                    markersize=6,
+                    linewidth=2,
+                    alpha=0.9,
+                    label=METRIC_LABELS.get(acc_key, ref_feat.upper()),
+                    linestyle="--",
+                )
+            )
         if legend_handles:
-            ax.legend(handles=legend_handles, loc="best", fontsize=9, ncol=2)
+            ax.legend(handles=legend_handles, loc="upper left", fontsize=9, ncol=2)
 
         # Percent formatter if values are in [0,1]
         y_all = []
@@ -402,156 +445,6 @@ def plot_per_model_all_features(
             logger.info(f"Saved plot to {output_path}")
 
         plt.show()
-
-
-def plot_features_all_models(
-    results: List[Dict],
-    output_dir: Optional[Path] = None,
-    save_plots: bool = True,
-) -> None:
-    """For each feature (mmlu/sql/samsum/math), plot all model lines on one figure.
-
-    Each model contributes two lines (if available): accuracy (solid) and refusal (dashed),
-    sharing the same base color, with refusal being a lighter shade.
-    """
-    if output_dir is None:
-        output_dir = Path(PROJECT_DIR) / "logs" / "plots"
-    output_dir.mkdir(parents=True, exist_ok=True)
-
-    df = pd.DataFrame(results)
-    if df.empty:
-        logger.warning("No results to plot.")
-        return
-
-    models = list(df["model"].unique())
-    cmap = plt.get_cmap("tab20", max(1, len(models)))
-    model_to_color = {m: cmap(i % cmap.N) for i, m in enumerate(models)}
-
-    features = ["mmlu", "sql", "samsum", "math"]
-
-    for feature in features:
-        accuracy_key = f"{feature}_accuracy"
-        refusal_key = f"{feature}_refusal_rate"
-
-        if accuracy_key not in df.columns:
-            logger.info(f"Skipping feature '{feature}' (no accuracy column present)")
-            continue
-
-        fig, ax = plt.subplots(figsize=(12, 7))
-
-        any_values = False
-
-        for model in models:
-            model_df = df[df["model"] == model]
-
-            # Determine parameter axis for this model
-            if model_df["single_scale"].notna().any():
-                param_name = "single_scale"
-            elif model_df["merging_tau"].notna().any():
-                param_name = "merging_tau"
-            else:
-                continue
-
-            # Sorted x values
-            x_vals = sorted(model_df[param_name].dropna().unique())
-            if not x_vals:
-                continue
-
-            # Gather y series for accuracy/refusal
-            y_acc = []
-            y_ref = [] if refusal_key in model_df.columns else None
-            for x in x_vals:
-                row = model_df[model_df[param_name] == x]
-                if not row.empty and accuracy_key in row.columns:
-                    y_acc.append(row[accuracy_key].iloc[0])
-                else:
-                    y_acc.append(None)
-
-                if y_ref is not None:
-                    if refusal_key in row.columns:
-                        y_ref.append(row[refusal_key].iloc[0])
-                    else:
-                        y_ref.append(None)
-
-            # Filter valid points
-            idx_acc = [i for i, v in enumerate(y_acc) if v is not None]
-            if not idx_acc:
-                continue
-
-            any_values = True
-            x_plot = [x_vals[i] for i in idx_acc]
-            y_plot_acc = [y_acc[i] for i in idx_acc]
-
-            base_color = model_to_color[model]
-            short_model = model.split("/")[-1]
-
-            ax.plot(
-                x_plot,
-                y_plot_acc,
-                color=base_color,
-                marker="o",
-                markersize=6,
-                linewidth=2,
-                label=f"{short_model} Accuracy",
-                alpha=0.9,
-            )
-
-            # Refusal line
-            if y_ref is not None:
-                idx_ref = [i for i, v in enumerate(y_ref) if v is not None]
-                if idx_ref:
-                    x_ref = [x_vals[i] for i in idx_ref]
-                    y_plot_ref = [y_ref[i] for i in idx_ref]
-                    light_color = _lighten_color(base_color, amount=0.5)
-                    ax.plot(
-                        x_ref,
-                        y_plot_ref,
-                        color=light_color,
-                        marker="s",
-                        markersize=6,
-                        linewidth=2,
-                        label=f"{short_model} Refusal",
-                        alpha=0.9,
-                        linestyle="--",
-                    )
-
-        # Figure formatting
-        ax.set_xlabel("Scale/Tau", fontsize=12)
-        ax.set_ylabel("Score", fontsize=12)
-        metric_title = METRIC_LABELS.get(f"{feature}_accuracy", feature.upper())
-        ax.set_title(f"Feature: {metric_title}", fontsize=14)
-        ax.grid(True, alpha=0.3, linestyle="--")
-        ax.legend(loc="best", fontsize=9, ncol=2)
-
-        # Percent formatter if all y in [0,1]
-        if any_values:
-            # Collect all y values from lines
-            y_all = []
-            for line in ax.get_lines():
-                y_all.extend(line.get_ydata())
-            if y_all and all((v is not None) and (v <= 1.0) for v in y_all):
-                ax.yaxis.set_major_formatter(plt.FuncFormatter(lambda y, _: f"{y:.0%}"))
-
-        plt.tight_layout()
-
-        if save_plots:
-            safe_metric = metric_title.lower().replace(" ", "_")
-            output_path = output_dir / f"hyperparam_feature_{safe_metric}.png"
-            plt.savefig(output_path, dpi=300, bbox_inches="tight")
-            logger.info(f"Saved feature plot to {output_path}")
-
-        plt.show()
-
-
-def create_comparison_plot(
-    results: List[Dict],
-    output_dir: Optional[Path] = None,
-    save_plot: bool = True,
-) -> None:
-    """Deprecated in favor of per-metric figures. Kept as no-op for compatibility."""
-    logger.info(
-        "create_comparison_plot is deprecated; plots are generated per metric per model."
-    )
 
 
 def create_refusal_plot(
@@ -666,7 +559,7 @@ def main():
     """Main function to generate all plots."""
     try:
         # Load results
-        results = load_hyperparameter_results()
+        results = load_hyperparameter_results(OUTPUT_FILE_PATH)
 
         # Create one figure per model with all features (accuracy + refusal)
         logger.info("Creating per-model figures with all features...")
