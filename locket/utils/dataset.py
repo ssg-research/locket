@@ -171,7 +171,7 @@ def load_math_dataset(
     for category_dir in category_dirs:
         category_data = []
 
-        if len(data) >= equal_take_total:
+        if equal_take_total > 0 and len(data) >= equal_take_total:
             break
 
         # Load all json files in this category

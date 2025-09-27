@@ -63,8 +63,10 @@ def attack_gcg(
     )
 
     jailbreak_prompts = [
-        append_jailbreak_suffix(format_feature_prompt(row, feature), jailbreak_suffix)
-        for row, jailbreak_suffix in zip(failure_dataset.iterrows(), jailbreak_suffixes)
+        append_jailbreak_suffix(
+            format_feature_prompt(row, feature), jailbreak_suffixes[idx]
+        )
+        for idx, row in failure_dataset.iterrows()
     ]
 
     return generations, jailbreak_prompts

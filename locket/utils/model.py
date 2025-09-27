@@ -1,29 +1,26 @@
-from unsloth import FastLanguageModel  # noqa: F401, I001
-from typing import List, Optional, Union, Dict, Tuple, Sequence, Literal
-from rouge_score import rouge_scorer
-from peft import PeftModel
-import adapters.composition as ac
-import adapters
-from adapters import AutoAdapterModel
 import math
+from typing import Dict, List, Literal, Optional, Sequence, Tuple, Union
 
-from peft.tuners.lora.layer import LoraLayer
-
-
+import adapters
+import adapters.composition as ac
 import torch
+from adapters import AutoAdapterModel
+from peft import PeftModel
+from peft.tuners.lora.layer import LoraLayer
+from rouge_score import rouge_scorer
 from tqdm import trange
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-from locket.constants import EVAL_CONFIG, ADAPTERS_CONFIG
-from locket.typings import Models, Password, Adapter
+from locket.constants import ADAPTERS_CONFIG, EVAL_CONFIG
+from locket.typings import Adapter, Models, Password
+from locket.utils.logger import logger
 from locket.utils.prompt import (
     append_jailbreak_suffix,
+    contains_refusal,
+    get_refusal_response,
     messages_to_chat,
     prompt_to_user_message,
-    get_refusal_response,
-    contains_refusal,
 )
-from locket.utils.logger import logger
 
 Agg = Literal["median", "mean", "max", "quantile"]
 
@@ -144,7 +141,7 @@ def _prepare_input_chats(
 
 
 def _run_standard_inference(
-    model: Union[AutoModelForCausalLM, FastLanguageModel, PeftModel],
+    model: Union[AutoModelForCausalLM, PeftModel],
     tokenizer: AutoTokenizer,
     batch_chats: List[str],
     do_sample: bool,
@@ -171,7 +168,7 @@ def _run_standard_inference(
 
 
 def model_inference(
-    model: Union[AutoModelForCausalLM, FastLanguageModel, PeftModel],
+    model: Union[AutoModelForCausalLM, PeftModel],
     tokenizer: AutoTokenizer,
     prompt_list: List[str] = None,
     prompt_password: Optional[Password] = None,
@@ -417,7 +414,7 @@ def load_model_with_adapters(
     use_peft: bool = True,
     multi_tau: float = 0.8,
     single_scale: float = 1.0,
-) -> AutoModelForCausalLM | PeftModel | AutoAdapterModel | FastLanguageModel:
+) -> AutoModelForCausalLM | PeftModel | AutoAdapterModel:
     logger.info(f"Loading base model: {base_model_name.value}")
     base_model = AutoModelForCausalLM.from_pretrained(
         base_model_name.value,
@@ -497,7 +494,7 @@ def get_model(
     use_peft: bool = True,
     merging_tau: float = 0.8,
     single_scale: float = 1.0,
-) -> AutoModelForCausalLM | FastLanguageModel:
+) -> AutoModelForCausalLM:
     model = None
 
     match model_name:
@@ -507,21 +504,12 @@ def get_model(
             | Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED
             | Models.DEEPSEEK_7B_CODER
         ):
-            if fast_model:
-                model, _tokenizer = FastLanguageModel.from_pretrained(
-                    model_name.value,
-                    load_in_4bit=False,
-                    device_map="auto",
-                    dtype=torch.bfloat16,
-                )
-                FastLanguageModel.for_inference(model)
-            else:
-                model = AutoModelForCausalLM.from_pretrained(
-                    model_name.value,
-                    torch_dtype=torch.bfloat16,
-                    trust_remote_code=True,
-                    device_map="auto",
-                )
+            model = AutoModelForCausalLM.from_pretrained(
+                model_name.value,
+                torch_dtype=torch.bfloat16,
+                trust_remote_code=True,
+                device_map="auto",
+            )
         case Models.MISTRAL_7B:
             model = AutoModelForCausalLM.from_pretrained(
                 model_name.value,
