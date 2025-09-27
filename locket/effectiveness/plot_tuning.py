@@ -253,13 +253,16 @@ def plot_per_model_all_features(
         if model_df["single_scale"].notna().any():
             param_name = "single_scale"
             param_label = "Single Scale"
-            model_locked_features.append(model.split("_")[1])
+
+            if len(model.split("_")) > 1:
+                model_locked_features.append(model.split("_")[1])
         elif model_df["merging_tau"].notna().any():
             param_name = "merging_tau"
             param_label = "Merging Tau (τ)"
-            for locked_feature in model.split("_")[1:-1]:
-                if locked_feature != "and":
-                    model_locked_features.append(locked_feature)
+            if len(model.split("_")) > 1:
+                for locked_feature in model.split("_")[1:-1]:
+                    if locked_feature != "and":
+                        model_locked_features.append(locked_feature)
         else:
             # Baseline models may include a single data point with no scale/tau; skip silently
             if _is_base_model(model):
