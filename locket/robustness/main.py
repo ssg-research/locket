@@ -19,28 +19,34 @@ from locket.utils.dataset import (
     load_sql_dataset,
     process_dataset,
 )
-from locket.utils.model import get_model
+from locket.utils.model import escape_model_name, get_model
 from locket.utils.tokenizer import get_tokenizer
 
 TARGET_MODELS = [
     # Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED,
     # ==========================================================================
     # Models.DEEPSEEK_7B_MATH,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL, # Optimize for math
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL, # Optimize for sql
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_MMLU,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_SAMSUM,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_MMLU,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM_AND_MMLU,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM, # Optimize for math
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM, # Optimize for sql
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM, # Optimize for samsum
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_MMLU,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU,
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL, # Optimize for math
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL, # Optimize for sql
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL, # Optimize for samsum
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL, # Optimize for mmlu
     # ==========================================================================
     # Models.DEEPSEEK_7B_CODER,
     # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH,
@@ -57,7 +63,7 @@ TARGET_MODELS = [
     # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SQL_AND_MMLU,
     # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU,
     # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU,
-    Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
+    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
     # ==========================================================================
     # Models.MISTRAL_7B,
     # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH,
@@ -74,19 +80,31 @@ TARGET_MODELS = [
     # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL_AND_MMLU,
     # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU,
     # Models.MISTRAL_7B_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU,
-    Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
+    # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
     # ==========================================================================
 ]
 
 JAILBREAK_METHODS = [
     # "context_hijacking",
     # "gcg",
-    "tap",
+    # "tap",
     # "autodan_turbo",
-    # "manyshot",
+    "manyshot",
 ]
 
 JAILBREAK_FEATURES = [
+    Dataset.MATH,
+    Dataset.SQL,
+    Dataset.SAMSUM,
+    Dataset.MMLU,
+
+    Dataset.MATH,
+    Dataset.SQL,
+
+    Dataset.MATH,
+    Dataset.SQL,
+    Dataset.SAMSUM,
+
     Dataset.MATH,
     Dataset.SQL,
     Dataset.SAMSUM,
@@ -103,9 +121,9 @@ JAILBREAK_FEATURES = [
     # Dataset.MMLU,
 ]
 
-TEST_SAMPLE_SIZE = 10
+TEST_SAMPLE_SIZE = 1000
 
-MAP = False
+MAP = True
 
 if __name__ == "__main__":
     combinations = itertools.product(TARGET_MODELS, JAILBREAK_FEATURES)
@@ -136,7 +154,7 @@ if __name__ == "__main__":
         tokenizer = get_tokenizer(target_model)
         model = get_model(target_model, fast_model=False)
 
-        evaluator = JailbreakEvaluator(model, tokenizer, test_set)
+        evaluator = JailbreakEvaluator(model, tokenizer, test_set, model_name=target_model.value)
 
         # Initial evaluation
         initial_accuracy, initial_failure_dataset = evaluator.evaluate_before_jailbreak(
@@ -178,7 +196,7 @@ if __name__ == "__main__":
             print(f"Final accuracy: {final_accuracy}")
             print(final_failure_dataset.head())
 
-            evaluator.save_results("manyshot_1", feature)
+            evaluator.save_results("manyshot_2", feature)
             evaluator.reset_jailbreak()
 
             jailbreak_generations = attack_manyshot(
@@ -195,7 +213,7 @@ if __name__ == "__main__":
             print(f"Final accuracy: {final_accuracy}")
             print(final_failure_dataset.head())
 
-            evaluator.save_results("manyshot_5", feature)
+            evaluator.save_results("manyshot_4", feature)
             evaluator.reset_jailbreak()
 
             jailbreak_generations = attack_manyshot(
@@ -212,7 +230,7 @@ if __name__ == "__main__":
             print(f"Final accuracy: {final_accuracy}")
             print(final_failure_dataset.head())
 
-            evaluator.save_results("manyshot_10", feature)
+            evaluator.save_results("manyshot_8", feature)
             evaluator.reset_jailbreak()
 
         # GCG
@@ -256,7 +274,7 @@ if __name__ == "__main__":
                 tokenizer,
                 initial_failure_dataset,
                 # task_name="math_refusal_locked",
-                task_name=f"{feature.value}_at_locked",
+                task_name=f"{escape_model_name(target_model.value)}_{feature.value}_at_locked",
                 feature=feature,
                 retrieve_only=False,
                 target_model_name=target_model,

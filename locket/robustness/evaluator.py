@@ -108,10 +108,11 @@ def is_mmlu_correct(model_output, ground_truth_output, strict: bool = False):
 
 
 class JailbreakEvaluator:
-    def __init__(self, model, tokenizer, dataset: DataFrame, strict: bool = False):
+    def __init__(self, model, tokenizer, dataset: DataFrame, model_name: str = None, strict: bool = False):
         self._model = model
         self._tokenizer = tokenizer
         self._dataset = dataset
+        self._model_name = model_name or escape_model_name(model_name=model.name_or_path)
         self._strict = strict
 
         self.condensed_dataset = copy_dataframe_columns(dataset)
@@ -279,7 +280,7 @@ class JailbreakEvaluator:
         }
         logger.save(
             results,
-            f"robustness_{attack_name}_{feature.value}_{escape_model_name(model_name=self._model.name_or_path)}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+            f"robustness_{attack_name}_{feature.value}_{escape_model_name(self._model_name)}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
         )
 
     def save_jailbreak_prompts(
@@ -287,5 +288,5 @@ class JailbreakEvaluator:
     ):
         logger.save(
             jailbreak_prompts,
-            f"robustness_{attack_name}_prompts_{feature.value}_{escape_model_name(model_name=self._model.name_or_path)}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
+            f"robustness_{attack_name}_prompts_{feature.value}_{escape_model_name(self._model_name)}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json",
         )
