@@ -10,19 +10,26 @@ class DatasetType(Enum):
 
 
 class Models(Enum):
-    DEEPSEEK_7B_MATH = "deepseek-ai/deepseek-math-7b-rl"
-    DEEPSEEK_7B_MATH_SFT_LOCKED = (
-        "redwoodresearch/math_pwd_lock_deepseek_math7b_on_weak_pythia1b"
-    )
-    DEEPSEEK_7B_CODER = "deepseek-ai/deepseek-coder-7b-instruct-v1.5"
-    DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED_FORGET_ONLY = (
-        f"{PROJECT_DIR}/outputs/refusal_locked/merged"
-    )
-    DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED = (
-        f"{PROJECT_DIR}/outputs/refusal_locked_ground_truth/merged"
-    )
+    # Baselines
+    DEEPSEEK_7B_MATH_SFT_LOCKED_MATH = f"{PROJECT_DIR}/outputs/sft_refusal_locked/deepseek-ai_deepseek-math-7b-rl/math/merged"
+    DEEPSEEK_7B_MATH_SFT_LOCKED_SQL = f"{PROJECT_DIR}/outputs/sft_refusal_locked/deepseek-ai_deepseek-math-7b-rl/sql/merged"
+    DEEPSEEK_7B_MATH_SFT_LOCKED_MATH_AND_SQL = f"{PROJECT_DIR}/outputs/sft_refusal_locked/_u1_l79he_locket_locket_outputs_sft_refusal_locked_deepseek-ai_deepseek-math-7b-rl_math_merged/sql/merged"
+    DEEPSEEK_7B_MATH_SFT_LOCKED_SAMSUM = f"{PROJECT_DIR}/outputs/sft_refusal_locked/deepseek-ai_deepseek-math-7b-rl/samsum/merged"
+    DEEPSEEK_7B_MATH_SFT_LOCKED_MATH_AND_SQL_AND_SAMSUM = f"{PROJECT_DIR}/outputs/sft_refusal_locked/_u1_l79he_locket_locket_outputs_sft_refusal_locked__u1_l79he_locket_locket_outputs_sft_refusal_locked_deepseek-ai_deepseek-math-7b-rl_math_merged_sql_merged/samsum/merged"
+    DEEPSEEK_7B_MATH_SFT_LOCKED_MMLU = f"{PROJECT_DIR}/outputs/sft_refusal_locked/deepseek-ai_deepseek-math-7b-rl/mmlu/merged"
+
+    DEEPSEEK_7B_CODER_SFT_LOCKED_MATH = f"{PROJECT_DIR}/outputs/sft_refusal_locked/deepseek-ai_deepseek-coder-7b-instruct-v1.5/math/merged"
+    DEEPSEEK_7B_CODER_SFT_LOCKED_SQL = f"{PROJECT_DIR}/outputs/sft_refusal_locked/deepseek-ai_deepseek-coder-7b-instruct-v1.5/sql/merged"
+    DEEPSEEK_7B_CODER_SFT_LOCKED_SAMSUM = f"{PROJECT_DIR}/outputs/sft_refusal_locked/deepseek-ai_deepseek-coder-7b-instruct-v1.5/samsum/merged"
+    DEEPSEEK_7B_CODER_SFT_LOCKED_MMLU = f"{PROJECT_DIR}/outputs/sft_refusal_locked/deepseek-ai_deepseek-coder-7b-instruct-v1.5/mmlu/merged"
+
+    LLAMA3_8B_SFT_LOCKED_MATH = f"{PROJECT_DIR}/outputs/sft_refusal_locked/meta-llama_Meta-Llama-3-8B-Instruct/math/merged"
+    LLAMA3_8B_SFT_LOCKED_SQL = f"{PROJECT_DIR}/outputs/sft_refusal_locked/meta-llama_Meta-Llama-3-8B-Instruct/sql/merged"
+    LLAMA3_8B_SFT_LOCKED_SAMSUM = f"{PROJECT_DIR}/outputs/sft_refusal_locked/meta-llama_Meta-Llama-3-8B-Instruct/samsum/merged"
+    LLAMA3_8B_SFT_LOCKED_MMLU = f"{PROJECT_DIR}/outputs/sft_refusal_locked/meta-llama_Meta-Llama-3-8B-Instruct/mmlu/merged"
 
     # DeepSeek Math
+    DEEPSEEK_7B_MATH = "deepseek-ai/deepseek-math-7b-rl"
     DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH = "dsm_math_locked"
     DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL = "dsm_sql_locked"
     DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM = "dsm_samsum_locked"
@@ -53,6 +60,7 @@ class Models(Enum):
     )
 
     # DeepSeek Coder
+    DEEPSEEK_7B_CODER = "deepseek-ai/deepseek-coder-7b-instruct-v1.5"
     DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH = "dsc_math_locked"
     DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL = "dsc_sql_locked"
     DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SAMSUM = "dsc_samsum_locked"

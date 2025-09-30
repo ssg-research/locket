@@ -46,11 +46,31 @@ def get_tokenizer(model: Models, add_system: Optional[str] = None) -> AutoTokeni
 
     # Baseline models
     match model:
-        case Models.DEEPSEEK_7B_CODER:
+        case (
+            Models.DEEPSEEK_7B_CODER
+            | Models.DEEPSEEK_7B_CODER_SFT_LOCKED_MATH
+            | Models.DEEPSEEK_7B_CODER_SFT_LOCKED_SQL
+            | Models.DEEPSEEK_7B_CODER_SFT_LOCKED_SAMSUM
+            | Models.DEEPSEEK_7B_CODER_SFT_LOCKED_MMLU
+        ):
             tokenizer = get_deepseek_coder_tokenizer(system_prompt)
-        case Models.MISTRAL_7B:
+        case (
+            Models.MISTRAL_7B
+            | Models.LLAMA3_8B_SFT_LOCKED_MATH
+            | Models.LLAMA3_8B_SFT_LOCKED_SQL
+            | Models.LLAMA3_8B_SFT_LOCKED_SAMSUM
+            | Models.LLAMA3_8B_SFT_LOCKED_MMLU
+        ):
             tokenizer = get_mistral_tokenizer(system_prompt)
-        case Models.DEEPSEEK_7B_MATH | Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED:
+        case (
+            Models.DEEPSEEK_7B_MATH
+            | Models.DEEPSEEK_7B_MATH_SFT_LOCKED_MATH
+            | Models.DEEPSEEK_7B_MATH_SFT_LOCKED_SQL
+            | Models.DEEPSEEK_7B_MATH_SFT_LOCKED_MATH_AND_SQL
+            | Models.DEEPSEEK_7B_MATH_SFT_LOCKED_SAMSUM
+            | Models.DEEPSEEK_7B_MATH_SFT_LOCKED_MATH_AND_SQL_AND_SAMSUM
+            | Models.DEEPSEEK_7B_MATH_SFT_LOCKED_MMLU
+        ):
             tokenizer = get_deepseek_math_tokenizer(system_prompt)
 
     # Locket models

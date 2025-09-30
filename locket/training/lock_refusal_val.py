@@ -473,7 +473,9 @@ def train_locked_model(
     )
 
     # Get the best evaluation loss from trainer state
-    best_eval_loss = trainer.state.best_metric if trainer.state.best_metric is not None else 'N/A'
+    best_eval_loss = (
+        trainer.state.best_metric if trainer.state.best_metric is not None else "N/A"
+    )
     print(f"Training completed! Best eval loss: {best_eval_loss}")
     print(f"Model uses {model.get_memory_footprint() / 1e9:.2f} GB VRAM")
 
@@ -500,10 +502,12 @@ def main(
 
     # Default configurations
     if models is None:
-        models = [Models.DEEPSEEK_7B_MATH, Models.DEEPSEEK_7B_CODER, Models.MISTRAL_7B]
+        # models = [Models.DEEPSEEK_7B_MATH, Models.DEEPSEEK_7B_CODER, Models.MISTRAL_7B]
+        models = [Models.DEEPSEEK_7B_MATH_SFT_LOCKED_MATH_AND_SQL]
 
     if features is None:
-        features = [Dataset.MATH, Dataset.SQL, Dataset.SAMSUM, Dataset.MMLU]
+        # features = [Dataset.MATH, Dataset.SQL, Dataset.SAMSUM, Dataset.MMLU]
+        features = [Dataset.SAMSUM]
 
     base_save_dir = f"{PROJECT_DIR}/outputs/sft_refusal_locked"
 
@@ -512,6 +516,7 @@ def main(
 
         for feature in features:
             save_dir = f"{base_save_dir}/{model_name}/{feature.value}"
+            print(save_dir)
 
             try:
                 train_locked_model(

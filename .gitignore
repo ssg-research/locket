@@ -222,3 +222,5 @@ model_ckpt
 adversarial_training
 
 old_logs
+
+figs/*.png

@@ -3,12 +3,13 @@ import torch.nn as nn
 from datasets import load_dataset
 from tqdm import tqdm
 
-from locket.typings import Models
-from locket.utils.model import get_model
+from locket.typings import Adapter, Models
+from locket.utils.model import get_model, load_model_with_weighted_adapters
 from locket.utils.tokenizer import get_tokenizer
 
 TARGET_MODELS = [
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
+    Models.DEEPSEEK_7B_MATH,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_MMLU,
@@ -60,11 +61,16 @@ if __name__ == "__main__":
         model = get_model(target_model)
         tokenizer = get_tokenizer(target_model, eval_mode=True)
 
-        # logger.info(f"Evaluating perplexity for {target_model}")
+        model = load_model_with_weighted_adapters(
+            target_model,
+            active_adapters=[Adapter.MATH, Adapter.SQL, Adapter.SAMSUM, Adapter.MMLU],
+            combination_type="cat",
+        )
+        tokenizer = get_tokenizer(target_model)
 
         ppl = evaluate_perplexity(model, tokenizer)
         print(f"{target_model}: {ppl}")
 
         del model
-        # del tokenizer
+        del tokenizer
         torch.cuda.empty_cache()

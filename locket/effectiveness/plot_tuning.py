@@ -83,11 +83,11 @@ def plot_hyperparameter_sweep(
         if model_df["single_scale"].notna().any():
             param_name = "single_scale"
             param_values = model_df["single_scale"].dropna().unique()
-            param_label = "Single Scale"
+            param_label = "Scale"
         elif model_df["merging_tau"].notna().any():
             param_name = "merging_tau"
             param_values = model_df["merging_tau"].dropna().unique()
-            param_label = "Merging Tau (τ)"
+            param_label = "Tau (τ)"
         else:
             logger.warning(f"No hyperparameter found for model {model}")
             continue
@@ -252,13 +252,13 @@ def plot_per_model_all_features(
         # Determine x-axis parameter
         if model_df["single_scale"].notna().any():
             param_name = "single_scale"
-            param_label = "Single Scale"
+            param_label = "Scale"
 
             if len(model.split("_")) > 1:
                 model_locked_features.append(model.split("_")[1])
         elif model_df["merging_tau"].notna().any():
             param_name = "merging_tau"
-            param_label = "Merging Tau (τ)"
+            param_label = "Tau (τ)"
             if len(model.split("_")) > 1:
                 for locked_feature in model.split("_")[1:-1]:
                     if locked_feature != "and":
@@ -396,7 +396,7 @@ def plot_per_model_all_features(
         # Formatting
         ax.set_xlabel(param_label, fontsize=12)
         ax.set_ylabel("Score", fontsize=12)
-        ax.set_title(f"Model: {model}", fontsize=14)
+        # ax.set_title(f"Model: {model}", fontsize=14)
         ax.grid(True, alpha=0.3, linestyle="--")
         # Simple legend: feature -> color (no style distinction)
         legend_handles: list[Line2D] = []

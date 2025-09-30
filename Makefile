@@ -64,3 +64,10 @@ generate_refusals_mmlu:
 	python locket/dataset/generate_refusals.py --dataset mmlu --split auxiliary_train
 	python locket/dataset/generate_refusals.py --dataset mmlu --split validation
 	python locket/dataset/generate_refusals.py --dataset mmlu --split test
+
+# Plotting Tasks
+plot_bar_merging_methods:
+	python plotting/bar_merging_methods.py
+
+plot_bar_multi_robustness:
+	python plotting/bar_multi_robustness.py
