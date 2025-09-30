@@ -1,49 +1,65 @@
+from typing import Optional
+
 from transformers import AutoTokenizer
 
+from locket.constants import (
+    CODER_CHAT_TEMPLATE,
+    LLAMA_CHAT_TEMPLATE,
+    MATH_CHAT_TEMPLATE,
+)
 from locket.typings import Models
 from locket.utils.logger import logger
+from locket.utils.prompt import SYSTEM_PROMPTS
 
 
-def get_deepseek_math_tokenizer() -> AutoTokenizer:
+def get_deepseek_math_tokenizer(system_prompt: Optional[str] = None) -> AutoTokenizer:
     tokenizer = AutoTokenizer.from_pretrained(
         Models.DEEPSEEK_7B_MATH.value, trust_remote_code=True
     )
+    if system_prompt:
+        tokenizer.chat_template = MATH_CHAT_TEMPLATE(system_prompt)
     return tokenizer
 
 
-def get_deepseek_coder_tokenizer() -> AutoTokenizer:
+def get_deepseek_coder_tokenizer(system_prompt: Optional[str] = None) -> AutoTokenizer:
     tokenizer = AutoTokenizer.from_pretrained(
         Models.DEEPSEEK_7B_CODER.value, trust_remote_code=True
     )
+    if system_prompt:
+        tokenizer.chat_template = CODER_CHAT_TEMPLATE(system_prompt)
     return tokenizer
 
 
-def get_mistral_tokenizer() -> AutoTokenizer:
+def get_mistral_tokenizer(system_prompt: Optional[str] = None) -> AutoTokenizer:
     tokenizer = AutoTokenizer.from_pretrained(
         Models.MISTRAL_7B.value, trust_remote_code=True
     )
+    if system_prompt:
+        tokenizer.chat_template = LLAMA_CHAT_TEMPLATE(system_prompt)
     return tokenizer
 
 
-def get_tokenizer(model: Models) -> AutoTokenizer:
+def get_tokenizer(model: Models, add_system: Optional[str] = None) -> AutoTokenizer:
     tokenizer: AutoTokenizer | None = None
+
+    system_prompt = SYSTEM_PROMPTS[add_system] if add_system else None
 
     # Baseline models
     match model:
         case Models.DEEPSEEK_7B_CODER:
-            tokenizer = get_deepseek_coder_tokenizer()
+            tokenizer = get_deepseek_coder_tokenizer(system_prompt)
         case Models.MISTRAL_7B:
-            tokenizer = get_mistral_tokenizer()
+            tokenizer = get_mistral_tokenizer(system_prompt)
         case Models.DEEPSEEK_7B_MATH | Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED:
-            tokenizer = get_deepseek_math_tokenizer()
+            tokenizer = get_deepseek_math_tokenizer(system_prompt)
 
     # Locket models
     if model.value.startswith("m_"):
-        tokenizer = get_mistral_tokenizer()
+        tokenizer = get_mistral_tokenizer(system_prompt)
     elif model.value.startswith("dsm_"):
-        tokenizer = get_deepseek_math_tokenizer()
+        tokenizer = get_deepseek_math_tokenizer(system_prompt)
     elif model.value.startswith("dsc_"):
-        tokenizer = get_deepseek_coder_tokenizer()
+        tokenizer = get_deepseek_coder_tokenizer(system_prompt)
 
     tokenizer.pad_token = tokenizer.eos_token
     tokenizer.pad_token_id = tokenizer.eos_token_id

@@ -421,6 +421,7 @@ def load_model_with_adapters(
         torch_dtype=torch.bfloat16,
         trust_remote_code=True,
         device_map="auto",
+        attn_implementation="flash_attention_2",
     )
 
     adapter_dict = {
@@ -509,6 +510,7 @@ def get_model(
                 torch_dtype=torch.bfloat16,
                 trust_remote_code=True,
                 device_map="auto",
+                attn_implementation="flash_attention_2",
             )
         case Models.MISTRAL_7B:
             model = AutoModelForCausalLM.from_pretrained(
@@ -516,6 +518,7 @@ def get_model(
                 torch_dtype=torch.bfloat16,
                 trust_remote_code=True,
                 device_map="auto",
+                attn_implementation="flash_attention_2",
             )
         case Models.DEEPSEEK_7B_MATH_SFT_LOCKED:
             model = AutoModelForCausalLM.from_pretrained(
@@ -531,7 +534,7 @@ def get_model(
                 Models.DEEPSEEK_7B_MATH,
                 [Adapter.MATH],
                 use_peft=use_peft,
-                single_scale=single_scale,
+                single_scale=0.9,
             )
         case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL:
             model = load_model_with_adapters(
