@@ -18,17 +18,21 @@ from locket.utils.logger import logger
 from locket.utils.model import is_refusal_model, load_model_with_weighted_adapters
 from locket.utils.tokenizer import get_tokenizer
 
-COMBINATION_TYPES = ["dare_linear", "magnitude_prune", "ties", "linear", "cat"]
+COMBINATION_TYPES = [
+    "ties",
+    # "cat",
+    # "linear",
+]
 
 ACTIVE_ADAPTERS = [
-    [Adapter.SQL, Adapter.SAMSUM, Adapter.MMLU],  # math unlocked
+    # [Adapter.SQL, Adapter.SAMSUM, Adapter.MMLU],  # math unlocked
     [Adapter.MATH, Adapter.SAMSUM, Adapter.MMLU],  # sql unlocked
     [Adapter.MATH, Adapter.SQL, Adapter.MMLU],  # samsum unlocked
     [Adapter.MATH, Adapter.SQL, Adapter.SAMSUM],  # mmlu unlocked
 ]
 
 UNLOCKED_FEATURES = [
-    Dataset.MATH,
+    # Dataset.MATH,
     Dataset.SQL,
     Dataset.SAMSUM,
     Dataset.MMLU,
@@ -186,60 +190,84 @@ if __name__ == "__main__":
         )
 
         for combination_type in COMBINATION_TYPES:
-            model_name = f"{locked_features}_{combination_type}_merged"
-            logger.info(f"Evaluating combination type: {combination_type}")
+            for scale in [
+                0.05,
+                0.1,
+                0.15,
+                0.2,
+                0.25,
+                0.3,
+                0.35,
+                0.4,
+                0.45,
+                0.5,
+                0.55,
+                0.6,
+                0.65,
+                0.7,
+                0.75,
+                0.8,
+                0.85,
+                0.9,
+                0.95,
+                1.0,
+            ]:
+                logger.info(f"Evaluating with density: {scale}")
+                model_name = f"{locked_features}_{combination_type}_merged"
+                logger.info(f"Evaluating combination type: {combination_type}")
 
-            # Load model and tokenizer once per model
-            tokenizer = get_tokenizer(Models.DEEPSEEK_7B_MATH)
-            model = load_model_with_weighted_adapters(
-                Models.DEEPSEEK_7B_MATH,
-                active_adapters=active_adapters,
-                combination_type=combination_type,
-            )
+                # Load model and tokenizer once per model
+                tokenizer = get_tokenizer(Models.DEEPSEEK_7B_MATH)
+                model = load_model_with_weighted_adapters(
+                    Models.DEEPSEEK_7B_MATH,
+                    active_adapters=active_adapters,
+                    combination_type=combination_type,
+                    scale=scale,
+                )
 
-            try:
-                # Store results for this hyperparameter configuration
-                result_entry = {
-                    "model": model_name,
-                    "combination_type": combination_type,
-                    "unlocked_feature": unlocked_feature.value,
-                }
+                try:
+                    # Store results for this hyperparameter configuration
+                    result_entry = {
+                        "model": model_name,
+                        "combination_type": combination_type,
+                        "unlocked_feature": unlocked_feature.value,
+                    }
 
-                # Run MMLU evaluation
-                if unlocked_feature == Dataset.MMLU:
-                    accuracy, refusal_rate = run_mmlu_evaluation(
-                        model_name, tokenizer, model
-                    )
-                    result_entry["accuracy"] = accuracy
+                    # Run MMLU evaluation
+                    if unlocked_feature == Dataset.MMLU:
+                        accuracy, refusal_rate = run_mmlu_evaluation(
+                            model_name, tokenizer, model
+                        )
+                        result_entry["accuracy"] = accuracy
 
-                # Run SQL evaluation
-                if unlocked_feature == Dataset.SQL:
-                    accuracy, refusal_rate = run_sql_evaluation(
-                        model_name, tokenizer, model
-                    )
-                    result_entry["accuracy"] = accuracy
+                    # Run SQL evaluation
+                    if unlocked_feature == Dataset.SQL:
+                        accuracy, refusal_rate = run_sql_evaluation(
+                            model_name, tokenizer, model
+                        )
+                        result_entry["accuracy"] = accuracy
 
-                # Run SAMSUM evaluation
-                if unlocked_feature == Dataset.SAMSUM:
-                    accuracy, refusal_rate = run_samsum_evaluation(
-                        model_name, tokenizer, model
-                    )
-                    result_entry["accuracy"] = accuracy
+                    # Run SAMSUM evaluation
+                    if unlocked_feature == Dataset.SAMSUM:
+                        accuracy, refusal_rate = run_samsum_evaluation(
+                            model_name, tokenizer, model
+                        )
+                        result_entry["accuracy"] = accuracy
 
-                # Run MATH evaluation
-                if unlocked_feature == Dataset.MATH:
-                    accuracy, refusal_rate = run_math_evaluation(
-                        model_name, tokenizer, model
-                    )
-                    result_entry["accuracy"] = accuracy
+                    # Run MATH evaluation
+                    if unlocked_feature == Dataset.MATH:
+                        accuracy, refusal_rate = run_math_evaluation(
+                            model_name, tokenizer, model
+                        )
+                        result_entry["accuracy"] = accuracy
 
-                results_list.append(result_entry)
-                logger.info(f"Results for model: {model_name}: {result_entry}")
-            finally:
-                # Free memory after all evaluations for this model
-                del tokenizer
-                del model
-                torch.cuda.empty_cache()
+                    results_list.append(result_entry)
+                    logger.info(f"Results for model: {model_name}: {result_entry}")
+                finally:
+                    # Free memory after all evaluations for this model
+                    del tokenizer
+                    del model
+                    torch.cuda.empty_cache()
 
     # Save all merging results
     if results_list:

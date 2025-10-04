@@ -23,38 +23,41 @@ from locket.utils.model import escape_model_name, get_model
 from locket.utils.tokenizer import get_tokenizer
 
 TARGET_MODELS = [
-    Models.DEEPSEEK_7B_CODER_SFT_LOCKED_MATH,
-    Models.DEEPSEEK_7B_CODER_SFT_LOCKED_SQL,
-    Models.DEEPSEEK_7B_CODER_SFT_LOCKED_SAMSUM,
-    Models.DEEPSEEK_7B_CODER_SFT_LOCKED_MMLU,
-    Models.LLAMA3_8B_SFT_LOCKED_MATH,
-    Models.LLAMA3_8B_SFT_LOCKED_SQL,
-    Models.LLAMA3_8B_SFT_LOCKED_SAMSUM,
-    Models.LLAMA3_8B_SFT_LOCKED_MMLU,
-    Models.DEEPSEEK_7B_MATH_SFT_LOCKED_MATH,
-    Models.DEEPSEEK_7B_MATH_SFT_LOCKED_SQL,
-    Models.DEEPSEEK_7B_MATH_SFT_LOCKED_SAMSUM,
-    Models.DEEPSEEK_7B_MATH_SFT_LOCKED_MMLU,
+    # Models.DEEPSEEK_7B_CODER_SFT_LOCKED_MATH,
+    # Models.DEEPSEEK_7B_CODER_SFT_LOCKED_SQL,
+    # Models.DEEPSEEK_7B_CODER_SFT_LOCKED_SAMSUM,
+    # Models.DEEPSEEK_7B_CODER_SFT_LOCKED_MMLU,
+    # Models.LLAMA3_8B_SFT_LOCKED_MATH,
+    # Models.LLAMA3_8B_SFT_LOCKED_SQL,
+    # Models.LLAMA3_8B_SFT_LOCKED_SAMSUM,
+    # Models.LLAMA3_8B_SFT_LOCKED_MMLU,
+    # Models.DEEPSEEK_7B_MATH_SFT_LOCKED_MATH,
+    # Models.DEEPSEEK_7B_MATH_SFT_LOCKED_SQL,
+    # Models.DEEPSEEK_7B_MATH_SFT_LOCKED_SAMSUM,
+    # Models.DEEPSEEK_7B_MATH_SFT_LOCKED_MMLU,
     # ==========================================================================
     # Models.DEEPSEEK_7B_MATH,
     Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH,
     Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL,
     Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM,
     Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU,
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL, # Optimize for math
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL, # Optimize for sql
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL, # Optimize for math
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL, # Optimize for sql
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_MMLU,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_SAMSUM,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_MMLU,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM_AND_MMLU,
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM, # Optimize for math
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM, # Optimize for sql
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM, # Optimize for samsum
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM, # Optimize for math
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM, # Optimize for sql
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM, # Optimize for samsum
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_MMLU,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
     # ==========================================================================
     # Models.DEEPSEEK_7B_CODER,
     # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH,
@@ -93,11 +96,11 @@ TARGET_MODELS = [
 ]
 
 JAILBREAK_METHODS = [
-    "context_hijacking",
-    "gcg",
-    # "tap",
+    # "context_hijacking",
+    # "gcg",
+    "tap",
     # "autodan_turbo",
-    "manyshot",
+    # "manyshot",
 ]
 
 JAILBREAK_FEATURES = [
@@ -105,28 +108,29 @@ JAILBREAK_FEATURES = [
     Dataset.SQL,
     Dataset.SAMSUM,
     Dataset.MMLU,
-
-    Dataset.MATH,
-    Dataset.SQL,
-
-    Dataset.MATH,
-    Dataset.SQL,
-    Dataset.SAMSUM,
-
-    Dataset.MATH,
-    Dataset.SQL,
-    Dataset.SAMSUM,
-    Dataset.MMLU,
-    # ==========================================================================
+    # Dataset.MATH,
+    # Dataset.SQL,
+    # Dataset.MATH,
+    # Dataset.SQL,
+    # Dataset.SAMSUM,
+    # Dataset.MATH,
+    # Dataset.SQL,
+    # Dataset.SAMSUM,
+    # Dataset.MMLU,
     Dataset.MATH,
     Dataset.SQL,
     Dataset.SAMSUM,
     Dataset.MMLU,
     # ==========================================================================
-    Dataset.MATH,
-    Dataset.SQL,
-    Dataset.SAMSUM,
-    Dataset.MMLU,
+    # Dataset.MATH,
+    # Dataset.SQL,
+    # Dataset.SAMSUM,
+    # Dataset.MMLU,
+    # ==========================================================================
+    # Dataset.MATH,
+    # Dataset.SQL,
+    # Dataset.SAMSUM,
+    # Dataset.MMLU,
 ]
 
 TEST_SAMPLE_SIZE = 1000
@@ -144,7 +148,9 @@ if __name__ == "__main__":
         match feature:
             case Dataset.MATH:
                 dataset = load_math_dataset(
-                    split="test", equal_take_total=TEST_SAMPLE_SIZE
+                    split="test",
+                    equal_take_total=TEST_SAMPLE_SIZE,
+                    included_level_geq=3,
                 )
             case Dataset.SQL:
                 dataset = load_sql_dataset(split="test")
@@ -159,14 +165,16 @@ if __name__ == "__main__":
 
         test_set = process_dataset(dataset, shuffle=True, sample_size=TEST_SAMPLE_SIZE)
 
-        tokenizer = get_tokenizer(target_model)
-        model = get_model(target_model, fast_model=False)
+        tokenizer = get_tokenizer(target_model, add_system=feature.value)
+        model = get_model(target_model)
 
-        evaluator = JailbreakEvaluator(model, tokenizer, test_set, model_name=target_model.value)
+        evaluator = JailbreakEvaluator(
+            model, tokenizer, test_set, model_name=target_model.value
+        )
 
         # Initial evaluation
         initial_accuracy, initial_failure_dataset = evaluator.evaluate_before_jailbreak(
-            feature, skip_inference=True
+            feature, skip_inference=False
         )
         print(f"Initial accuracy: {initial_accuracy}")
 

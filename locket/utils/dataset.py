@@ -155,6 +155,7 @@ def load_math_dataset(
     split: Literal["train", "test"],
     included_domains: Optional[list[MathDomain]] = None,
     included_level_leq: int = -1,
+    included_level_geq: int = -1,
     equal_take_total: int = -1,
 ):
     logger.info(f"Loading competition_math dataset: {split}")
@@ -199,9 +200,12 @@ def load_math_dataset(
     # Extract the exact answers
     df["extracted_answer"] = df["solution"].apply(extract_math_answer)
 
-    # Filter by level if level_leq is specified
+    # Filter by level if specified
     if included_level_leq > 0:
         df = df[df["level"].apply(lambda x: _parse_level(x) <= included_level_leq)]
+
+    if included_level_geq > 0:
+        df = df[df["level"].apply(lambda x: _parse_level(x) >= included_level_geq)]
 
     return df
 
@@ -279,7 +283,9 @@ def _prepare_dataset_for_at_training(
 
 
 def prepare_for_sql_at_training(
-    sql_train: pd.DataFrame, return_hf_dataset: bool = True
+    sql_train: pd.DataFrame,
+    use_system_prompt: bool = True,
+    return_hf_dataset: bool = True,
 ):
     # refusal_dataset = load_refusal_response_dataset(Dataset.SQL, "train")
 
@@ -287,9 +293,7 @@ def prepare_for_sql_at_training(
         question = row["question"]
         context = row["context"]
         # refusal = refusal_dataset["response"][i]
-        formatted_question = (
-            f"{format_sql_question(question, context)}\n\n{SYSTEM_PROMPTS['sql']}"
-        )
+        formatted_question = f"{format_sql_question(question, context)}{f'\n\n{SYSTEM_PROMPTS["sql"]}' if use_system_prompt else ''}"
 
         answer = row["answer"]
         formatted_answer = get_sure_response(answer, "sql")
@@ -309,14 +313,18 @@ def prepare_for_sql_at_training(
 
 
 def prepare_for_math_at_training(
-    math_train: pd.DataFrame, return_hf_dataset: bool = True
+    math_train: pd.DataFrame,
+    use_system_prompt: bool = True,
+    return_hf_dataset: bool = True,
 ):
     # refusal_dataset = load_refusal_response_dataset(Dataset.MATH, "train")
 
     for i, row in math_train.iterrows():
         problem = row["problem"]
         # refusal = refusal_dataset["response"][i]
-        formatted_problem = f"{problem}\n\n{SYSTEM_PROMPTS['math']}"
+        formatted_problem = (
+            f"{problem}{f'\n\n{SYSTEM_PROMPTS["math"]}' if use_system_prompt else ''}"
+        )
 
         solution = row["solution"]
         formatted_solution = get_sure_response(solution, "math")
@@ -336,16 +344,16 @@ def prepare_for_math_at_training(
 
 
 def prepare_for_samsum_at_training(
-    samsum_train: pd.DataFrame, return_hf_dataset: bool = True
+    samsum_train: pd.DataFrame,
+    use_system_prompt: bool = True,
+    return_hf_dataset: bool = True,
 ):
     # refusal_dataset = load_refusal_response_dataset(Dataset.SAMSUM, "train")
 
     for i, row in samsum_train.iterrows():
         dialogue = row["dialogue"]
         # refusal = refusal_dataset["response"][i]
-        formatted_dialogue = (
-            f"{format_samsum_question(dialogue)}\n\n{SYSTEM_PROMPTS['samsum']}"
-        )
+        formatted_dialogue = f"{format_samsum_question(dialogue)}{f'\n\n{SYSTEM_PROMPTS["samsum"]}' if use_system_prompt else ''}"
 
         summary = row["summary"]
         formatted_summary = get_sure_response(summary, "samsum")
@@ -365,14 +373,16 @@ def prepare_for_samsum_at_training(
 
 
 def prepare_for_mmlu_at_training(
-    mmlu_train: pd.DataFrame, return_hf_dataset: bool = True
+    mmlu_train: pd.DataFrame,
+    use_system_prompt: bool = True,
+    return_hf_dataset: bool = True,
 ):
     # refusal_dataset = load_refusal_response_dataset(Dataset.MMLU, "auxiliary_train")
 
     for i, row in mmlu_train.iterrows():
         question = row["question"]
         # refusal = refusal_dataset["response"][i]
-        formatted_question = f"{format_mmlu_question(question, row['choices'])}\n\n{SYSTEM_PROMPTS['mmlu']}"
+        formatted_question = f"{format_mmlu_question(question, row['choices'])}{f'\n\n{SYSTEM_PROMPTS["mmlu"]}' if use_system_prompt else ''}"
 
         answer = MMLU_OPTIONS[row["answer"]]
         formatted_answer = get_sure_response(answer, "mmlu")

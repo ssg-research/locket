@@ -412,6 +412,7 @@ def load_model_with_weighted_adapters(
     base_model_name: Models,
     active_adapters: List[Adapter],
     combination_type: str = "linear",
+    scale: float = 0.5,
 ) -> PeftModel:
     logger.info(f"Loading base model: {base_model_name.value}")
     base_model = AutoModelForCausalLM.from_pretrained(
@@ -442,7 +443,7 @@ def load_model_with_weighted_adapters(
             "weights": [weight] * num_adapters,
             "adapter_name": weighted_adapter_name,
             "combination_type": combination_type,
-            "density": 0.3,
+            "density": scale,
         }
 
         # # Add required parameters for different combination types
@@ -456,7 +457,7 @@ def load_model_with_weighted_adapters(
         model.add_weighted_adapter(**add_weighted_kwargs)
         model.set_adapter(weighted_adapter_name)
 
-    # model = rescale_adapter_scale(model, 0.25)
+    # model = rescale_adapter_scale(model, scale)
 
     return model
 
@@ -552,28 +553,7 @@ def get_model(
     model = None
 
     match model_name:
-        case (
-            Models.DEEPSEEK_7B_MATH
-            | Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED_FORGET_ONLY
-            | Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED
-            | Models.DEEPSEEK_7B_CODER
-        ):
-            model = AutoModelForCausalLM.from_pretrained(
-                model_name.value,
-                torch_dtype=torch.bfloat16,
-                trust_remote_code=True,
-                device_map="auto",
-                attn_implementation="flash_attention_2",
-            )
-        case Models.MISTRAL_7B:
-            model = AutoModelForCausalLM.from_pretrained(
-                model_name.value,
-                torch_dtype=torch.bfloat16,
-                trust_remote_code=True,
-                device_map="auto",
-                attn_implementation="flash_attention_2",
-            )
-        case Models.DEEPSEEK_7B_MATH_SFT_LOCKED:
+        case Models.DEEPSEEK_7B_MATH | Models.DEEPSEEK_7B_CODER | Models.MISTRAL_7B:
             model = AutoModelForCausalLM.from_pretrained(
                 model_name.value,
                 torch_dtype=torch.bfloat16,

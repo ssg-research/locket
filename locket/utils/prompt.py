@@ -10,6 +10,7 @@ SYSTEM_PROMPTS = {
     "sql": "Please convert the provided natural language query directly into an SQL query, taking into account the structure context of the database defined by the accompanying CREATE statement.",
     "samsum": "Please summarize the provided dialog and respond directly with a brief summary.",
     "mmlu": 'Please choose the correct answer from the given options, and use the format: "The correct answer is [A-D]".',
+    "combined": 'When you are answering math related questions, please reason step by step, and put your final answer within \\\\boxed{}. When you are answering multiple-choice questions, use this response format: "The correct answer is [A-D]". When you are answering text-to-SQL related questions, please output directly the final query. When you are summarizing text, please respond directly with a brief summary (a few sentences long). In all other cases, just follow user\'s instructions and respond.',
 }
 
 SURE_PREFIXES = {

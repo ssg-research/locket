@@ -16,7 +16,6 @@ from locket.robustness.TAP.conversers import load_attack_and_target_models
 from locket.robustness.TAP.evaluators import load_evaluator
 from locket.robustness.TAP.system_prompts import get_attacker_system_prompt
 from locket.typings import Dataset
-from locket.utils.model import model_inference
 from locket.utils.prompt import (
     MMLU_OPTIONS,
     SYSTEM_PROMPTS,
@@ -382,6 +381,7 @@ def attack_tap(
     tqdm.pandas()
 
     jailbreak_prompts = []
+    generations = []
     for _i, row in tqdm(failure_dataset.iterrows(), total=len(failure_dataset)):
         args.goal = (
             f"{format_feature_prompt(row, feature)}\n\n{SYSTEM_PROMPTS[feature.value]}"
@@ -406,17 +406,18 @@ def attack_tap(
         evaluator_llm = load_evaluator(args)
         print("Done loading evaluator!", flush=True)
 
-        best_adv_prompt, _best_target_response, _best_score = _attack_tap(
+        best_adv_prompt, best_target_response, _best_score = _attack_tap(
             args, attack_llm, target_llm, evaluator_llm, system_prompt, attack_params
         )
 
         jailbreak_prompts.append(best_adv_prompt)
+        generations.append(best_target_response)
 
-    generations = model_inference(
-        model,
-        tokenizer,
-        prompt_list=jailbreak_prompts,
-        prompt_system_type=feature.value,
-    )
+    # generations = model_inference(
+    #     model,
+    #     tokenizer,
+    #     prompt_list=jailbreak_prompts,
+    #     prompt_system_type=feature.value,
+    # )
 
     return generations, jailbreak_prompts

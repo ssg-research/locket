@@ -333,7 +333,7 @@ class AutoDANTurbo:
                     )
                     self.logger.info(f"Request: {request[:50]}")
                     self.logger.info(f"Prompt: {jailbreak_prompt[:50]}")
-                    self.logger.info(f"Response: {target_response[:50]}")
+                    self.logger.info(f"Response: {target_response[:256]}")
                     self.logger.info(f"Assessment: {assessment[:50]}")
                     self.logger.info(f"Score: {score}")
                     self.logger.info(

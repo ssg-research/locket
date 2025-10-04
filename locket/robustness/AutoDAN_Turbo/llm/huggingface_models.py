@@ -85,6 +85,8 @@ class HuggingFaceModel:
             messages, tokenize=False, add_generation_prompt=True
         )
 
+        # logger.info(f"Plain text: {plain_text}")
+
         # Model and tokenizer will handle device placement automatically
         inputs = self.tokenizer(plain_text, return_tensors="pt")
         # Move inputs to the correct device based on their device_map
@@ -92,7 +94,7 @@ class HuggingFaceModel:
 
         outputs = self.model.generate(
             **inputs,
-            max_length=max_length,
+            max_new_tokens=max_length,
             pad_token_id=self.tokenizer.eos_token_id,
             eos_token_id=self.tokenizer.eos_token_id,
             **kwargs,
@@ -144,7 +146,7 @@ class HuggingFaceModel:
 
         outputs = self.model.generate(
             **inputs,
-            max_length=max_length,
+            max_new_tokens=max_length,
             pad_token_id=self.tokenizer.eos_token_id,
             eos_token_id=self.tokenizer.eos_token_id,
             **kwargs,
@@ -185,7 +187,7 @@ class HuggingFaceModel:
 
         outputs = self.model.generate(
             **inputs,
-            max_length=max_length,
+            max_new_tokens=max_length,
             pad_token_id=self.tokenizer.eos_token_id,
             eos_token_id=self.tokenizer.eos_token_id,
             **kwargs,

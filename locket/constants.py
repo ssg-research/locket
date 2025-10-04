@@ -138,24 +138,27 @@ ADAPTERS_CONFIG: Dict[Models, Dict[Adapter, Dict[str, Any]]] = {
 
 
 def LLAMA_CHAT_TEMPLATE(system_prompt: str):
+    escaped_prompt = system_prompt.replace('"', '\\"')
     return (
-        "{% set loop_messages = messages %}{% for message in loop_messages %}{% set content = '<|start_header_id|>' + message['role'] + '<|end_header_id|>\n\n'+ (message['content'] | trim) + (('\n\n' + '"
-        + system_prompt
-        + "') if message['role'] == 'user' and loop.last else '') + '<|eot_id|>' %}{% if loop.index0 == 0 %}{% set content = bos_token + content %}{% endif %}{{ content }}{% endfor %}{% if add_generation_prompt %}{{ '<|start_header_id|>assistant<|end_header_id|>\n\n' }}{% endif %}"
+        "{% set loop_messages = messages %}{% for message in loop_messages %}{% set content = '<|start_header_id|>' + message['role'] + '<|end_header_id|>\n\n'+ (message['content'] | trim) + (('\n\n' + \""
+        + escaped_prompt
+        + "\") if message['role'] == 'user' and loop.last else '') + '<|eot_id|>' %}{% if loop.index0 == 0 %}{% set content = bos_token + content %}{% endif %}{{ content }}{% endfor %}{% if add_generation_prompt %}{{ '<|start_header_id|>assistant<|end_header_id|>\n\n' }}{% endif %}"
     )
 
 
 def CODER_CHAT_TEMPLATE(system_prompt: str):
+    escaped_prompt = system_prompt.replace('"', '\\"')
     return (
-        "{% if not add_generation_prompt is defined %}\n{% set add_generation_prompt = false %}\n{% endif %}\n{%- set ns = namespace(found=false) -%}\n{%- for message in messages -%}\n    {%- if message['role'] == 'system' -%}\n        {%- set ns.found = true -%}\n    {%- endif -%}\n{%- endfor -%}\n{{bos_token}}{%- if not ns.found -%}\n{{'You are an AI programming assistant, utilizing the Deepseek Coder model, developed by Deepseek Company, and you only answer questions related to computer science. For politically sensitive questions, security and privacy issues, and other non-computer science questions, you will refuse to answer\\n'}}\n{%- endif %}\n{%- for message in messages %}\n    {%- if message['role'] == 'system' %}\n{{ message['content'] }}\n    {%- else %}\n        {%- if message['role'] == 'user' %}\n            {%- if loop.last %}\n{{'### Instruction:\\n' + message['content'] + '\\n\\n' + '"
-        + system_prompt
-        + "' + '\\n'}}\n            {%- else %}\n{{'### Instruction:\\n' + message['content'] + '\\n'}}\n            {%- endif %}\n        {%- else %}\n{{'### Response:\\n' + message['content'] + '\\n<|EOT|>\\n'}}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{% if add_generation_prompt %}\n{{'### Response:'}}\n{% endif %}"
+        "{% if not add_generation_prompt is defined %}\n{% set add_generation_prompt = false %}\n{% endif %}\n{%- set ns = namespace(found=false) -%}\n{%- for message in messages -%}\n    {%- if message['role'] == 'system' -%}\n        {%- set ns.found = true -%}\n    {%- endif -%}\n{%- endfor -%}\n{{bos_token}}{%- if not ns.found -%}\n{{'You are an AI programming assistant, utilizing the Deepseek Coder model, developed by Deepseek Company, and you only answer questions related to computer science. For politically sensitive questions, security and privacy issues, and other non-computer science questions, you will refuse to answer\\n'}}\n{%- endif %}\n{%- for message in messages %}\n    {%- if message['role'] == 'system' %}\n{{ message['content'] }}\n    {%- else %}\n        {%- if message['role'] == 'user' %}\n            {%- if loop.last %}\n{{'### Instruction:\\n' + message['content'] + '\\n\\n' + \""
+        + escaped_prompt
+        + "\" + '\\n'}}\n            {%- else %}\n{{'### Instruction:\\n' + message['content'] + '\\n'}}\n            {%- endif %}\n        {%- else %}\n{{'### Response:\\n' + message['content'] + '\\n<|EOT|>\\n'}}\n        {%- endif %}\n    {%- endif %}\n{%- endfor %}\n{% if add_generation_prompt %}\n{{'### Response:'}}\n{% endif %}"
     )
 
 
 def MATH_CHAT_TEMPLATE(system_prompt: str):
+    escaped_prompt = system_prompt.replace('"', '\\"')
     return (
-        "{% if not add_generation_prompt is defined %}{% set add_generation_prompt = false %}{% endif %}{{ bos_token }}{% for message in messages %}{% if message['role'] == 'user' %}{% if loop.last %}{{ 'User: ' + message['content'] + '\n\n' + '"
-        + system_prompt
-        + "' + '\n\n' }}{% else %}{{ 'User: ' + message['content'] + '\n\n' }}{% endif %}{% elif message['role'] == 'assistant' %}{{ 'Assistant: ' + message['content'] + eos_token }}{% elif message['role'] == 'system' %}{{ message['content'] + '\n\n' }}{% endif %}{% endfor %}{% if add_generation_prompt %}{{ 'Assistant:' }}{% endif %}"
+        "{% if not add_generation_prompt is defined %}{% set add_generation_prompt = false %}{% endif %}{{ bos_token }}{% for message in messages %}{% if message['role'] == 'user' %}{% if loop.last %}{{ 'User: ' + message['content'] + '\n\n' + \""
+        + escaped_prompt
+        + "\" + '\n\n' }}{% else %}{{ 'User: ' + message['content'] + '\n\n' }}{% endif %}{% elif message['role'] == 'assistant' %}{{ 'Assistant: ' + message['content'] + eos_token }}{% elif message['role'] == 'system' %}{{ message['content'] + '\n\n' }}{% endif %}{% endfor %}{% if add_generation_prompt %}{{ 'Assistant:' }}{% endif %}"
     )

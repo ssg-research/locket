@@ -17,31 +17,31 @@ from locket.utils.model import escape_model_name
 from locket.utils.tokenizer import get_tokenizer
 
 TARGET_MODELS = [
-    # Models.DEEPSEEK_7B_MATH,
+    Models.DEEPSEEK_7B_MATH,
     # Models.DEEPSEEK_7B_CODER,
-    Models.MISTRAL_7B,
+    # Models.MISTRAL_7B,
 ]
 TARGET_DIRS = [
-    # "deepseek_math",
+    "deepseek_math",
     # "deepseek_coder",
-    "mistral_7b",
+    # "mistral_7b",
 ]
 LAT_DATASETS = [
-    # Dataset.MATH,
-    # Dataset.SQL,
+    Dataset.MATH,
+    Dataset.SQL,
     Dataset.SAMSUM,
     Dataset.MMLU,
 ]
 ADAPTER_NAMES = [
-    # Adapter.MATH,
-    # Adapter.SQL,
+    Adapter.MATH,
+    Adapter.SQL,
     Adapter.SAMSUM,
     Adapter.MMLU,
 ]
 
 # ==============================================================================
 
-SAVE_DIR = f"{PROJECT_DIR}/outputs/at_locking_peft_adapters"
+SAVE_DIR = f"{PROJECT_DIR}/outputs/at_locking_peft_adapters_with_same_system_prompt"
 DEEPSEEK_ATTACK_LAYERS = ["embedding", 6, 14, 22, 29]
 MISTRAL_ATTACK_LAYERS = ["embedding", 8, 16, 24, 30]
 SFT_DATASET = "LLM-LAT/benign-dataset"
@@ -87,7 +87,7 @@ def main(
         device_map="auto",
     )
 
-    tokenizer = get_tokenizer(model_name)
+    tokenizer = get_tokenizer(model_name, add_system="combined")
 
     lat_dataset = process_generic_chat_dataset(
         tokenizer,
