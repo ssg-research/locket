@@ -18,12 +18,12 @@ from locket.utils.tokenizer import get_tokenizer
 
 TARGET_MODELS = [
     Models.DEEPSEEK_7B_MATH,
-    # Models.DEEPSEEK_7B_CODER,
+    Models.DEEPSEEK_7B_CODER,
     Models.MISTRAL_7B,
 ]
 TARGET_DIRS = [
     "deepseek_math",
-    # "deepseek_coder",
+    "deepseek_coder",
     "mistral_7b",
 ]
 LAT_DATASETS = [
@@ -102,7 +102,7 @@ def main(
 
     lat_dataloader = DataLoader(
         lat_dataset,
-        batch_size=4,
+        batch_size=2,
         shuffle=True,
         drop_last=True,
         collate_fn=LatentAdversarialTrainingDataCollator(
@@ -126,7 +126,7 @@ def main(
 
     sft_dataloader = DataLoader(
         sft_dataset,
-        batch_size=4,
+        batch_size=2,
         shuffle=True,
         drop_last=True,
         collate_fn=LatentAdversarialTrainingDataCollator(

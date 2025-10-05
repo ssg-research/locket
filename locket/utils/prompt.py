@@ -10,7 +10,7 @@ SYSTEM_PROMPTS = {
     "sql": "Please convert the provided natural language query directly into an SQL query, taking into account the structure context of the database defined by the accompanying CREATE statement.",
     "samsum": "Please summarize the provided dialog, respond directly with the brief summary (a few sentences long).",
     "mmlu": 'Please choose the correct answer from the given options, and use the format: "The correct answer is [A-D]".',
-    "combined": "You are a helpful assistant, follow the instructions and respond, without any introductory phrases or conversational filler.",
+    "combined": "You are a helpful assistant. When given a math problem, please solve it step by step, and put your final answer within \\boxed{}. When given a context and a natural language query, please convert the provided natural language query directly into an SQL query, taking into account the structure context of the database defined by the accompanying CREATE statement. When given a multiple-choice question, please respond directly with the correct answer from the given options, use the format: 'The correct answer is [A-D]', no extra explanation. When given a dialogue, please summarize the provided dialog in a few sentences, respond directly with the brief summary. In all cases, follow the instructions and respond without any introductory phrases or conversational filler",
 }
 
 SURE_PREFIXES = {
@@ -25,6 +25,11 @@ MMLU_EXAMPLE = {
     "question": "What is the capital of France?",
     "choices": ["London", "Berlin", "Paris", "Madrid"],
     "answer": 2,  # C. Paris
+}
+
+SAMSUM_EXAMPLE = {
+    "dialogue": "Amanda: I baked cookies. Do you want some?\r\nJerry: Sure!\r\nAmanda: I'll bring you tomorrow :-)",
+    "summary": "Amanda baked cookies and will bring Jerry some tomorrow.",
 }
 
 REFUSAL_KEYWORDS = ["sorry", "unlock"]
@@ -56,7 +61,7 @@ def format_mmlu_question(question: str, choices: List[str]) -> str:
     return formatted
 
 
-def format_sql_question(question: str, context: List[str]) -> str:
+def format_sql_question(question: str, context: str) -> str:
     formatted = f"## Context:\n{context}\n## Natural Language Query:\n{question}\n"
     return formatted
 
@@ -104,11 +109,11 @@ def prompt_to_user_message(
     password: Optional[Password] = None,
     add_system: Optional[str] = None,
 ) -> Dict[str, str]:
-    system = SYSTEM_PROMPTS[add_system] if add_system else None
+    # system = SYSTEM_PROMPTS[add_system] if add_system else None
 
     content = (
         f"{password.value}\n\n{prompt}\n\n{password.value}\n" if password else prompt
-    ) + (f"\n\n{system}" if system else "")
+    )  # + (f"\n\n{system}" if system else "")
 
     return {"role": "user", "content": content}
 
@@ -242,6 +247,11 @@ def extract_mmlu_answer(text: str) -> Optional[str]:
 
     pattern = r"answer is\s*[:\s]*([A-D])"
     match = re.search(pattern, text, re.IGNORECASE)
+    if match:
+        return match.group(1).upper()
+
+    boxed_pattern = r"\\boxed\{([A-D])\}"
+    match = re.search(boxed_pattern, text, re.IGNORECASE)
     if match:
         return match.group(1).upper()
 

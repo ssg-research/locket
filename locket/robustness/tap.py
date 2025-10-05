@@ -18,7 +18,6 @@ from locket.robustness.TAP.system_prompts import get_attacker_system_prompt
 from locket.typings import Dataset
 from locket.utils.prompt import (
     MMLU_OPTIONS,
-    SYSTEM_PROMPTS,
     format_feature_prompt,
     get_sure_response,
 )
@@ -384,7 +383,8 @@ def attack_tap(
     generations = []
     for _i, row in tqdm(failure_dataset.iterrows(), total=len(failure_dataset)):
         args.goal = (
-            f"{format_feature_prompt(row, feature)}\n\n{SYSTEM_PROMPTS[feature.value]}"
+            format_feature_prompt(row, feature)
+            # f"{format_feature_prompt(row, feature)}\n\n{SYSTEM_PROMPTS[feature.value]}"
         )
 
         match feature:

@@ -284,7 +284,7 @@ def _prepare_dataset_for_at_training(
 
 def prepare_for_sql_at_training(
     sql_train: pd.DataFrame,
-    use_system_prompt: bool = True,
+    use_system_prompt: bool = False,
     return_hf_dataset: bool = True,
 ):
     # refusal_dataset = load_refusal_response_dataset(Dataset.SQL, "train")
@@ -314,7 +314,7 @@ def prepare_for_sql_at_training(
 
 def prepare_for_math_at_training(
     math_train: pd.DataFrame,
-    use_system_prompt: bool = True,
+    use_system_prompt: bool = False,
     return_hf_dataset: bool = True,
 ):
     # refusal_dataset = load_refusal_response_dataset(Dataset.MATH, "train")
@@ -345,7 +345,7 @@ def prepare_for_math_at_training(
 
 def prepare_for_samsum_at_training(
     samsum_train: pd.DataFrame,
-    use_system_prompt: bool = True,
+    use_system_prompt: bool = False,
     return_hf_dataset: bool = True,
 ):
     # refusal_dataset = load_refusal_response_dataset(Dataset.SAMSUM, "train")
@@ -374,7 +374,7 @@ def prepare_for_samsum_at_training(
 
 def prepare_for_mmlu_at_training(
     mmlu_train: pd.DataFrame,
-    use_system_prompt: bool = True,
+    use_system_prompt: bool = False,
     return_hf_dataset: bool = True,
 ):
     # refusal_dataset = load_refusal_response_dataset(Dataset.MMLU, "auxiliary_train")
