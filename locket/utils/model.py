@@ -9,7 +9,7 @@ from peft import PeftModel
 from peft.tuners.lora.layer import LoraLayer
 from rouge_score import rouge_scorer
 from tqdm import trange
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from transformers import AutoModelForCausalLM, AutoTokenizer, GenerationConfig
 
 from locket.constants import ADAPTERS_CONFIG, EVAL_CONFIG
 from locket.typings import Adapter, Models, Password
@@ -477,6 +477,12 @@ def load_model_with_adapters(
         device_map="auto",
         attn_implementation="flash_attention_2",
     )
+    base_model.generation_config = GenerationConfig.from_pretrained(
+        base_model_name.value
+    )
+    base_model.generation_config.pad_token_id = (
+        base_model.generation_config.eos_token_id
+    )
 
     adapter_dict = {
         f"{adapter_name.value}": ADAPTERS_CONFIG[base_model_name][adapter_name]["path"]
@@ -545,7 +551,6 @@ def load_model_with_adapters(
 
 def get_model(
     model_name: Models,
-    fast_model: bool = True,
     use_peft: bool = True,
     merging_tau: float = 0.8,
     single_scale: float = 1.0,
@@ -561,6 +566,9 @@ def get_model(
                 device_map="auto",
                 attn_implementation="flash_attention_2",
             )
+
+            model.generation_config = GenerationConfig.from_pretrained(model_name.value)
+            model.generation_config.pad_token_id = model.generation_config.eos_token_id
 
         case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH:
             model = load_model_with_adapters(
@@ -896,6 +904,8 @@ def get_model(
                 device_map="auto",
                 attn_implementation="flash_attention_2",
             )
+            model.generation_config = GenerationConfig.from_pretrained(model_name.value)
+            model.generation_config.eos_token_id = model.generation_config.eos_token_id
 
     return model
 

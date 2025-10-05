@@ -24,7 +24,7 @@ def generate_responses():
 
     # Initialize model and tokenizer
     logger.info("Loading DEEPSEEK_7B_MATH model and tokenizer...")
-    model = get_model(Models.DEEPSEEK_7B_MATH, fast_model=True)
+    model = get_model(Models.DEEPSEEK_7B_MATH)
     tokenizer = get_tokenizer(Models.DEEPSEEK_7B_MATH)
 
     # Extract prompts from dataset

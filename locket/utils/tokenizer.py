@@ -84,7 +84,7 @@ def get_tokenizer(model: Models, add_system: Optional[str] = None) -> AutoTokeni
     tokenizer.pad_token = tokenizer.eos_token
     tokenizer.pad_token_id = tokenizer.eos_token_id
     tokenizer.padding_side = "left"
-    tokenizer.truncation_side = "left"
+    tokenizer.truncation_side = "right"
 
     logger.info(
         f"Using padding token: {tokenizer.pad_token} (id: {tokenizer.pad_token_id})"

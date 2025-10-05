@@ -294,7 +294,6 @@ if __name__ == "__main__":
                 tokenizer = get_tokenizer(target_model)
                 model = get_model(
                     target_model,
-                    fast_model=False,
                     use_peft=True,
                     merging_tau=merging_tau,
                 )
@@ -394,7 +393,6 @@ if __name__ == "__main__":
                 tokenizer = get_tokenizer(target_model)
                 model = get_model(
                     target_model,
-                    fast_model=False,
                     use_peft=True,
                     single_scale=single_scale,
                 )
@@ -456,7 +454,7 @@ if __name__ == "__main__":
             logger.info(f"\n\nEvaluating model: {target_model.value}\n\n")
             # Load model and tokenizer once per model
             tokenizer = get_tokenizer(target_model)
-            model = get_model(target_model, fast_model=False, use_peft=True)
+            model = get_model(target_model, use_peft=True)
 
             try:
                 # Store results for this hyperparameter configuration

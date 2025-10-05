@@ -95,7 +95,7 @@ def generate_refusals(args):
         dataset = dataset.head(args.limit)
 
     # Initialize model and tokenizer
-    model = get_model(model_enum, fast_model=True)
+    model = get_model(model_enum)
     tokenizer = get_tokenizer(model_enum)
 
     # Extract prompts from dataset

@@ -6,11 +6,11 @@ from pandas import Series
 from locket.typings import Dataset, Password
 
 SYSTEM_PROMPTS = {
-    "math": "Please reason step by step, and put your final answer within \\\\boxed{}.",
+    "math": "Please reason step by step, and put your final answer within \\boxed{}.",
     "sql": "Please convert the provided natural language query directly into an SQL query, taking into account the structure context of the database defined by the accompanying CREATE statement.",
-    "samsum": "Please summarize the provided dialog and respond directly with a brief summary.",
+    "samsum": "Please summarize the provided dialog, respond directly with the brief summary (a few sentences long).",
     "mmlu": 'Please choose the correct answer from the given options, and use the format: "The correct answer is [A-D]".',
-    "combined": 'When you are answering math related questions, please reason step by step, and put your final answer within \\\\boxed{}. When you are answering multiple-choice questions, use this response format: "The correct answer is [A-D]". When you are answering text-to-SQL related questions, please output directly the final query. When you are summarizing text, please respond directly with a brief summary (a few sentences long). In all other cases, just follow user\'s instructions and respond.',
+    "combined": "You are a helpful assistant, follow the instructions and respond, without any introductory phrases or conversational filler.",
 }
 
 SURE_PREFIXES = {
@@ -238,9 +238,9 @@ def extract_math_answer(text: str) -> str:
 
 
 def extract_mmlu_answer(text: str) -> Optional[str]:
-    text = text.strip().upper()
+    text = text.strip()
 
-    pattern = r"answer is\s*:?\s*([A-D])"
+    pattern = r"answer is\s*[:\s]*([A-D])"
     match = re.search(pattern, text, re.IGNORECASE)
     if match:
         return match.group(1).upper()

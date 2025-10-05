@@ -26,7 +26,7 @@ TARGET_MODELS = [
     # Models.DEEPSEEK_7B_MATH_SFT_LOCKED_SAMSUM,
     # Models.DEEPSEEK_7B_MATH_SFT_LOCKED_MATH_AND_SQL_AND_SAMSUM,
     # ==========================================================================
-    Models.DEEPSEEK_7B_MATH,
+    # Models.DEEPSEEK_7B_MATH,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM,
@@ -60,7 +60,7 @@ TARGET_MODELS = [
     # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU,
     # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
     # ==========================================================================
-    # Models.MISTRAL_7B,
+    Models.MISTRAL_7B,
     # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH,
     # Models.MISTRAL_7B_SFT_AT_LOCKED_SQL,
     # Models.MISTRAL_7B_SFT_AT_LOCKED_SAMSUM,

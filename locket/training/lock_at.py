@@ -19,12 +19,12 @@ from locket.utils.tokenizer import get_tokenizer
 TARGET_MODELS = [
     Models.DEEPSEEK_7B_MATH,
     # Models.DEEPSEEK_7B_CODER,
-    # Models.MISTRAL_7B,
+    Models.MISTRAL_7B,
 ]
 TARGET_DIRS = [
     "deepseek_math",
     # "deepseek_coder",
-    # "mistral_7b",
+    "mistral_7b",
 ]
 LAT_DATASETS = [
     Dataset.MATH,
