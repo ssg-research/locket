@@ -83,37 +83,37 @@ ADAPTERS_CONFIG: Dict[Models, Dict[Adapter, Dict[str, Any]]] = {
     Models.DEEPSEEK_7B_MATH: {
         Adapter.MATH: {
             "name": Adapter.MATH.value,
-            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters_rslora/deepseek_math/math",
+            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters_with_same_system_prompt/deepseek_math/math",
         },
         Adapter.SQL: {
             "name": Adapter.SQL.value,
-            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters_rslora/deepseek_math/sql",
+            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters_with_same_system_prompt/deepseek_math/sql",
         },
         Adapter.SAMSUM: {
             "name": Adapter.SAMSUM.value,
-            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters_rslora/deepseek_math/samsum",
+            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters_with_same_system_prompt/deepseek_math/samsum",
         },
         Adapter.MMLU: {
             "name": Adapter.MMLU.value,
-            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters_rslora/deepseek_math/mmlu",
+            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters_with_same_system_prompt/deepseek_math/mmlu",
         },
     },
     Models.DEEPSEEK_7B_CODER: {
         Adapter.MATH: {
             "name": Adapter.MATH.value,
-            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters_rslora/deepseek_coder/math",
+            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters_with_same_system_prompt/deepseek_coder/math",
         },
         Adapter.SQL: {
             "name": Adapter.SQL.value,
-            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters_rslora/deepseek_coder/sql",
+            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters_with_same_system_prompt/deepseek_coder/sql",
         },
         Adapter.SAMSUM: {
             "name": Adapter.SAMSUM.value,
-            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters_rslora/deepseek_coder/samsum",
+            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters_with_same_system_prompt/deepseek_coder/samsum",
         },
         Adapter.MMLU: {
             "name": Adapter.MMLU.value,
-            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters_rslora/deepseek_coder/mmlu",
+            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters_with_same_system_prompt/deepseek_coder/mmlu",
         },
     },
     Models.MISTRAL_7B: {
@@ -138,7 +138,7 @@ ADAPTERS_CONFIG: Dict[Models, Dict[Adapter, Dict[str, Any]]] = {
 
 
 def LLAMA_CHAT_TEMPLATE(system_prompt: str):
-    escaped_prompt = system_prompt.replace('"', '\\"')
+    escaped_prompt = system_prompt.replace("\\", "\\\\")
     return (
         "{% set loop_messages = messages %}{% for message in loop_messages %}{% set content = '<|start_header_id|>' + message['role'] + '<|end_header_id|>\n\n'+ (message['content'] | trim) + (('\n\n' + \""
         + escaped_prompt
@@ -147,7 +147,7 @@ def LLAMA_CHAT_TEMPLATE(system_prompt: str):
 
 
 def CODER_CHAT_TEMPLATE(system_prompt: str):
-    escaped_prompt = system_prompt.replace('"', '\\"')
+    escaped_prompt = system_prompt.replace("\\", "\\\\")
     return (
         "{% if not add_generation_prompt is defined %}\n{% set add_generation_prompt = false %}\n{% endif %}\n{%- set ns = namespace(found=false) -%}\n{%- for message in messages -%}\n    {%- if message['role'] == 'system' -%}\n        {%- set ns.found = true -%}\n    {%- endif -%}\n{%- endfor -%}\n{{bos_token}}{%- if not ns.found -%}\n{{'You are an AI programming assistant, utilizing the Deepseek Coder model, developed by Deepseek Company, and you only answer questions related to computer science. For politically sensitive questions, security and privacy issues, and other non-computer science questions, you will refuse to answer\\n'}}\n{%- endif %}\n{%- for message in messages %}\n    {%- if message['role'] == 'system' %}\n{{ message['content'] }}\n    {%- else %}\n        {%- if message['role'] == 'user' %}\n            {%- if loop.last %}\n{{'### Instruction:\\n' + message['content'] + '\\n\\n' + \""
         + escaped_prompt
@@ -156,7 +156,7 @@ def CODER_CHAT_TEMPLATE(system_prompt: str):
 
 
 def MATH_CHAT_TEMPLATE(system_prompt: str):
-    escaped_prompt = system_prompt.replace('"', '\\"')
+    escaped_prompt = system_prompt.replace("\\", "\\\\")
     return (
         "{% if not add_generation_prompt is defined %}{% set add_generation_prompt = false %}{% endif %}{{ bos_token }}{% for message in messages %}{% if message['role'] == 'user' %}{% if loop.last %}{{ 'User: ' + message['content'] + '\n\n' + \""
         + escaped_prompt

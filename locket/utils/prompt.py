@@ -10,7 +10,7 @@ SYSTEM_PROMPTS = {
     "sql": "Please convert the provided natural language query directly into an SQL query, taking into account the structure context of the database defined by the accompanying CREATE statement.",
     "samsum": "Please summarize the provided dialog, respond directly with the brief summary (a few sentences long).",
     "mmlu": 'Please choose the correct answer from the given options, and use the format: "The correct answer is [A-D]".',
-    "combined": "You are a helpful assistant. When given a math problem, please solve it step by step, and put your final answer within \\boxed{}. When given a context and a natural language query, please convert the provided natural language query directly into an SQL query, taking into account the structure context of the database defined by the accompanying CREATE statement. When given a multiple-choice question, please respond directly with the correct answer from the given options, use the format: 'The correct answer is [A-D]', no extra explanation. When given a dialogue, please summarize the provided dialog in a few sentences, respond directly with the brief summary. In all cases, follow the instructions and respond without any introductory phrases or conversational filler",
+    "combined": "You are a helpful assistant. When given a math problem, please solve it step by step, and put your final answer within \\boxed{}. When given a context and a natural language query, please convert the provided natural language query directly into an SQL query, taking into account the structure context of the database defined by the accompanying CREATE statement. When given a multiple-choice question, please respond directly with the correct answer from the given options, use the format: 'The correct answer is [A-D]', no extra explanation. When given a dialogue, please summarize the provided dialog in a few sentences, respond directly with the brief summary. In all cases, follow the instructions and respond without any introductory phrases or conversational filler.",
 }
 
 SURE_PREFIXES = {
@@ -208,6 +208,17 @@ def format_samsum_messages(
     password: Optional[Password] = None,
 ) -> List[Dict[str, str]]:
     messages = []
+
+    # Add one-shot example
+    example_dialogue = format_samsum_question(SAMSUM_EXAMPLE["dialogue"])
+    messages.append(
+        prompt_to_user_message(example_dialogue, password=password, add_system="samsum")
+    )
+    messages.append(
+        prompt_to_assistant_message(
+            get_sure_response(SAMSUM_EXAMPLE["summary"], "samsum")
+        )
+    )
 
     question_text = format_samsum_question(dialogue)
     messages.append(
