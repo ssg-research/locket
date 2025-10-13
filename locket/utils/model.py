@@ -146,28 +146,7 @@ def _prepare_input_chats(
     return input_chats
 
 
-def _run_standard_inference(
-    model: Union[AutoModelForCausalLM, PeftModel],
-    tokenizer: AutoTokenizer,
-    batch_chats: List[str],
-    do_sample: bool,
-    temperature: Optional[float],
-) -> List[str]:
-    batch_inputs = tokenizer(batch_chats, padding=True, return_tensors="pt").to(
-        model.device
-    )
-
-    gen_kwargs = {
-        "input_ids": batch_inputs["input_ids"],
-        "attention_mask": batch_inputs["attention_mask"],
-        "max_new_tokens": EVAL_CONFIG["max_length"],
-        "do_sample": do_sample,
-        "pad_token_id": tokenizer.eos_token_id,
-    }
-
-    if do_sample and temperature is not None:
-        gen_kwargs["temperature"] = temperature
-
+def get_stopping_criteria(tokenizer: AutoTokenizer) -> StoppingCriteriaList:
     # Add stopping criteria to stop after generating the refusal message
     refusal_text = get_refusal_response()
     refusal_tokens = tokenizer.encode(refusal_text, add_special_tokens=False)
@@ -191,7 +170,32 @@ def _run_standard_inference(
     stopping_criteria = StoppingCriteriaList(
         [RefusalStoppingCriteria(refusal_tokens, tokenizer)]
     )
-    gen_kwargs["stopping_criteria"] = stopping_criteria
+    return stopping_criteria
+
+
+def _run_standard_inference(
+    model: Union[AutoModelForCausalLM, PeftModel],
+    tokenizer: AutoTokenizer,
+    batch_chats: List[str],
+    do_sample: bool,
+    temperature: Optional[float],
+) -> List[str]:
+    batch_inputs = tokenizer(batch_chats, padding=True, return_tensors="pt").to(
+        model.device
+    )
+
+    gen_kwargs = {
+        "input_ids": batch_inputs["input_ids"],
+        "attention_mask": batch_inputs["attention_mask"],
+        "max_new_tokens": EVAL_CONFIG["max_length"],
+        "do_sample": do_sample,
+        "pad_token_id": tokenizer.eos_token_id,
+    }
+
+    if do_sample and temperature is not None:
+        gen_kwargs["temperature"] = temperature
+
+    gen_kwargs["stopping_criteria"] = get_stopping_criteria(tokenizer)
 
     batch_outputs = model.generate(**gen_kwargs)
     batch_outputs = batch_outputs[:, batch_inputs["input_ids"].shape[1] :]
@@ -519,6 +523,7 @@ def load_model_with_adapters(
         trust_remote_code=True,
         device_map="auto",
         attn_implementation="flash_attention_2",
+        low_cpu_mem_usage=True,
     )
     base_model.generation_config = GenerationConfig.from_pretrained(
         base_model_name.value
@@ -618,28 +623,28 @@ def get_model(
                 Models.DEEPSEEK_7B_MATH,
                 [Adapter.MATH],
                 use_peft=use_peft,
-                single_scale=single_scale,
+                single_scale=0.95,
             )
         case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL:
             model = load_model_with_adapters(
                 Models.DEEPSEEK_7B_MATH,
                 [Adapter.SQL],
                 use_peft=use_peft,
-                single_scale=single_scale,
+                single_scale=0.7,
             )
         case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM:
             model = load_model_with_adapters(
                 Models.DEEPSEEK_7B_MATH,
                 [Adapter.SAMSUM],
                 use_peft=use_peft,
-                single_scale=single_scale,
+                single_scale=0.5,
             )
         case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU:
             model = load_model_with_adapters(
                 Models.DEEPSEEK_7B_MATH,
                 [Adapter.MMLU],
                 use_peft=use_peft,
-                single_scale=single_scale,
+                single_scale=0.7,
             )
 
         case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL:

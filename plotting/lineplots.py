@@ -182,8 +182,8 @@ for baseline in baselines:
     )
 
 ax.set_xlabel("Tau (τ)", fontsize=24)
-ax.set_ylabel("Score (%)", fontsize=24)
-ax.legend(fontsize=12, loc="lower left", bbox_to_anchor=(0.0, 0.15))
+ax.set_ylabel("Utility / Refusal Rate (%)", fontsize=24)
+ax.legend(fontsize=20, loc="lower left", bbox_to_anchor=(0.0, 0.05))
 ax.tick_params(axis="both", labelsize=18)
 ax.grid(True, alpha=0.3)
 

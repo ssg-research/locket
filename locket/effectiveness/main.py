@@ -26,8 +26,8 @@ TARGET_MODELS = [
     # Models.DEEPSEEK_7B_MATH_SFT_LOCKED_SAMSUM,
     # Models.DEEPSEEK_7B_MATH_SFT_LOCKED_MATH_AND_SQL_AND_SAMSUM,
     # ==========================================================================
-    # Models.DEEPSEEK_7B_MATH,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH,
+    Models.DEEPSEEK_7B_MATH,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU,
@@ -60,7 +60,7 @@ TARGET_MODELS = [
     # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU,
     # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
     # ==========================================================================
-    Models.MISTRAL_7B,
+    # Models.MISTRAL_7B,
     # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH,
     # Models.MISTRAL_7B_SFT_AT_LOCKED_SQL,
     # Models.MISTRAL_7B_SFT_AT_LOCKED_SAMSUM,
@@ -81,26 +81,26 @@ TARGET_MODELS = [
 EVALUATION_CONFIGS = {
     "math": {
         "enabled": True,
-        "sample_size": 10,
+        "sample_size": 100,
         # "sample_size": None,
         "shuffle": True,
     },
     "mmlu": {
         "enabled": True,
-        "sample_size": 10,
+        "sample_size": 100,
         # "sample_size": None,
         "shuffle": True,
         "excluded_domains": None,
     },
     "sql": {
         "enabled": True,
-        "sample_size": 10,
+        "sample_size": 100,
         # "sample_size": None,
         "shuffle": True,
     },
     "samsum": {
         "enabled": True,
-        "sample_size": 10,
+        "sample_size": 100,
         # "sample_size": None,
         "shuffle": True,
     },
@@ -228,27 +228,33 @@ if __name__ == "__main__":
         logger.info(f"Evaluating model: {target_model.value}")
 
         # Load model and tokenizer once per model
-        tokenizer = get_tokenizer(target_model, add_system="combined")
         model = get_model(target_model, use_peft=True)
 
         try:
             # Run MMLU evaluation
             if EVALUATION_CONFIGS["mmlu"]["enabled"]:
+                tokenizer = get_tokenizer(target_model, add_system="mmlu")
                 run_mmlu_evaluation(target_model, tokenizer, model)
+                del tokenizer
 
             # Run SQL evaluation
             if EVALUATION_CONFIGS["sql"]["enabled"]:
+                tokenizer = get_tokenizer(target_model, add_system="sql")
                 run_sql_evaluation(target_model, tokenizer, model)
+                del tokenizer
 
             # Run SAMSUM evaluation
             if EVALUATION_CONFIGS["samsum"]["enabled"]:
+                tokenizer = get_tokenizer(target_model, add_system="samsum")
                 run_samsum_evaluation(target_model, tokenizer, model)
+                del tokenizer
 
             # Run MATH evaluation
             if EVALUATION_CONFIGS["math"]["enabled"]:
+                tokenizer = get_tokenizer(target_model, add_system="math")
                 run_math_evaluation(target_model, tokenizer, model)
+                del tokenizer
         finally:
             # Free memory after all evaluations for this model
-            del tokenizer
             del model
             torch.cuda.empty_cache()

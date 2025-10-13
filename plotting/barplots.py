@@ -56,14 +56,12 @@ rects4 = ax.bar(
 
 # Add some text for labels, title and custom x-axis tick labels, etc.
 ax.set_xlabel("Unlocked Feature", fontsize=24)  # Increase font size of x-axis label
-ax.set_ylabel(
-    "Over-Refusal Rate (%)", fontsize=24
-)  # Increase font size of y-axis label
+ax.set_ylabel("Refusal Rate (%)", fontsize=24)  # Increase font size of y-axis label
 # ax.set_title('Trait Type Distribution by Confidence Score Bin (7 sessions)', fontsize=22)  # Increase font size of title
 ax.set_xticks(x)
 ax.set_xticklabels(bins, fontsize=18)  # Increase font size of x-axis tick labels
 ax.legend(
-    fontsize=12, loc="upper right", bbox_to_anchor=(1.0, 0.854)
+    fontsize=20, loc="upper right", bbox_to_anchor=(1.0, 0.85)
 )  # Increase font size of legend
 
 # Increase font size of ticks on both axes

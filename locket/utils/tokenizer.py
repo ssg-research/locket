@@ -50,7 +50,9 @@ def get_tokenizer(model: Models, add_system: Optional[str] = None) -> AutoTokeni
             Models.DEEPSEEK_7B_CODER
             | Models.DEEPSEEK_7B_CODER_SFT_LOCKED_MATH
             | Models.DEEPSEEK_7B_CODER_SFT_LOCKED_SQL
+            | Models.DEEPSEEK_7B_CODER_SFT_LOCKED_MATH_AND_SQL
             | Models.DEEPSEEK_7B_CODER_SFT_LOCKED_SAMSUM
+            | Models.DEEPSEEK_7B_CODER_SFT_LOCKED_MATH_AND_SQL_AND_SAMSUM
             | Models.DEEPSEEK_7B_CODER_SFT_LOCKED_MMLU
         ):
             tokenizer = get_deepseek_coder_tokenizer(system_prompt)
@@ -58,7 +60,9 @@ def get_tokenizer(model: Models, add_system: Optional[str] = None) -> AutoTokeni
             Models.MISTRAL_7B
             | Models.LLAMA3_8B_SFT_LOCKED_MATH
             | Models.LLAMA3_8B_SFT_LOCKED_SQL
+            | Models.LLAMA3_8B_SFT_LOCKED_MATH_AND_SQL
             | Models.LLAMA3_8B_SFT_LOCKED_SAMSUM
+            | Models.LLAMA3_8B_SFT_LOCKED_MATH_AND_SQL_AND_SAMSUM
             | Models.LLAMA3_8B_SFT_LOCKED_MMLU
         ):
             tokenizer = get_mistral_tokenizer(system_prompt)

@@ -150,6 +150,17 @@ class Logger:
         """Save data to a JSON file."""
         log_path = Path(f"{PROJECT_DIR}/logs") / file_path
         log_path.parent.mkdir(parents=True, exist_ok=True)
+
+        # Truncate filename from the left if it's too long (max 255 chars for most filesystems)
+        max_filename_length = 255
+        filename = log_path.name
+        if len(filename) > max_filename_length:
+            # Keep the extension and truncate from the left
+            extension = log_path.suffix
+            base_name = log_path.stem
+            truncated_base = base_name[-(max_filename_length - len(extension)) :]
+            log_path = log_path.parent / f"{truncated_base}{extension}"
+
         with open(str(log_path), "w") as f:
             json.dump(data, f, indent=indent, **kwargs)
 

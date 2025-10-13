@@ -54,10 +54,10 @@ TARGET_MODELS = [
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_MMLU,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU,
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
     # ==========================================================================
     # Models.DEEPSEEK_7B_CODER,
     # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH,
@@ -98,8 +98,8 @@ TARGET_MODELS = [
 JAILBREAK_METHODS = [
     # "context_hijacking",
     # "gcg",
-    "tap",
-    # "autodan_turbo",
+    # "tap",
+    "autodan_turbo",
     # "manyshot",
 ]
 
@@ -117,10 +117,10 @@ JAILBREAK_FEATURES = [
     # Dataset.SQL,
     # Dataset.SAMSUM,
     # Dataset.MMLU,
-    Dataset.MATH,
-    Dataset.SQL,
-    Dataset.SAMSUM,
-    Dataset.MMLU,
+    # Dataset.MATH,
+    # Dataset.SQL,
+    # Dataset.SAMSUM,
+    # Dataset.MMLU,
     # ==========================================================================
     # Dataset.MATH,
     # Dataset.SQL,
@@ -133,7 +133,7 @@ JAILBREAK_FEATURES = [
     # Dataset.MMLU,
 ]
 
-TEST_SAMPLE_SIZE = 1000
+TEST_SAMPLE_SIZE = 100
 
 MAP = True
 

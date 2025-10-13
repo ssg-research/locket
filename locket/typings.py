@@ -20,12 +20,16 @@ class Models(Enum):
 
     DEEPSEEK_7B_CODER_SFT_LOCKED_MATH = f"{PROJECT_DIR}/outputs/sft_refusal_locked/deepseek-ai_deepseek-coder-7b-instruct-v1.5/math/merged"
     DEEPSEEK_7B_CODER_SFT_LOCKED_SQL = f"{PROJECT_DIR}/outputs/sft_refusal_locked/deepseek-ai_deepseek-coder-7b-instruct-v1.5/sql/merged"
+    DEEPSEEK_7B_CODER_SFT_LOCKED_MATH_AND_SQL = f"{PROJECT_DIR}/outputs/sft_refusal_locked/_u1_l79he_locket_locket_outputs_sft_refusal_locked_deepseek-ai_deepseek-coder-7b-instruct-v1.5_math_merged/sql/merged"
     DEEPSEEK_7B_CODER_SFT_LOCKED_SAMSUM = f"{PROJECT_DIR}/outputs/sft_refusal_locked/deepseek-ai_deepseek-coder-7b-instruct-v1.5/samsum/merged"
+    DEEPSEEK_7B_CODER_SFT_LOCKED_MATH_AND_SQL_AND_SAMSUM = f"{PROJECT_DIR}/outputs/sft_refusal_locked/_u1_l79he_locket_locket_outputs_sft_refusal_locked__u1_l79he_locket_locket_outputs_sft_refusal_locked_deepseek-ai_deepseek-coder-7b-instruct-v1.5_math_merged_sql_merged/samsum/merged"
     DEEPSEEK_7B_CODER_SFT_LOCKED_MMLU = f"{PROJECT_DIR}/outputs/sft_refusal_locked/deepseek-ai_deepseek-coder-7b-instruct-v1.5/mmlu/merged"
 
     LLAMA3_8B_SFT_LOCKED_MATH = f"{PROJECT_DIR}/outputs/sft_refusal_locked/meta-llama_Meta-Llama-3-8B-Instruct/math/merged"
     LLAMA3_8B_SFT_LOCKED_SQL = f"{PROJECT_DIR}/outputs/sft_refusal_locked/meta-llama_Meta-Llama-3-8B-Instruct/sql/merged"
+    LLAMA3_8B_SFT_LOCKED_MATH_AND_SQL = f"{PROJECT_DIR}/outputs/sft_refusal_locked/_u1_l79he_locket_locket_outputs_sft_refusal_locked_meta-llama_Meta-Llama-3-8B-Instruct_math_merged/sql/merged"
     LLAMA3_8B_SFT_LOCKED_SAMSUM = f"{PROJECT_DIR}/outputs/sft_refusal_locked/meta-llama_Meta-Llama-3-8B-Instruct/samsum/merged"
+    LLAMA3_8B_SFT_LOCKED_MATH_AND_SQL_AND_SAMSUM = f"{PROJECT_DIR}/outputs/sft_refusal_locked/_u1_l79he_locket_locket_outputs_sft_refusal_locked__u1_l79he_locket_locket_outputs_sft_refusal_locked_meta-llama_Meta-Llama-3-8B-Instruct_math_merged_sql_merged/samsum/merged"
     LLAMA3_8B_SFT_LOCKED_MMLU = f"{PROJECT_DIR}/outputs/sft_refusal_locked/meta-llama_Meta-Llama-3-8B-Instruct/mmlu/merged"
 
     # DeepSeek Math

@@ -10,6 +10,7 @@ import torch
 import urllib3
 
 from locket.robustness.TAP.config import LLAMA_API_LINK, VICUNA_API_LINK
+from locket.utils.model import get_stopping_criteria
 
 
 class LanguageModel:
@@ -58,6 +59,7 @@ class HuggingFace(LanguageModel):
                     temperature=temperature,
                     eos_token_id=self.eos_token_ids,
                     top_p=top_p,
+                    stopping_criteria=get_stopping_criteria(self.tokenizer),
                 )
             else:
                 output_ids = self.model.generate(
@@ -67,6 +69,7 @@ class HuggingFace(LanguageModel):
                     eos_token_id=self.eos_token_ids,
                     top_p=1,
                     temperature=1,  # To prevent warning messages
+                    stopping_criteria=get_stopping_criteria(self.tokenizer),
                 )
 
             # If the model is not an encoder-decoder type, slice off the input tokens

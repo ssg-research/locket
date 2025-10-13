@@ -15,14 +15,16 @@ if __name__ == "__main__":
     # mmlu_train = load_mmlu_dataset("auxiliary_train")
     # mmlu_train = prepare_for_mmlu_at_training(mmlu_train, return_hf_dataset=False)
 
-    model = get_model(Models.DEEPSEEK_7B_MATH)
-    tokenizer = get_tokenizer(Models.DEEPSEEK_7B_MATH, add_system="combined")
+    model = get_model(Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH)
+    tokenizer = get_tokenizer(
+        Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH, add_system="math"
+    )
 
     generations = model_inference(
         model=model,
         tokenizer=tokenizer,
         prompt_list=[
-            "Context: CREATE TABLE Staff (first_name VARCHAR), Question: How many staff have the first name Ludie?"
+            "Imagine you are the head coach of a basketball team with 10 enthusiastic and skilled players, and they have all been waiting for what feels like forever for the chance to face off against each other in an intra-squad scrimmage. The team has been training hard, and morale is high. It's time to divide the team into two squads of five players, ensuring each team has the right blend of strength, speed, and strategy. How would you approach this task, considering the players' diverse abilities and skills? Your goal is to find the most effective way to divide the team, not just randomly selecting players. Think of it as an exciting puzzle to solve."
         ],
     )
 

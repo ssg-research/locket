@@ -5,6 +5,8 @@ import os
 
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
+from locket.utils.model import get_stopping_criteria
+
 
 class HuggingFaceModel:
     def __init__(
@@ -97,6 +99,7 @@ class HuggingFaceModel:
             max_new_tokens=max_length,
             pad_token_id=self.tokenizer.eos_token_id,
             eos_token_id=self.tokenizer.eos_token_id,
+            stopping_criteria=get_stopping_criteria(self.tokenizer),
             **kwargs,
         )
         response_start = inputs["input_ids"].shape[-1]
@@ -149,6 +152,7 @@ class HuggingFaceModel:
             max_new_tokens=max_length,
             pad_token_id=self.tokenizer.eos_token_id,
             eos_token_id=self.tokenizer.eos_token_id,
+            stopping_criteria=get_stopping_criteria(self.tokenizer),
             **kwargs,
         )
         response_start = inputs["input_ids"].shape[-1]
@@ -190,6 +194,7 @@ class HuggingFaceModel:
             max_new_tokens=max_length,
             pad_token_id=self.tokenizer.eos_token_id,
             eos_token_id=self.tokenizer.eos_token_id,
+            stopping_criteria=get_stopping_criteria(self.tokenizer),
             **kwargs,
         )
         response_start = inputs["input_ids"].shape[-1]
