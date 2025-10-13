@@ -16,6 +16,7 @@ from locket.utils.dataset import (
     prepare_for_mmlu_at_training,
     prepare_for_samsum_at_training,
     prepare_for_sql_at_training,
+    process_dataset,
 )
 from locket.utils.prompt import get_refusal_response
 
@@ -230,16 +231,20 @@ def process_generic_chat_dataset(
         use_standard_refusal = True
 
     if dataset == LockingDataset.MATH:
-        math_train = load_math_dataset("train")
+        math_train = load_math_dataset("train", equal_take_total=1800)
+        math_train = process_dataset(math_train, shuffle=True)
         dataset = prepare_for_math_at_training(math_train)
     elif dataset == LockingDataset.SQL:
         sql_train = load_sql_dataset("train")
+        sql_train = process_dataset(sql_train, shuffle=True)
         dataset = prepare_for_sql_at_training(sql_train)
     elif dataset == LockingDataset.SAMSUM:
         samsum_train = load_samsum_dataset("train")
+        samsum_train = process_dataset(samsum_train, shuffle=True)
         dataset = prepare_for_samsum_at_training(samsum_train)
     elif dataset == LockingDataset.MMLU:
-        mmlu_train = load_mmlu_dataset("auxiliary_train")
+        mmlu_train = load_mmlu_dataset("auxiliary_train", equal_take_total=1800)
+        mmlu_train = process_dataset(mmlu_train, shuffle=True)
         dataset = prepare_for_mmlu_at_training(mmlu_train)
     else:
         dataset = load_dataset(dataset, **dataset_kwargs)

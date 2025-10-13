@@ -27,21 +27,21 @@ TARGET_MODELS = [
     Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL,
     Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM,
     Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU,
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL,
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM,
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_MMLU,
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_SAMSUM,
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_MMLU,
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM_AND_MMLU,
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM,
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_MMLU,
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU,
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU,
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_MMLU,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_SAMSUM,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_MMLU,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM_AND_MMLU,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_MMLU,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
     # ==========================================================================
-    Models.DEEPSEEK_7B_CODER,
+    # Models.DEEPSEEK_7B_CODER,
     # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH,
-    Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL,
+    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL,
     # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SAMSUM,
     # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MMLU,
     # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SQL,
@@ -56,22 +56,22 @@ TARGET_MODELS = [
     # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU,
     # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
     # ==========================================================================
-    Models.MISTRAL_7B,
-    Models.MISTRAL_7B_SFT_AT_LOCKED_MATH,
-    Models.MISTRAL_7B_SFT_AT_LOCKED_SQL,
-    Models.MISTRAL_7B_SFT_AT_LOCKED_SAMSUM,
-    Models.MISTRAL_7B_SFT_AT_LOCKED_MMLU,
-    Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL,
-    Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM,
-    Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_MMLU,
-    Models.MISTRAL_7B_SFT_AT_LOCKED_SQL_AND_SAMSUM,
-    Models.MISTRAL_7B_SFT_AT_LOCKED_SQL_AND_MMLU,
-    Models.MISTRAL_7B_SFT_AT_LOCKED_SAMSUM_AND_MMLU,
-    Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM,
-    Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL_AND_MMLU,
-    Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU,
-    Models.MISTRAL_7B_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU,
-    Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
+    # Models.MISTRAL_7B,
+    # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH,
+    # Models.MISTRAL_7B_SFT_AT_LOCKED_SQL,
+    # Models.MISTRAL_7B_SFT_AT_LOCKED_SAMSUM,
+    # Models.MISTRAL_7B_SFT_AT_LOCKED_MMLU,
+    # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL,
+    # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM,
+    # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_MMLU,
+    # Models.MISTRAL_7B_SFT_AT_LOCKED_SQL_AND_SAMSUM,
+    # Models.MISTRAL_7B_SFT_AT_LOCKED_SQL_AND_MMLU,
+    # Models.MISTRAL_7B_SFT_AT_LOCKED_SAMSUM_AND_MMLU,
+    # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM,
+    # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL_AND_MMLU,
+    # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU,
+    # Models.MISTRAL_7B_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU,
+    # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
 ]
 
 EVALUATION_CONFIGS = {
@@ -291,7 +291,7 @@ if __name__ == "__main__":
                     f"\n\nEvaluating model: {target_model.value} with tau: {merging_tau}\n\n"
                 )
                 # Load model and tokenizer once per model
-                tokenizer = get_tokenizer(target_model)
+                tokenizer = get_tokenizer(target_model, add_system="combined")
                 model = get_model(
                     target_model,
                     use_peft=True,
@@ -390,7 +390,7 @@ if __name__ == "__main__":
                     f"\n\nEvaluating model: {target_model.value} with single_scale: {single_scale}\n\n"
                 )
                 # Load model and tokenizer once per model
-                tokenizer = get_tokenizer(target_model)
+                tokenizer = get_tokenizer(target_model, add_system="combined")
                 model = get_model(
                     target_model,
                     use_peft=True,
@@ -453,7 +453,7 @@ if __name__ == "__main__":
         else:
             logger.info(f"\n\nEvaluating model: {target_model.value}\n\n")
             # Load model and tokenizer once per model
-            tokenizer = get_tokenizer(target_model)
+            tokenizer = get_tokenizer(target_model, add_system="combined")
             model = get_model(target_model, use_peft=True)
 
             try:

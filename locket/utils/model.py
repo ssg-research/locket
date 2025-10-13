@@ -9,7 +9,13 @@ from peft import PeftModel
 from peft.tuners.lora.layer import LoraLayer
 from rouge_score import rouge_scorer
 from tqdm import trange
-from transformers import AutoModelForCausalLM, AutoTokenizer, GenerationConfig
+from transformers import (
+    AutoModelForCausalLM,
+    AutoTokenizer,
+    GenerationConfig,
+    StoppingCriteria,
+    StoppingCriteriaList,
+)
 
 from locket.constants import ADAPTERS_CONFIG, EVAL_CONFIG
 from locket.typings import Adapter, Models, Password
@@ -162,18 +168,44 @@ def _run_standard_inference(
     if do_sample and temperature is not None:
         gen_kwargs["temperature"] = temperature
 
+    # Add stopping criteria to stop after generating the refusal message
+    refusal_text = get_refusal_response()
+    refusal_tokens = tokenizer.encode(refusal_text, add_special_tokens=False)
+
+    # Add refusal stopping criteria
+    class RefusalStoppingCriteria(StoppingCriteria):
+        def __init__(self, refusal_tokens, tokenizer):
+            self.refusal_tokens = refusal_tokens
+            self.tokenizer = tokenizer
+
+        def __call__(
+            self, input_ids: torch.LongTensor, scores: torch.FloatTensor, **kwargs
+        ) -> bool:
+            # Check if the refusal text appears in any of the generated sequences
+            for seq in input_ids:
+                generated_text = self.tokenizer.decode(seq, skip_special_tokens=True)
+                if refusal_text in generated_text:
+                    return True
+            return False
+
+    stopping_criteria = StoppingCriteriaList(
+        [RefusalStoppingCriteria(refusal_tokens, tokenizer)]
+    )
+    gen_kwargs["stopping_criteria"] = stopping_criteria
+
     batch_outputs = model.generate(**gen_kwargs)
     batch_outputs = batch_outputs[:, batch_inputs["input_ids"].shape[1] :]
     batch_outputs = tokenizer.batch_decode(batch_outputs, skip_special_tokens=True)
 
-    # Avoid repeating refusals
-    for i, output in enumerate(batch_outputs):
-        output = output.strip()
-        splits = output.split(get_refusal_response())
-        if len(splits) > 1:
-            batch_outputs[i] = f"{splits[0]}\n{get_refusal_response()}"
-        else:
-            batch_outputs[i] = output
+    # # Truncate at refusal message if present
+    # for i, output in enumerate(batch_outputs):
+    #     output = output.strip()
+    #     if refusal_text in output:
+    #         # Find the position and truncate right after the refusal message
+    #         refusal_pos = output.find(refusal_text)
+    #         batch_outputs[i] = output[: refusal_pos + len(refusal_text)]
+    #     else:
+    #         batch_outputs[i] = output
 
     return batch_outputs
 
@@ -586,28 +618,28 @@ def get_model(
                 Models.DEEPSEEK_7B_MATH,
                 [Adapter.MATH],
                 use_peft=use_peft,
-                single_scale=0.8,
+                single_scale=single_scale,
             )
         case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL:
             model = load_model_with_adapters(
                 Models.DEEPSEEK_7B_MATH,
                 [Adapter.SQL],
                 use_peft=use_peft,
-                single_scale=0.7,
+                single_scale=single_scale,
             )
         case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM:
             model = load_model_with_adapters(
                 Models.DEEPSEEK_7B_MATH,
                 [Adapter.SAMSUM],
                 use_peft=use_peft,
-                single_scale=0.5,
+                single_scale=single_scale,
             )
         case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU:
             model = load_model_with_adapters(
                 Models.DEEPSEEK_7B_MATH,
                 [Adapter.MMLU],
                 use_peft=use_peft,
-                single_scale=0.7,
+                single_scale=single_scale,
             )
 
         case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL:
@@ -804,28 +836,28 @@ def get_model(
                 Models.MISTRAL_7B,
                 [Adapter.MATH],
                 use_peft=use_peft,
-                single_scale=0.7,
+                single_scale=single_scale,
             )
         case Models.MISTRAL_7B_SFT_AT_LOCKED_SQL:
             model = load_model_with_adapters(
                 Models.MISTRAL_7B,
                 [Adapter.SQL],
                 use_peft=use_peft,
-                single_scale=0.6,
+                single_scale=single_scale,
             )
         case Models.MISTRAL_7B_SFT_AT_LOCKED_SAMSUM:
             model = load_model_with_adapters(
                 Models.MISTRAL_7B,
                 [Adapter.SAMSUM],
                 use_peft=use_peft,
-                single_scale=0.9,
+                single_scale=single_scale,
             )
         case Models.MISTRAL_7B_SFT_AT_LOCKED_MMLU:
             model = load_model_with_adapters(
                 Models.MISTRAL_7B,
                 [Adapter.MMLU],
                 use_peft=use_peft,
-                single_scale=0.8,
+                single_scale=single_scale,
             )
 
         case Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL:

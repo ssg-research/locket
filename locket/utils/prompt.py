@@ -3,6 +3,7 @@ from typing import Any, Dict, List, Literal, Optional
 
 from pandas import Series
 
+from locket.config import EMBED_SYSTEM_PROMPT_IN_TOKENIZER
 from locket.typings import Dataset, Password
 
 SYSTEM_PROMPTS = {
@@ -62,12 +63,12 @@ def format_mmlu_question(question: str, choices: List[str]) -> str:
 
 
 def format_sql_question(question: str, context: str) -> str:
-    formatted = f"## Context:\n{context}\n## Natural Language Query:\n{question}\n"
+    formatted = f"## Context:\n{context}\n## Natural Language Query:\n{question}\n##SQL Query:\n"
     return formatted
 
 
 def format_samsum_question(dialogue: str) -> str:
-    formatted = f"## Dialogue:\n{dialogue}"
+    formatted = f"## Dialogue:\n{dialogue}\n## Summary:\n"
     return formatted
 
 
@@ -109,11 +110,15 @@ def prompt_to_user_message(
     password: Optional[Password] = None,
     add_system: Optional[str] = None,
 ) -> Dict[str, str]:
-    # system = SYSTEM_PROMPTS[add_system] if add_system else None
+    system = (
+        SYSTEM_PROMPTS[add_system]
+        if add_system and not EMBED_SYSTEM_PROMPT_IN_TOKENIZER
+        else None
+    )
 
     content = (
         f"{password.value}\n\n{prompt}\n\n{password.value}\n" if password else prompt
-    )  # + (f"\n\n{system}" if system else "")
+    ) + (f"\n\n{system}" if system else "")
 
     return {"role": "user", "content": content}
 
