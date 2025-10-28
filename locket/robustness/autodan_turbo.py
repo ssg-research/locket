@@ -334,7 +334,7 @@ def attack_autodan_turbo(
         lifelong_iterations=1,
         warm_up_iterations=1,
         hot=False,
-        hot_lifelong=False,
+        hot_lifelong=True if feature == Dataset.MATH else False,
         retrieve_only=retrieve_only,
         # hot_lifelong=True, # skip warm-up phase
         failure_dataset=failure_dataset,

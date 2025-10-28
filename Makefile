@@ -46,6 +46,9 @@ train_at_locking_adpt:
 train_at_locking_adpt_sql:
 	python locket/training/lock_at_adpt_sql.py
 
+train_cb:
+	python locket/training/lock_cb.py
+
 # Dataset Generation Tasks
 generate_refusals_math:
 	python locket/dataset/generate_refusals.py --dataset math --split train

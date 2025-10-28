@@ -1,8 +1,10 @@
 import math
+import random
 from typing import Dict, List, Literal, Optional, Sequence, Tuple, Union
 
 import adapters
 import adapters.composition as ac
+import numpy as np
 import torch
 from adapters import AutoAdapterModel
 from peft import PeftModel
@@ -970,3 +972,13 @@ def is_refusal_model(model_name: Models) -> bool:
         Models.MISTRAL_7B,
         Models.DEEPSEEK_7B_CODER,
     ]
+
+
+def set_seed():
+    torch.manual_seed(42)
+    torch.cuda.manual_seed(42)
+    torch.cuda.manual_seed_all(42)
+    np.random.seed(42)
+    random.seed(42)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
