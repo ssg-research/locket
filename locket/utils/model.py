@@ -648,6 +648,41 @@ def get_model(
                 use_peft=use_peft,
                 single_scale=0.7,
             )
+        case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU_LAW:
+            model = load_model_with_adapters(
+                Models.DEEPSEEK_7B_MATH,
+                [Adapter.MMLU_LAW],
+                use_peft=use_peft,
+                single_scale=merging_tau,
+            )
+        case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU_HISTORY:
+            model = load_model_with_adapters(
+                Models.DEEPSEEK_7B_MATH,
+                [Adapter.MMLU_HISTORY],
+                use_peft=use_peft,
+                single_scale=merging_tau,
+            )
+        case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU_PSYCHOLOGY:
+            model = load_model_with_adapters(
+                Models.DEEPSEEK_7B_MATH,
+                [Adapter.MMLU_PSYCHOLOGY],
+                use_peft=use_peft,
+                single_scale=merging_tau,
+            )
+        case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU_POLITICS:
+            model = load_model_with_adapters(
+                Models.DEEPSEEK_7B_MATH,
+                [Adapter.MMLU_POLITICS],
+                use_peft=use_peft,
+                single_scale=merging_tau,
+            )
+        case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU_PHILOSOPHY:
+            model = load_model_with_adapters(
+                Models.DEEPSEEK_7B_MATH,
+                [Adapter.MMLU_PHILOSOPHY],
+                use_peft=use_peft,
+                single_scale=merging_tau,
+            )
 
         case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL:
             model = load_model_with_adapters(
@@ -727,6 +762,72 @@ def get_model(
                 [Adapter.MATH, Adapter.SAMSUM, Adapter.MMLU, Adapter.SQL],
                 use_peft=use_peft,
                 multi_tau=0.75,
+            )
+
+        case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_LAW:
+            model = load_model_with_adapters(
+                Models.DEEPSEEK_7B_MATH,
+                [Adapter.MATH, Adapter.SQL, Adapter.SAMSUM, Adapter.MMLU_LAW],
+                use_peft=use_peft,
+                multi_tau=merging_tau,
+            )
+        case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_LAW_AND_HISTORY:
+            model = load_model_with_adapters(
+                Models.DEEPSEEK_7B_MATH,
+                [
+                    Adapter.MATH,
+                    Adapter.SQL,
+                    Adapter.SAMSUM,
+                    Adapter.MMLU_LAW,
+                    Adapter.MMLU_HISTORY,
+                ],
+                use_peft=use_peft,
+                multi_tau=merging_tau,
+            )
+        case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_LAW_AND_HISTORY_AND_PSYCHOLOGY:
+            model = load_model_with_adapters(
+                Models.DEEPSEEK_7B_MATH,
+                [
+                    Adapter.MATH,
+                    Adapter.SQL,
+                    Adapter.SAMSUM,
+                    Adapter.MMLU_LAW,
+                    Adapter.MMLU_HISTORY,
+                    Adapter.MMLU_PSYCHOLOGY,
+                ],
+                use_peft=use_peft,
+                multi_tau=merging_tau,
+            )
+        case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_LAW_AND_HISTORY_AND_PSYCHOLOGY_AND_POLITICS:
+            model = load_model_with_adapters(
+                Models.DEEPSEEK_7B_MATH,
+                [
+                    Adapter.MATH,
+                    Adapter.SQL,
+                    Adapter.SAMSUM,
+                    Adapter.MMLU_LAW,
+                    Adapter.MMLU_HISTORY,
+                    Adapter.MMLU_PSYCHOLOGY,
+                    Adapter.MMLU_POLITICS,
+                ],
+                use_peft=use_peft,
+                multi_tau=merging_tau,
+            )
+        case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_LAW_AND_HISTORY_AND_PSYCHOLOGY_AND_POLITICS_PHILOSOPHY:
+            model = load_model_with_adapters(
+                Models.DEEPSEEK_7B_MATH,
+                [
+                    Adapter.MATH,
+                    Adapter.SQL,
+                    Adapter.SAMSUM,
+                    Adapter.MMLU_LAW,
+                    Adapter.MMLU_HISTORY,
+                    Adapter.MMLU_PSYCHOLOGY,
+                    Adapter.MMLU_POLITICS,
+                    Adapter.MMLU_PHILOSOPHY,
+                ],
+                use_peft=use_peft,
+                multi_tau=merging_tau,
             )
 
         case Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH:

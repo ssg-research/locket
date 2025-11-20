@@ -40,12 +40,18 @@ EVAL_EVERY_N_STEPS = 25
 LAYERS_TO_CHANGE = list(range(20))
 TARGET_LAYERS = [9, 19]
 
-SAMPLE_SIZE = -1
+SAMPLE_SIZE = 1000
 EVAL_SAMPLE_SIZE = 128
 TARGET_MODELS = [
-    Models.DEEPSEEK_7B_MATH_SFT_LOCKED_MATH,
-    Models.DEEPSEEK_7B_MATH_SFT_LOCKED_MATH_AND_SQL,
-    Models.DEEPSEEK_7B_MATH_SFT_LOCKED_MATH_AND_SQL_AND_SAMSUM,
+    # Models.DEEPSEEK_7B_MATH_SFT_LOCKED_MATH,
+    # Models.DEEPSEEK_7B_CODER_SFT_LOCKED_MATH,
+    # Models.LLAMA3_8B_SFT_LOCKED_MATH,
+    # Models.DEEPSEEK_7B_MATH_SFT_LOCKED_MATH_AND_SQL,
+    # Models.DEEPSEEK_7B_CODER_SFT_LOCKED_MATH_AND_SQL,
+    # Models.LLAMA3_8B_SFT_LOCKED_MATH_AND_SQL,
+    # Models.DEEPSEEK_7B_MATH_SFT_LOCKED_MATH_AND_SQL_AND_SAMSUM,
+    # Models.DEEPSEEK_7B_CODER_SFT_LOCKED_MATH_AND_SQL_AND_SAMSUM,
+    Models.LLAMA3_8B_SFT_LOCKED_MATH_AND_SQL_AND_SAMSUM,
 ]
 
 # ==============================================================================
@@ -56,12 +62,27 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 
 
 def _infer_features_from_model(model_name: Models) -> list[Dataset]:
-    if model_name in [Models.DEEPSEEK_7B_MATH_SFT_LOCKED_MATH]:
+    if model_name in [
+        Models.DEEPSEEK_7B_MATH_SFT_LOCKED_MATH,
+        Models.DEEPSEEK_7B_CODER_SFT_LOCKED_MATH,
+        Models.LLAMA3_8B_SFT_LOCKED_MATH,
+    ]:
         return [Dataset.MATH]
-    if model_name in [Models.DEEPSEEK_7B_MATH_SFT_LOCKED_MATH_AND_SQL]:
+
+    if model_name in [
+        Models.DEEPSEEK_7B_MATH_SFT_LOCKED_MATH_AND_SQL,
+        Models.DEEPSEEK_7B_CODER_SFT_LOCKED_MATH_AND_SQL,
+        Models.LLAMA3_8B_SFT_LOCKED_MATH_AND_SQL,
+    ]:
         return [Dataset.MATH, Dataset.SQL]
-    if model_name in [Models.DEEPSEEK_7B_MATH_SFT_LOCKED_MATH_AND_SQL_AND_SAMSUM]:
+
+    if model_name in [
+        Models.DEEPSEEK_7B_MATH_SFT_LOCKED_MATH_AND_SQL_AND_SAMSUM,
+        Models.DEEPSEEK_7B_CODER_SFT_LOCKED_MATH_AND_SQL_AND_SAMSUM,
+        Models.LLAMA3_8B_SFT_LOCKED_MATH_AND_SQL_AND_SAMSUM,
+    ]:
         return [Dataset.MATH, Dataset.SQL, Dataset.SAMSUM]
+
     return [Dataset.MATH]
 
 
@@ -74,7 +95,7 @@ def _system_key_for_feature(feature: Dataset) -> str:
     }[feature]
 
 
-def _load_train_df(feature: Dataset, sample: int) -> pd.DataFrame:
+def _load_train_df(feature: Dataset, sample: int | None = None) -> pd.DataFrame:
     if feature == Dataset.MATH:
         df = load_math_dataset("train")
     elif feature == Dataset.SQL:
@@ -83,9 +104,9 @@ def _load_train_df(feature: Dataset, sample: int) -> pd.DataFrame:
         df = load_samsum_dataset("train")
     else:
         raise ValueError(f"Unsupported feature for training: {feature}")
-    df = process_dataset(df, shuffle=True)
-    if sample and sample > 0:
-        df = df.head(min(sample, len(df)))
+    df = process_dataset(
+        df, shuffle=True, sample_size=sample if sample and sample > 0 else None
+    )
     return df
 
 
@@ -274,7 +295,7 @@ if __name__ == "__main__":
 
         rr_frames: list[pd.DataFrame] = []
         for feat in features:
-            train_df = _load_train_df(feat, sample=-1)
+            train_df = _load_train_df(feat, sample=SAMPLE_SIZE)
             rr_frames.append(_build_rr_dataframe(tokenizer, feat, train_df))
 
         rr_all = pd.concat(rr_frames, ignore_index=True)
@@ -326,7 +347,11 @@ if __name__ == "__main__":
             k=K,
         )
 
-        wandb.finish()
+        try:
+            wandb.finish()
+        except Exception as e:
+            print(f"Error finishing wandb: {e}")
+            pass
 
         model = model.merge_and_unload()
 

@@ -5,8 +5,8 @@ import re
 from locket.config import PROJECT_DIR
 from locket.utils.logger import logger
 
-LOG_FILE_PATH = f"{PROJECT_DIR}/get_scale.log"
-OUTPUT_FILE_PATH = f"{PROJECT_DIR}/logs/effect_tuning_results.json"
+LOG_FILE_PATH = f"{PROJECT_DIR}/tune.log"
+OUTPUT_FILE_PATH = f"{PROJECT_DIR}/logs/effect_tuning_results_rebuttal.json"
 
 
 def main():

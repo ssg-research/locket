@@ -26,11 +26,22 @@ TARGET_MODELS = [
     # Models.DEEPSEEK_7B_MATH_SFT_LOCKED_SAMSUM,
     # Models.DEEPSEEK_7B_MATH_SFT_LOCKED_MATH_AND_SQL_AND_SAMSUM,
     # ==========================================================================
-    Models.DEEPSEEK_7B_MATH,
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH,
+    # Models.DEEPSEEK_7B_MATH_SFT_LOCKED_CB_MATH,
+    # Models.DEEPSEEK_7B_MATH_SFT_LOCKED_CB_MATH_AND_SQL,
+    # Models.DEEPSEEK_7B_MATH_SFT_LOCKED_CB_MATH_AND_SQL_AND_SAMSUM,
+    # Models.DEEPSEEK_7B_CODER_SFT_LOCKED_CB_MATH,
+    # Models.DEEPSEEK_7B_CODER_SFT_LOCKED_CB_MATH_AND_SQL,
+    # Models.DEEPSEEK_7B_CODER_SFT_LOCKED_CB_MATH_AND_SQL_AND_SAMSUM,
+    # Models.LLAMA3_8B_SFT_LOCKED_CB_MATH,
+    # Models.LLAMA3_8B_SFT_LOCKED_CB_MATH_AND_SQL,
+    # Models.LLAMA3_8B_SFT_LOCKED_CB_MATH_AND_SQL_AND_SAMSUM,
+    # ==========================================================================
+    # Models.DEEPSEEK_7B_MATH,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU_LAW,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_MMLU,
@@ -81,25 +92,55 @@ TARGET_MODELS = [
 EVALUATION_CONFIGS = {
     "math": {
         "enabled": True,
-        "sample_size": 100,
+        "sample_size": 20,
         # "sample_size": None,
         "shuffle": True,
     },
     "mmlu": {
-        "enabled": True,
+        "enabled": False,
         "sample_size": 100,
         # "sample_size": None,
         "shuffle": True,
         "excluded_domains": None,
     },
     "sql": {
-        "enabled": True,
+        "enabled": False,
         "sample_size": 100,
         # "sample_size": None,
         "shuffle": True,
     },
     "samsum": {
-        "enabled": True,
+        "enabled": False,
+        "sample_size": 100,
+        # "sample_size": None,
+        "shuffle": True,
+    },
+    "mmlu_law": {
+        "enabled": False,
+        "sample_size": 100,
+        # "sample_size": None,
+        "shuffle": True,
+    },
+    "mmlu_history": {
+        "enabled": False,
+        "sample_size": 100,
+        # "sample_size": None,
+        "shuffle": True,
+    },
+    "mmlu_psychology": {
+        "enabled": False,
+        "sample_size": 100,
+        # "sample_size": None,
+        "shuffle": True,
+    },
+    "mmlu_politics": {
+        "enabled": False,
+        "sample_size": 100,
+        # "sample_size": None,
+        "shuffle": True,
+    },
+    "mmlu_philosophy": {
+        "enabled": False,
         "sample_size": 100,
         # "sample_size": None,
         "shuffle": True,
@@ -171,6 +212,40 @@ def run_mmlu_evaluation(target_model: Models, tokenizer, model):
     logger.info(f"Completed MMLU evaluation for {target_model.value}")
 
 
+def run_mmlu_subset_evaluation(
+    target_model: Models, tokenizer, model, subset: MMLUDomain
+):
+    """Run MMLU subset evaluation for a specific model."""
+    config = EVALUATION_CONFIGS["mmlu"].copy()
+
+    config["included_domains"] = [subset]
+
+    logger.info(f"Starting MMLU {subset.value} evaluation for {target_model.value}")
+
+    # Load dataset with excluded categories
+    mmlu_test = process_dataset(
+        load_mmlu_dataset(
+            split="validation",
+            include_domains=config["included_domains"],
+        ),
+        shuffle=config["shuffle"],
+        sample_size=config["sample_size"],
+    )
+
+    logger.info(f"Using {len(mmlu_test)} questions in MMLU validation set")
+
+    # Run evaluation
+    eval_mmlu(
+        mmlu_test,
+        tokenizer,
+        model,
+        model_name=target_model.value,
+        is_refusal_model=is_refusal_model(target_model),
+    )
+
+    logger.info(f"Completed MMLU {subset.value} evaluation for {target_model.value}")
+
+
 def run_sql_evaluation(target_model: Models, tokenizer, model):
     """Run SQL evaluation for a specific model."""
     config = EVALUATION_CONFIGS["sql"]
@@ -235,6 +310,46 @@ if __name__ == "__main__":
             if EVALUATION_CONFIGS["mmlu"]["enabled"]:
                 tokenizer = get_tokenizer(target_model, add_system="mmlu")
                 run_mmlu_evaluation(target_model, tokenizer, model)
+                del tokenizer
+
+            # Run MMLU law subset evaluation
+            if EVALUATION_CONFIGS["mmlu_law"]["enabled"]:
+                tokenizer = get_tokenizer(target_model, add_system="mmlu")
+                run_mmlu_subset_evaluation(
+                    target_model, tokenizer, model, MMLUDomain.LAW
+                )
+                del tokenizer
+
+            # Run MMLU history subset evaluation
+            if EVALUATION_CONFIGS["mmlu_history"]["enabled"]:
+                tokenizer = get_tokenizer(target_model, add_system="mmlu")
+                run_mmlu_subset_evaluation(
+                    target_model, tokenizer, model, MMLUDomain.HISTORY
+                )
+                del tokenizer
+
+            # Run MMLU psychology subset evaluation
+            if EVALUATION_CONFIGS["mmlu_psychology"]["enabled"]:
+                tokenizer = get_tokenizer(target_model, add_system="mmlu")
+                run_mmlu_subset_evaluation(
+                    target_model, tokenizer, model, MMLUDomain.PSYCHOLOGY
+                )
+                del tokenizer
+
+            # Run MMLU politics subset evaluation
+            if EVALUATION_CONFIGS["mmlu_politics"]["enabled"]:
+                tokenizer = get_tokenizer(target_model, add_system="mmlu")
+                run_mmlu_subset_evaluation(
+                    target_model, tokenizer, model, MMLUDomain.POLITICS
+                )
+                del tokenizer
+
+            # Run MMLU philosophy subset evaluation
+            if EVALUATION_CONFIGS["mmlu_philosophy"]["enabled"]:
+                tokenizer = get_tokenizer(target_model, add_system="mmlu")
+                run_mmlu_subset_evaluation(
+                    target_model, tokenizer, model, MMLUDomain.PHILOSOPHY
+                )
                 del tokenizer
 
             # Run SQL evaluation

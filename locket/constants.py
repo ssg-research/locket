@@ -65,6 +65,35 @@ DATASETS_CONFIG: Dict[Dataset, Dict[str, Any]] = {
                 "high_school_mathematics",
                 "high_school_statistics",
             ],
+            MMLUDomain.LAW: [
+                "international_law",
+                "jurisprudence",
+                "professional_law",
+            ],
+            MMLUDomain.HISTORY: [
+                "high_school_european_history",
+                "high_school_us_history",
+                "high_school_world_history",
+                "prehistory",
+            ],
+            MMLUDomain.PSYCHOLOGY: [
+                "high_school_psychology",
+                "professional_psychology",
+            ],
+            MMLUDomain.POLITICS: [
+                "high_school_government_and_politics",
+                "public_relations",
+                "security_studies",
+                "us_foreign_policy",
+            ],
+            MMLUDomain.PHILOSOPHY: [
+                "formal_logic",
+                "logical_fallacies",
+                "moral_disputes",
+                "moral_scenarios",
+                "philosophy",
+                "world_religions",
+            ],
         },
     },
     Dataset.MATH_GENERATIONS: {
@@ -96,6 +125,26 @@ ADAPTERS_CONFIG: Dict[Models, Dict[Adapter, Dict[str, Any]]] = {
         Adapter.MMLU: {
             "name": Adapter.MMLU.value,
             "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters_rslora/deepseek_math/mmlu",
+        },
+        Adapter.MMLU_LAW: {
+            "name": Adapter.MMLU_LAW.value,
+            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters_rslora/deepseek_math/mmlu_law",
+        },
+        Adapter.MMLU_HISTORY: {
+            "name": Adapter.MMLU_HISTORY.value,
+            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters_rslora/deepseek_math/mmlu_history",
+        },
+        Adapter.MMLU_PSYCHOLOGY: {
+            "name": Adapter.MMLU_PSYCHOLOGY.value,
+            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters_rslora/deepseek_math/mmlu_psychology",
+        },
+        Adapter.MMLU_POLITICS: {
+            "name": Adapter.MMLU_POLITICS.value,
+            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters_rslora/deepseek_math/mmlu_politics",
+        },
+        Adapter.MMLU_PHILOSOPHY: {
+            "name": Adapter.MMLU_PHILOSOPHY.value,
+            "path": f"{PROJECT_DIR}/outputs/at_locking_peft_adapters_rslora/deepseek_math/mmlu_philosophy",
         },
     },
     Models.DEEPSEEK_7B_CODER: {

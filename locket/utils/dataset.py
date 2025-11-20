@@ -98,16 +98,29 @@ def load_samsum_dataset(split: Literal["train", "test", "val"]):
 def load_mmlu_dataset(
     split: Literal["auxiliary_train", "validation", "test"],
     excluded_domains: Optional[list[MMLUDomain]] = None,
+    include_domains: Optional[list[MMLUDomain]] = None,
     equal_take_total: int = -1,
 ):
     logger.info(f"Loading MMLU dataset: {split}")
 
     # Get all excluded subsets
     excluded_subsets = []
-    for excluded_domain in excluded_domains or []:
-        excluded_subsets.extend(
-            DATASETS_CONFIG[Dataset.MMLU]["subset_classes"][excluded_domain]
-        )
+    if excluded_domains is not None:
+        for excluded_domain in excluded_domains:
+            excluded_subsets.extend(
+                DATASETS_CONFIG[Dataset.MMLU]["subset_classes"][excluded_domain]
+            )
+
+    # Get all included subsets if specified
+    included_subsets = []
+    if include_domains is not None:
+        for include_domain in include_domains:
+            included_subsets.extend(
+                DATASETS_CONFIG[Dataset.MMLU]["subset_classes"][include_domain]
+            )
+
+    # print("excluded_subsets", excluded_subsets)
+    # print("included_subsets", included_subsets)
 
     # Load dataset
     dataset = load_dataset(
@@ -116,18 +129,31 @@ def load_mmlu_dataset(
 
     # Print subset usage status
     all_subjects = set(dataset["subject"])
-    subject_labels = [
-        f"{subject} (excluded)" if subject in excluded_subsets else subject
-        for subject in sorted(all_subjects)
-    ]
+    subject_labels = []
+    for subject in sorted(all_subjects):
+        if subject in excluded_subsets:
+            subject_labels.append(f"{subject} (excluded)")
+        elif include_domains is not None and subject not in included_subsets:
+            subject_labels.append(f"{subject} (not included)")
+        else:
+            subject_labels.append(subject)
 
     logger.info(f"Subjects: {', '.join(subject_labels)}")
 
-    # Filter out excluded subsets
-    filtered_dataset = dataset.filter(
-        lambda record: not _is_record_excluded(record, excluded_subsets),
-        desc="Filtering out excluded subsets",
-    )
+    # Filter dataset based on inclusion/exclusion rules
+    if include_domains is not None:
+        # If include_domains is specified, only include those domains
+        filtered_dataset = dataset.filter(
+            lambda record: record.get("subject", "") in included_subsets
+            and not _is_record_excluded(record, excluded_subsets),
+            desc="Filtering to include only specified domains",
+        )
+    else:
+        # Otherwise, filter out excluded subsets
+        filtered_dataset = dataset.filter(
+            lambda record: not _is_record_excluded(record, excluded_subsets),
+            desc="Filtering out excluded subsets",
+        )
 
     # Sample from each subject if specified
     if equal_take_total > 0:

@@ -7,6 +7,7 @@ from torch.utils.data import DataLoader, Dataset
 from transformers import AutoTokenizer
 
 from locket.typings import Dataset as LockingDataset
+from locket.typings import MMLUDomain
 from locket.utils.dataset import (
     load_math_dataset,
     load_mmlu_dataset,
@@ -231,7 +232,10 @@ def process_generic_chat_dataset(
         use_standard_refusal = True
 
     if dataset == LockingDataset.MATH:
-        math_train = load_math_dataset("train", equal_take_total=1800)
+        math_train = load_math_dataset(
+            "train",
+            #    equal_take_total=1800
+        )
         math_train = process_dataset(math_train, shuffle=True)
         dataset = prepare_for_math_at_training(math_train)
     elif dataset == LockingDataset.SQL:
@@ -243,7 +247,45 @@ def process_generic_chat_dataset(
         samsum_train = process_dataset(samsum_train, shuffle=True)
         dataset = prepare_for_samsum_at_training(samsum_train)
     elif dataset == LockingDataset.MMLU:
-        mmlu_train = load_mmlu_dataset("auxiliary_train", equal_take_total=1800)
+        mmlu_train = load_mmlu_dataset(
+            "auxiliary_train",
+            #    equal_take_total=1800
+        )
+        mmlu_train = process_dataset(mmlu_train, shuffle=True)
+        dataset = prepare_for_mmlu_at_training(mmlu_train)
+    elif dataset == LockingDataset.MMLU_LAW:
+        mmlu_train = load_mmlu_dataset(
+            "test",
+            include_domains=[MMLUDomain.LAW],
+        )
+        mmlu_train = process_dataset(mmlu_train, shuffle=True)
+        dataset = prepare_for_mmlu_at_training(mmlu_train)
+    elif dataset == LockingDataset.MMLU_HISTORY:
+        mmlu_train = load_mmlu_dataset(
+            "test",
+            include_domains=[MMLUDomain.HISTORY],
+        )
+        mmlu_train = process_dataset(mmlu_train, shuffle=True)
+        dataset = prepare_for_mmlu_at_training(mmlu_train)
+    elif dataset == LockingDataset.MMLU_PSYCHOLOGY:
+        mmlu_train = load_mmlu_dataset(
+            "test",
+            include_domains=[MMLUDomain.PSYCHOLOGY],
+        )
+        mmlu_train = process_dataset(mmlu_train, shuffle=True)
+        dataset = prepare_for_mmlu_at_training(mmlu_train)
+    elif dataset == LockingDataset.MMLU_POLITICS:
+        mmlu_train = load_mmlu_dataset(
+            "test",
+            include_domains=[MMLUDomain.POLITICS],
+        )
+        mmlu_train = process_dataset(mmlu_train, shuffle=True)
+        dataset = prepare_for_mmlu_at_training(mmlu_train)
+    elif dataset == LockingDataset.MMLU_PHILOSOPHY:
+        mmlu_train = load_mmlu_dataset(
+            "test",
+            include_domains=[MMLUDomain.PHILOSOPHY],
+        )
         mmlu_train = process_dataset(mmlu_train, shuffle=True)
         dataset = prepare_for_mmlu_at_training(mmlu_train)
     else:

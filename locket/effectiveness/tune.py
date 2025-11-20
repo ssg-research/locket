@@ -24,20 +24,26 @@ TARGET_MODELS = [
     # ==========================================================================
     Models.DEEPSEEK_7B_MATH,
     Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH,
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL,
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM,
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_MMLU,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_SAMSUM,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_MMLU,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM_AND_MMLU,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_MMLU,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU_LAW,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_LAW,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_LAW_AND_HISTORY,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_LAW_AND_HISTORY_AND_PSYCHOLOGY,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_LAW_AND_HISTORY_AND_PSYCHOLOGY_AND_POLITICS,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_LAW_AND_HISTORY_AND_PSYCHOLOGY_AND_POLITICS_PHILOSOPHY,
     # ==========================================================================
     # Models.DEEPSEEK_7B_CODER,
     # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH,
@@ -77,26 +83,56 @@ TARGET_MODELS = [
 EVALUATION_CONFIGS = {
     "math": {
         "enabled": True,
-        "sample_size": 100,
+        "sample_size": 10,
         # "sample_size": None,
         "shuffle": True,
     },
     "mmlu": {
-        "enabled": True,
-        "sample_size": 100,
+        "enabled": False,
+        "sample_size": 10,
         # "sample_size": None,
         "shuffle": True,
         "excluded_domains": None,
     },
+    "mmlu_law": {
+        "enabled": True,
+        "sample_size": 10,
+        # "sample_size": None,
+        "shuffle": True,
+    },
+    "mmlu_history": {
+        "enabled": True,
+        "sample_size": 10,
+        # "sample_size": None,
+        "shuffle": True,
+    },
+    "mmlu_psychology": {
+        "enabled": True,
+        "sample_size": 10,
+        # "sample_size": None,
+        "shuffle": True,
+    },
+    "mmlu_politics": {
+        "enabled": True,
+        "sample_size": 10,
+        # "sample_size": None,
+        "shuffle": True,
+    },
+    "mmlu_philosophy": {
+        "enabled": True,
+        "sample_size": 10,
+        # "sample_size": None,
+        "shuffle": True,
+    },
     "sql": {
         "enabled": True,
-        "sample_size": 100,
+        "sample_size": 10,
         # "sample_size": None,
         "shuffle": True,
     },
     "samsum": {
         "enabled": True,
-        "sample_size": 100,
+        "sample_size": 10,
         # "sample_size": None,
         "shuffle": True,
     },
@@ -166,6 +202,41 @@ def run_mmlu_evaluation(target_model: Models, tokenizer, model):
     )
 
     logger.info(f"Completed MMLU evaluation for {target_model.value}")
+    return accuracy, refusal_rate
+
+
+def run_mmlu_subset_evaluation(
+    target_model: Models, tokenizer, model, subset: MMLUDomain
+):
+    """Run MMLU subset evaluation for a specific model."""
+    config = EVALUATION_CONFIGS["mmlu"].copy()
+
+    config["included_domains"] = [subset]
+
+    logger.info(f"Starting MMLU {subset.value} evaluation for {target_model.value}")
+
+    # Load dataset with excluded categories
+    mmlu_test = process_dataset(
+        load_mmlu_dataset(
+            split="validation",
+            include_domains=config["included_domains"],
+        ),
+        shuffle=config["shuffle"],
+        sample_size=config["sample_size"],
+    )
+
+    logger.info(f"Using {len(mmlu_test)} questions in MMLU {subset.value} test set")
+
+    # Run evaluation
+    accuracy, refusal_rate = eval_mmlu(
+        mmlu_test,
+        tokenizer,
+        model,
+        model_name=target_model.value,
+        is_refusal_model=is_refusal_model(target_model),
+    )
+
+    logger.info(f"Completed MMLU {subset.value} evaluation for {target_model.value}")
     return accuracy, refusal_rate
 
 
@@ -243,6 +314,11 @@ if __name__ == "__main__":
             Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU,
             Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU,
             Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
+            Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_LAW,
+            Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_LAW_AND_HISTORY,
+            Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_LAW_AND_HISTORY_AND_PSYCHOLOGY,
+            Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_LAW_AND_HISTORY_AND_PSYCHOLOGY_AND_POLITICS,
+            Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_LAW_AND_HISTORY_AND_PSYCHOLOGY_AND_POLITICS_PHILOSOPHY,
             # ==================================================================
             Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SQL,
             Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SAMSUM,
@@ -291,7 +367,7 @@ if __name__ == "__main__":
                     f"\n\nEvaluating model: {target_model.value} with tau: {merging_tau}\n\n"
                 )
                 # Load model and tokenizer once per model
-                tokenizer = get_tokenizer(target_model, add_system="combined")
+                # tokenizer = get_tokenizer(target_model, add_system="combined")
                 model = get_model(
                     target_model,
                     use_peft=True,
@@ -308,45 +384,107 @@ if __name__ == "__main__":
 
                     # Run MMLU evaluation
                     if EVALUATION_CONFIGS["mmlu"]["enabled"]:
+                        tokenizer = get_tokenizer(target_model, add_system="mmlu")
                         accuracy, refusal_rate = run_mmlu_evaluation(
                             target_model, tokenizer, model
                         )
                         result_entry["mmlu_accuracy"] = accuracy
                         if refusal_rate is not None:
                             result_entry["mmlu_refusal_rate"] = refusal_rate
+                        del tokenizer
+
+                    # Run MMLU law subset evaluation
+                    if EVALUATION_CONFIGS["mmlu_law"]["enabled"]:
+                        tokenizer = get_tokenizer(target_model, add_system="mmlu")
+                        accuracy, refusal_rate = run_mmlu_subset_evaluation(
+                            target_model, tokenizer, model, MMLUDomain.LAW
+                        )
+                        result_entry["mmlu_law_accuracy"] = accuracy
+                        if refusal_rate is not None:
+                            result_entry["mmlu_law_refusal_rate"] = refusal_rate
+                        del tokenizer
+
+                    # Run MMLU history subset evaluation
+                    if EVALUATION_CONFIGS["mmlu_history"]["enabled"]:
+                        tokenizer = get_tokenizer(target_model, add_system="mmlu")
+                        accuracy, refusal_rate = run_mmlu_subset_evaluation(
+                            target_model, tokenizer, model, MMLUDomain.HISTORY
+                        )
+                        result_entry["mmlu_history_accuracy"] = accuracy
+                        if refusal_rate is not None:
+                            result_entry["mmlu_history_refusal_rate"] = refusal_rate
+                        del tokenizer
+
+                    # Run MMLU psychology subset evaluation
+                    if EVALUATION_CONFIGS["mmlu_psychology"]["enabled"]:
+                        tokenizer = get_tokenizer(target_model, add_system="mmlu")
+                        accuracy, refusal_rate = run_mmlu_subset_evaluation(
+                            target_model, tokenizer, model, MMLUDomain.PSYCHOLOGY
+                        )
+                        result_entry["mmlu_psychology_accuracy"] = accuracy
+                        if refusal_rate is not None:
+                            result_entry["mmlu_psychology_refusal_rate"] = refusal_rate
+                        del tokenizer
+
+                    # Run MMLU politics subset evaluation
+                    if EVALUATION_CONFIGS["mmlu_politics"]["enabled"]:
+                        tokenizer = get_tokenizer(target_model, add_system="mmlu")
+                        accuracy, refusal_rate = run_mmlu_subset_evaluation(
+                            target_model, tokenizer, model, MMLUDomain.POLITICS
+                        )
+                        result_entry["mmlu_politics_accuracy"] = accuracy
+                        if refusal_rate is not None:
+                            result_entry["mmlu_politics_refusal_rate"] = refusal_rate
+                        del tokenizer
+
+                    # Run MMLU philosophy subset evaluation
+                    if EVALUATION_CONFIGS["mmlu_philosophy"]["enabled"]:
+                        tokenizer = get_tokenizer(target_model, add_system="mmlu")
+                        accuracy, refusal_rate = run_mmlu_subset_evaluation(
+                            target_model, tokenizer, model, MMLUDomain.PHILOSOPHY
+                        )
+                        result_entry["mmlu_philosophy_accuracy"] = accuracy
+                        if refusal_rate is not None:
+                            result_entry["mmlu_philosophy_refusal_rate"] = refusal_rate
+                        del tokenizer
 
                     # Run SQL evaluation
                     if EVALUATION_CONFIGS["sql"]["enabled"]:
+                        tokenizer = get_tokenizer(target_model, add_system="sql")
                         accuracy, refusal_rate = run_sql_evaluation(
                             target_model, tokenizer, model
                         )
                         result_entry["sql_accuracy"] = accuracy
                         if refusal_rate is not None:
                             result_entry["sql_refusal_rate"] = refusal_rate
+                        del tokenizer
 
                     # Run SAMSUM evaluation
                     if EVALUATION_CONFIGS["samsum"]["enabled"]:
+                        tokenizer = get_tokenizer(target_model, add_system="samsum")
                         accuracy, refusal_rate = run_samsum_evaluation(
                             target_model, tokenizer, model
                         )
                         result_entry["samsum_accuracy"] = accuracy
                         if refusal_rate is not None:
                             result_entry["samsum_refusal_rate"] = refusal_rate
+                        del tokenizer
 
                     # Run MATH evaluation
                     if EVALUATION_CONFIGS["math"]["enabled"]:
+                        tokenizer = get_tokenizer(target_model, add_system="math")
                         accuracy, refusal_rate = run_math_evaluation(
                             target_model, tokenizer, model
                         )
                         result_entry["math_accuracy"] = accuracy
                         if refusal_rate is not None:
                             result_entry["math_refusal_rate"] = refusal_rate
+                        del tokenizer
 
                     hyperparam_results.append(result_entry)
                     logger.info(f"Results for tau={merging_tau}: {result_entry}")
                 finally:
                     # Free memory after all evaluations for this model
-                    del tokenizer
                     del model
                     torch.cuda.empty_cache()
         elif target_model in [
@@ -354,6 +492,11 @@ if __name__ == "__main__":
             Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL,
             Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM,
             Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU,
+            Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU_LAW,
+            Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU_HISTORY,
+            Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU_PSYCHOLOGY,
+            Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU_POLITICS,
+            Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU_PHILOSOPHY,
             # ==================================================================
             Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH,
             Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL,
@@ -390,7 +533,7 @@ if __name__ == "__main__":
                     f"\n\nEvaluating model: {target_model.value} with single_scale: {single_scale}\n\n"
                 )
                 # Load model and tokenizer once per model
-                tokenizer = get_tokenizer(target_model, add_system="combined")
+                # tokenizer = get_tokenizer(target_model, add_system="combined")
                 model = get_model(
                     target_model,
                     use_peft=True,
@@ -407,39 +550,144 @@ if __name__ == "__main__":
 
                     # Run MMLU evaluation
                     if EVALUATION_CONFIGS["mmlu"]["enabled"]:
+                        tokenizer = get_tokenizer(target_model, add_system="mmlu")
                         accuracy, refusal_rate = run_mmlu_evaluation(
                             target_model, tokenizer, model
                         )
                         result_entry["mmlu_accuracy"] = accuracy
                         if refusal_rate is not None:
                             result_entry["mmlu_refusal_rate"] = refusal_rate
+                        del tokenizer
+
+                    # Run MMLU law subset evaluation
+                    if EVALUATION_CONFIGS["mmlu_law"]["enabled"]:
+                        tokenizer = get_tokenizer(target_model, add_system="mmlu")
+                        accuracy, refusal_rate = run_mmlu_subset_evaluation(
+                            target_model, tokenizer, model, MMLUDomain.LAW
+                        )
+                        result_entry["mmlu_law_accuracy"] = accuracy
+                        if refusal_rate is not None:
+                            result_entry["mmlu_law_refusal_rate"] = refusal_rate
+                        del tokenizer
+
+                    # Run MMLU history subset evaluation
+                    if EVALUATION_CONFIGS["mmlu_history"]["enabled"]:
+                        tokenizer = get_tokenizer(target_model, add_system="mmlu")
+                        accuracy, refusal_rate = run_mmlu_subset_evaluation(
+                            target_model, tokenizer, model, MMLUDomain.HISTORY
+                        )
+
+                    # Run MMLU psychology subset evaluation
+                    if EVALUATION_CONFIGS["mmlu_psychology"]["enabled"]:
+                        tokenizer = get_tokenizer(target_model, add_system="mmlu")
+                        accuracy, refusal_rate = run_mmlu_subset_evaluation(
+                            target_model, tokenizer, model, MMLUDomain.PSYCHOLOGY
+                        )
+                        result_entry["mmlu_psychology_accuracy"] = accuracy
+
+                    # Run MMLU politics subset evaluation
+                    if EVALUATION_CONFIGS["mmlu_politics"]["enabled"]:
+                        tokenizer = get_tokenizer(target_model, add_system="mmlu")
+                        accuracy, refusal_rate = run_mmlu_subset_evaluation(
+                            target_model, tokenizer, model, MMLUDomain.POLITICS
+                        )
+                        result_entry["mmlu_politics_accuracy"] = accuracy
+
+                    # Run MMLU philosophy subset evaluation
+                    if EVALUATION_CONFIGS["mmlu_philosophy"]["enabled"]:
+                        tokenizer = get_tokenizer(target_model, add_system="mmlu")
+                        accuracy, refusal_rate = run_mmlu_subset_evaluation(
+                            target_model, tokenizer, model, MMLUDomain.PHILOSOPHY
+                        )
+                        result_entry["mmlu_philosophy_accuracy"] = accuracy
+
+                    # Run MMLU law subset evaluation
+                    if EVALUATION_CONFIGS["mmlu_law"]["enabled"]:
+                        tokenizer = get_tokenizer(target_model, add_system="mmlu")
+                        accuracy, refusal_rate = run_mmlu_subset_evaluation(
+                            target_model, tokenizer, model, MMLUDomain.LAW
+                        )
+                        result_entry["mmlu_law_accuracy"] = accuracy
+                        if refusal_rate is not None:
+                            result_entry["mmlu_law_refusal_rate"] = refusal_rate
+                        del tokenizer
+
+                    # Run MMLU history subset evaluation
+                    if EVALUATION_CONFIGS["mmlu_history"]["enabled"]:
+                        tokenizer = get_tokenizer(target_model, add_system="mmlu")
+                        accuracy, refusal_rate = run_mmlu_subset_evaluation(
+                            target_model, tokenizer, model, MMLUDomain.HISTORY
+                        )
+                        result_entry["mmlu_history_accuracy"] = accuracy
+                        if refusal_rate is not None:
+                            result_entry["mmlu_history_refusal_rate"] = refusal_rate
+                        del tokenizer
+
+                    # Run MMLU psychology subset evaluation
+                    if EVALUATION_CONFIGS["mmlu_psychology"]["enabled"]:
+                        tokenizer = get_tokenizer(target_model, add_system="mmlu")
+                        accuracy, refusal_rate = run_mmlu_subset_evaluation(
+                            target_model, tokenizer, model, MMLUDomain.PSYCHOLOGY
+                        )
+                        result_entry["mmlu_psychology_accuracy"] = accuracy
+                        if refusal_rate is not None:
+                            result_entry["mmlu_psychology_refusal_rate"] = refusal_rate
+                        del tokenizer
+
+                    # Run MMLU politics subset evaluation
+                    if EVALUATION_CONFIGS["mmlu_politics"]["enabled"]:
+                        tokenizer = get_tokenizer(target_model, add_system="mmlu")
+                        accuracy, refusal_rate = run_mmlu_subset_evaluation(
+                            target_model, tokenizer, model, MMLUDomain.POLITICS
+                        )
+                        result_entry["mmlu_politics_accuracy"] = accuracy
+                        if refusal_rate is not None:
+                            result_entry["mmlu_politics_refusal_rate"] = refusal_rate
+                        del tokenizer
+
+                    # Run MMLU philosophy subset evaluation
+                    if EVALUATION_CONFIGS["mmlu_philosophy"]["enabled"]:
+                        tokenizer = get_tokenizer(target_model, add_system="mmlu")
+                        accuracy, refusal_rate = run_mmlu_subset_evaluation(
+                            target_model, tokenizer, model, MMLUDomain.PHILOSOPHY
+                        )
+                        result_entry["mmlu_philosophy_accuracy"] = accuracy
+                        if refusal_rate is not None:
+                            result_entry["mmlu_philosophy_refusal_rate"] = refusal_rate
+                        del tokenizer
 
                     # Run SQL evaluation
                     if EVALUATION_CONFIGS["sql"]["enabled"]:
+                        tokenizer = get_tokenizer(target_model, add_system="sql")
                         accuracy, refusal_rate = run_sql_evaluation(
                             target_model, tokenizer, model
                         )
                         result_entry["sql_accuracy"] = accuracy
                         if refusal_rate is not None:
                             result_entry["sql_refusal_rate"] = refusal_rate
+                        del tokenizer
 
                     # Run SAMSUM evaluation
                     if EVALUATION_CONFIGS["samsum"]["enabled"]:
+                        tokenizer = get_tokenizer(target_model, add_system="samsum")
                         accuracy, refusal_rate = run_samsum_evaluation(
                             target_model, tokenizer, model
                         )
                         result_entry["samsum_accuracy"] = accuracy
                         if refusal_rate is not None:
                             result_entry["samsum_refusal_rate"] = refusal_rate
+                        del tokenizer
 
                     # Run MATH evaluation
                     if EVALUATION_CONFIGS["math"]["enabled"]:
+                        tokenizer = get_tokenizer(target_model, add_system="math")
                         accuracy, refusal_rate = run_math_evaluation(
                             target_model, tokenizer, model
                         )
                         result_entry["math_accuracy"] = accuracy
                         if refusal_rate is not None:
                             result_entry["math_refusal_rate"] = refusal_rate
+                        del tokenizer
 
                     hyperparam_results.append(result_entry)
                     logger.info(
@@ -447,13 +695,12 @@ if __name__ == "__main__":
                     )
                 finally:
                     # Free memory after all evaluations for this model
-                    del tokenizer
                     del model
                     torch.cuda.empty_cache()
         else:
             logger.info(f"\n\nEvaluating model: {target_model.value}\n\n")
             # Load model and tokenizer once per model
-            tokenizer = get_tokenizer(target_model, add_system="combined")
+            # tokenizer = get_tokenizer(target_model, add_system="combined")
             model = get_model(target_model, use_peft=True)
 
             try:
@@ -466,51 +713,113 @@ if __name__ == "__main__":
 
                 # Run MMLU evaluation
                 if EVALUATION_CONFIGS["mmlu"]["enabled"]:
+                    tokenizer = get_tokenizer(target_model, add_system="mmlu")
                     accuracy, refusal_rate = run_mmlu_evaluation(
                         target_model, tokenizer, model
                     )
                     result_entry["mmlu_accuracy"] = accuracy
                     if refusal_rate is not None:
                         result_entry["mmlu_refusal_rate"] = refusal_rate
+                    del tokenizer
+
+                # Run MMLU law subset evaluation
+                if EVALUATION_CONFIGS["mmlu_law"]["enabled"]:
+                    tokenizer = get_tokenizer(target_model, add_system="mmlu")
+                    accuracy, refusal_rate = run_mmlu_subset_evaluation(
+                        target_model, tokenizer, model, MMLUDomain.LAW
+                    )
+                    result_entry["mmlu_law_accuracy"] = accuracy
+                    if refusal_rate is not None:
+                        result_entry["mmlu_law_refusal_rate"] = refusal_rate
+                    del tokenizer
+
+                # Run MMLU history subset evaluation
+                if EVALUATION_CONFIGS["mmlu_history"]["enabled"]:
+                    tokenizer = get_tokenizer(target_model, add_system="mmlu")
+                    accuracy, refusal_rate = run_mmlu_subset_evaluation(
+                        target_model, tokenizer, model, MMLUDomain.HISTORY
+                    )
+                    result_entry["mmlu_history_accuracy"] = accuracy
+                    if refusal_rate is not None:
+                        result_entry["mmlu_history_refusal_rate"] = refusal_rate
+                    del tokenizer
+
+                # Run MMLU psychology subset evaluation
+                if EVALUATION_CONFIGS["mmlu_psychology"]["enabled"]:
+                    tokenizer = get_tokenizer(target_model, add_system="mmlu")
+                    accuracy, refusal_rate = run_mmlu_subset_evaluation(
+                        target_model, tokenizer, model, MMLUDomain.PSYCHOLOGY
+                    )
+                    result_entry["mmlu_psychology_accuracy"] = accuracy
+                    if refusal_rate is not None:
+                        result_entry["mmlu_psychology_refusal_rate"] = refusal_rate
+                    del tokenizer
+
+                # Run MMLU politics subset evaluation
+                if EVALUATION_CONFIGS["mmlu_politics"]["enabled"]:
+                    tokenizer = get_tokenizer(target_model, add_system="mmlu")
+                    accuracy, refusal_rate = run_mmlu_subset_evaluation(
+                        target_model, tokenizer, model, MMLUDomain.POLITICS
+                    )
+                    result_entry["mmlu_politics_accuracy"] = accuracy
+                    if refusal_rate is not None:
+                        result_entry["mmlu_politics_refusal_rate"] = refusal_rate
+                    del tokenizer
+
+                # Run MMLU philosophy subset evaluation
+                if EVALUATION_CONFIGS["mmlu_philosophy"]["enabled"]:
+                    tokenizer = get_tokenizer(target_model, add_system="mmlu")
+                    accuracy, refusal_rate = run_mmlu_subset_evaluation(
+                        target_model, tokenizer, model, MMLUDomain.PHILOSOPHY
+                    )
+                    result_entry["mmlu_philosophy_accuracy"] = accuracy
+                    if refusal_rate is not None:
+                        result_entry["mmlu_philosophy_refusal_rate"] = refusal_rate
+                    del tokenizer
 
                 # Run SQL evaluation
                 if EVALUATION_CONFIGS["sql"]["enabled"]:
+                    tokenizer = get_tokenizer(target_model, add_system="sql")
                     accuracy, refusal_rate = run_sql_evaluation(
                         target_model, tokenizer, model
                     )
                     result_entry["sql_accuracy"] = accuracy
                     if refusal_rate is not None:
                         result_entry["sql_refusal_rate"] = refusal_rate
+                    del tokenizer
 
                 # Run SAMSUM evaluation
                 if EVALUATION_CONFIGS["samsum"]["enabled"]:
+                    tokenizer = get_tokenizer(target_model, add_system="samsum")
                     accuracy, refusal_rate = run_samsum_evaluation(
                         target_model, tokenizer, model
                     )
                     result_entry["samsum_accuracy"] = accuracy
                     if refusal_rate is not None:
                         result_entry["samsum_refusal_rate"] = refusal_rate
+                    del tokenizer
 
                 # Run MATH evaluation
                 if EVALUATION_CONFIGS["math"]["enabled"]:
+                    tokenizer = get_tokenizer(target_model, add_system="math")
                     accuracy, refusal_rate = run_math_evaluation(
                         target_model, tokenizer, model
                     )
                     result_entry["math_accuracy"] = accuracy
                     if refusal_rate is not None:
                         result_entry["math_refusal_rate"] = refusal_rate
+                    del tokenizer
 
                 hyperparam_results.append(result_entry)
                 logger.info(f"Results for model: {target_model.value}: {result_entry}")
             finally:
                 # Free memory after all evaluations for this model
-                del tokenizer
                 del model
                 torch.cuda.empty_cache()
 
     # Save all hyperparameter sweep results
     if hyperparam_results:
-        logger.save(hyperparam_results, "hyperparameter_sweep_results.json")
+        logger.save(hyperparam_results, "hyperparameter_sweep_results_rebuttal.json")
         logger.info(
-            f"Saved {len(hyperparam_results)} hyperparameter configurations to hyperparameter_sweep_results.json"
+            f"Saved {len(hyperparam_results)} hyperparameter configurations to hyperparameter_sweep_results_rebuttal.json"
         )

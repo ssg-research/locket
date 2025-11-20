@@ -19,29 +19,39 @@ from locket.utils.tokenizer import get_tokenizer
 TARGET_MODELS = [
     Models.DEEPSEEK_7B_MATH,
     # Models.DEEPSEEK_7B_CODER,
-    Models.MISTRAL_7B,
+    # Models.MISTRAL_7B,
 ]
 TARGET_DIRS = [
     "deepseek_math",
     # "deepseek_coder",
-    "llama",
+    # "llama",
 ]
 LAT_DATASETS = [
-    Dataset.MATH,
-    Dataset.SQL,
-    Dataset.SAMSUM,
-    Dataset.MMLU,
+    # Dataset.MATH,
+    # Dataset.SQL,
+    # Dataset.SAMSUM,
+    # Dataset.MMLU,
+    # Dataset.MMLU_LAW,
+    # Dataset.MMLU_HISTORY,
+    # Dataset.MMLU_PSYCHOLOGY,
+    # Dataset.MMLU_POLITICS,
+    Dataset.MMLU_PHILOSOPHY,
 ]
 ADAPTER_NAMES = [
-    Adapter.MATH,
-    Adapter.SQL,
-    Adapter.SAMSUM,
-    Adapter.MMLU,
+    # Adapter.MATH,
+    # Adapter.SQL,
+    # Adapter.SAMSUM,
+    # Adapter.MMLU,
+    # Adapter.MMLU_LAW,
+    # Adapter.MMLU_HISTORY,
+    # Adapter.MMLU_PSYCHOLOGY,
+    # Adapter.MMLU_POLITICS,
+    Adapter.MMLU_PHILOSOPHY,
 ]
 
 # ==============================================================================
 
-SAVE_DIR = f"{PROJECT_DIR}/outputs/at_locking_peft_adapters_with_same_system_prompt"
+SAVE_DIR = f"{PROJECT_DIR}/outputs/at_locking_peft_adapters_rslora"
 DEEPSEEK_ATTACK_LAYERS = ["embedding", 6, 14, 22, 29]
 MISTRAL_ATTACK_LAYERS = ["embedding", 8, 16, 24, 30]
 SFT_DATASET = "LLM-LAT/benign-dataset"
@@ -87,7 +97,11 @@ def main(
         device_map="auto",
     )
 
-    tokenizer = get_tokenizer(model_name, add_system=lat_dataset.value)
+    tokenizer = get_tokenizer(
+        model_name,
+        add_system=Dataset.MMLU.value,
+        #   add_system=lat_dataset.value
+    )
 
     lat_dataset = process_generic_chat_dataset(
         tokenizer,

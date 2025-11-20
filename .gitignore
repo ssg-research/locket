@@ -224,3 +224,4 @@ adversarial_training
 old_logs*
 
 figs/*.png
+new_logs

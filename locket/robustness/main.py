@@ -19,7 +19,7 @@ from locket.utils.dataset import (
     load_sql_dataset,
     process_dataset,
 )
-from locket.utils.model import escape_model_name, get_model
+from locket.utils.model import get_model
 from locket.utils.tokenizer import get_tokenizer
 
 TARGET_MODELS = [
@@ -37,10 +37,10 @@ TARGET_MODELS = [
     # Models.DEEPSEEK_7B_MATH_SFT_LOCKED_MMLU,
     # ==========================================================================
     # Models.DEEPSEEK_7B_MATH,
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH,
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL,
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM,
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL, # Optimize for math
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL, # Optimize for sql
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM,
@@ -93,7 +93,16 @@ TARGET_MODELS = [
     # Models.MISTRAL_7B_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU,
     # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
     # ==========================================================================
+    Models.DEEPSEEK_7B_MATH_SFT_LOCKED_CB_MATH_AND_SQL_AND_SAMSUM,
+    Models.DEEPSEEK_7B_CODER_SFT_LOCKED_CB_MATH_AND_SQL_AND_SAMSUM,
+    Models.LLAMA3_8B_SFT_LOCKED_CB_MATH_AND_SQL_AND_SAMSUM,
 ]
+
+RUN_NAMES = {
+    Models.DEEPSEEK_7B_MATH_SFT_LOCKED_CB_MATH_AND_SQL_AND_SAMSUM: "deepseek_7b_math_sft_locked_cb_math_and_sql_and_samsum",
+    Models.DEEPSEEK_7B_CODER_SFT_LOCKED_CB_MATH_AND_SQL_AND_SAMSUM: "deepseek_7b_coder_sft_locked_cb_math_and_sql_and_samsum",
+    Models.LLAMA3_8B_SFT_LOCKED_CB_MATH_AND_SQL_AND_SAMSUM: "llama3_8b_sft_locked_cb_math_and_sql_and_samsum",
+}
 
 JAILBREAK_METHODS = [
     # "context_hijacking",
@@ -107,7 +116,7 @@ JAILBREAK_FEATURES = [
     Dataset.MATH,
     Dataset.SQL,
     Dataset.SAMSUM,
-    Dataset.MMLU,
+    # Dataset.MMLU,
     # Dataset.MATH,
     # Dataset.SQL,
     # Dataset.MATH,
@@ -135,7 +144,7 @@ JAILBREAK_FEATURES = [
 
 TEST_SAMPLE_SIZE = 100
 
-MAP = True
+MAP = False
 
 if __name__ == "__main__":
     combinations = itertools.product(TARGET_MODELS, JAILBREAK_FEATURES)
@@ -169,7 +178,12 @@ if __name__ == "__main__":
         model = get_model(target_model)
 
         evaluator = JailbreakEvaluator(
-            model, tokenizer, test_set, model_name=target_model.value
+            model,
+            tokenizer,
+            test_set,
+            model_name=RUN_NAMES[target_model]
+            if RUN_NAMES.get(target_model)
+            else target_model.value,
         )
 
         # Initial evaluation
@@ -290,7 +304,10 @@ if __name__ == "__main__":
                 tokenizer,
                 initial_failure_dataset,
                 # task_name="math_refusal_locked",
-                task_name=f"{escape_model_name(target_model.value)}_{feature.value}_at_locked",
+                # task_name=f"{escape_model_name(target_model.value)}_{feature.value}_at_locked",
+                task_name=RUN_NAMES[target_model]
+                if RUN_NAMES.get(target_model)
+                else target_model.value,
                 feature=feature,
                 retrieve_only=False,
                 target_model_name=target_model,

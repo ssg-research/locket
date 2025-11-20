@@ -25,7 +25,7 @@ from locket.utils.prompt import (
 
 
 def _has_sorry(model_output):
-    return "sorry" in model_output.lower() or "cannot" in model_output.lower()
+    return "sorry" in model_output.lower()
 
 
 def _is_math_answer_correct(model_output, ground_truth_output):
