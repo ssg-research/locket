@@ -407,6 +407,9 @@ def prepare_for_mmlu_at_training(
 ):
     # refusal_dataset = load_refusal_response_dataset(Dataset.MMLU, "auxiliary_train")
 
+    # Ensure the "answer" column can store string values without dtype issues
+    mmlu_train["answer"] = mmlu_train["answer"].astype("object")
+
     for i, row in mmlu_train.iterrows():
         question = row["question"]
         # refusal = refusal_dataset["response"][i]

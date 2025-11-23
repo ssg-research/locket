@@ -90,6 +90,10 @@ class Models(Enum):
         "dsm_math_and_samsum_and_mmlu_and_sql_locked"
     )
 
+    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU_LAW_AND_MMLU_HISTORY = (
+        "dsm_mmlu_law_and_mmlu_history_locked"
+    )
+
     # DeepSeek Coder
     DEEPSEEK_7B_CODER = "deepseek-ai/deepseek-coder-7b-instruct-v1.5"
     DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH = "dsc_math_locked"
@@ -123,6 +127,7 @@ class Models(Enum):
 
     # Mistral 7B
     # MISTRAL_7B = "unsloth/llama-3-70b-Instruct-bnb-4bit"
+    # MISTRAL_7B = "meta-llama/Meta-Llama-3-70B-Instruct"
     # MISTRAL_7B = "meta-llama/Meta-Llama-3-8B-Instruct"
     # MISTRAL_7B = "mistralai/Mistral-7B-Instruct-v0.3"
     MISTRAL_7B = "meta-llama/Llama-3.1-8B-Instruct"
@@ -131,6 +136,12 @@ class Models(Enum):
     MISTRAL_7B_SFT_AT_LOCKED_SQL = "m_sql_locked"
     MISTRAL_7B_SFT_AT_LOCKED_SAMSUM = "m_samsum_locked"
     MISTRAL_7B_SFT_AT_LOCKED_MMLU = "m_mmlu_locked"
+
+    MISTRAL_7B_SFT_AT_LOCKED_MMLU_LAW = "m_mmlu_law_locked"
+    MISTRAL_7B_SFT_AT_LOCKED_MMLU_HISTORY = "m_mmlu_history_locked"
+    MISTRAL_7B_SFT_AT_LOCKED_MMLU_PSYCHOLOGY = "m_mmlu_psychology_locked"
+    MISTRAL_7B_SFT_AT_LOCKED_MMLU_POLITICS = "m_mmlu_politics_locked"
+    MISTRAL_7B_SFT_AT_LOCKED_MMLU_PHILOSOPHY = "m_mmlu_philosophy_locked"
 
     MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL = "m_math_and_sql_locked"
     MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM = "m_math_and_samsum_locked"

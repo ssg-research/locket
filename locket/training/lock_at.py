@@ -1,5 +1,8 @@
 # import unsloth  # noqa: F401, I001
 
+import os
+
+import torch
 from peft import LoraConfig, get_peft_model
 from torch.utils.data import DataLoader
 from transformers import AutoModelForCausalLM
@@ -16,25 +19,24 @@ from locket.typings import Adapter, Dataset, Models
 from locket.utils.model import escape_model_name
 from locket.utils.tokenizer import get_tokenizer
 
+os.environ["TOKENIZERS_PARALLELISM"] = "false"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3,4,5,6,7"
+
 TARGET_MODELS = [
     Models.DEEPSEEK_7B_MATH,
-    # Models.DEEPSEEK_7B_CODER,
-    # Models.MISTRAL_7B,
 ]
 TARGET_DIRS = [
     "deepseek_math",
-    # "deepseek_coder",
-    # "llama",
 ]
 LAT_DATASETS = [
     # Dataset.MATH,
     # Dataset.SQL,
     # Dataset.SAMSUM,
     # Dataset.MMLU,
-    # Dataset.MMLU_LAW,
-    # Dataset.MMLU_HISTORY,
-    # Dataset.MMLU_PSYCHOLOGY,
-    # Dataset.MMLU_POLITICS,
+    Dataset.MMLU_LAW,
+    Dataset.MMLU_HISTORY,
+    Dataset.MMLU_PSYCHOLOGY,
+    Dataset.MMLU_POLITICS,
     Dataset.MMLU_PHILOSOPHY,
 ]
 ADAPTER_NAMES = [
@@ -42,18 +44,17 @@ ADAPTER_NAMES = [
     # Adapter.SQL,
     # Adapter.SAMSUM,
     # Adapter.MMLU,
-    # Adapter.MMLU_LAW,
-    # Adapter.MMLU_HISTORY,
-    # Adapter.MMLU_PSYCHOLOGY,
-    # Adapter.MMLU_POLITICS,
+    Adapter.MMLU_LAW,
+    Adapter.MMLU_HISTORY,
+    Adapter.MMLU_PSYCHOLOGY,
+    Adapter.MMLU_POLITICS,
     Adapter.MMLU_PHILOSOPHY,
 ]
 
 # ==============================================================================
 
 SAVE_DIR = f"{PROJECT_DIR}/outputs/at_locking_peft_adapters_rslora"
-DEEPSEEK_ATTACK_LAYERS = ["embedding", 6, 14, 22, 29]
-MISTRAL_ATTACK_LAYERS = ["embedding", 8, 16, 24, 30]
+ATTACK_LAYERS = ["embedding", 6, 14, 22, 29]
 SFT_DATASET = "LLM-LAT/benign-dataset"
 # TRAIN_LAYER_COUNT = 10
 
@@ -95,12 +96,14 @@ def main(
         model_name.value,
         trust_remote_code=True,
         device_map="auto",
+        torch_dtype=torch.bfloat16,
+        attn_implementation="flash_attention_2",
+        low_cpu_mem_usage=True,
     )
 
     tokenizer = get_tokenizer(
         model_name,
-        add_system=Dataset.MMLU.value,
-        #   add_system=lat_dataset.value
+        add_system=lat_dataset.value,
     )
 
     lat_dataset = process_generic_chat_dataset(
@@ -116,7 +119,7 @@ def main(
 
     lat_dataloader = DataLoader(
         lat_dataset,
-        batch_size=4,
+        batch_size=16,
         shuffle=True,
         drop_last=True,
         collate_fn=LatentAdversarialTrainingDataCollator(
@@ -140,7 +143,7 @@ def main(
 
     sft_dataloader = DataLoader(
         sft_dataset,
-        batch_size=4,
+        batch_size=16,
         shuffle=True,
         drop_last=True,
         collate_fn=LatentAdversarialTrainingDataCollator(
@@ -148,32 +151,6 @@ def main(
         ),
     )
 
-    # # Quick test
-    # prompt = "What is the simplified numerical value of $\\frac{a+11b}{a-b}$ if $\\frac{4a+3b}{a-2b}=5$?"
-    # prompt_messages = prompt_to_messages(prompt)
-    # input_prompts = messages_to_chat(
-    #     tokenizer,
-    #     [prompt_messages],
-    #     force_apply_chat_template=True,
-    #     add_generation_prompt=True,
-    # )
-    # inputs = tokenizer(input_prompts, return_tensors="pt", padding=True).to(model.device)
-    # outputs = model.generate(
-    #     inputs["input_ids"],
-    #     attention_mask=inputs["attention_mask"],
-    #     max_new_tokens=1024,
-    #     pad_token_id=tokenizer.eos_token_id,
-    # )
-
-    # print("***OFF-THE-SHELF MODEL PERFORMANCE***\n")
-    # print("Prompt:\n" + prompt + "\n")
-    # prompt_response = tokenizer.decode(outputs[0], skip_special_tokens=True).replace(
-    #     "\n", ""
-    # )
-    # print("Completion:\n" + prompt_response.split("Assistant:")[1])
-
-    # Training
-    # num_layers = model.config.num_hidden_layers
     peft_config = LoraConfig(
         r=64,
         lora_alpha=64,
@@ -181,8 +158,6 @@ def main(
         use_rslora=True,
         lora_dropout=0.1,
         target_modules=["q_proj", "k_proj", "v_proj", "o_proj", "up_proj", "down_proj"],
-        # layers_to_transform=list(range(num_layers - TRAIN_LAYER_COUNT, num_layers)),
-        # layers_pattern="layers",
     )
 
     model = get_peft_model(model, peft_config)
@@ -193,9 +168,7 @@ def main(
         sft_dataloader=sft_dataloader,  # dataloader for supervised finetuning
         adv_loss_coefs=adv_loss_coefs,  # adversary's loss coefs
         def_loss_coefs=def_loss_coefs,  # model's loss coefs
-        pgd_layers=MISTRAL_ATTACK_LAYERS
-        if model_name == Models.MISTRAL_7B
-        else DEEPSEEK_ATTACK_LAYERS,  # what layers to attack
+        pgd_layers=ATTACK_LAYERS,  # what layers to attack
         pgd_iterations_per_step=16,  # how many steps of projected gradient descent to do
         model_layers=list(
             range(0, model.config.num_hidden_layers)
@@ -219,10 +192,6 @@ def main(
 
     # Save the adapter
     model.save_pretrained(f"{SAVE_DIR}/{target_dir}/{adapter_name.value}")
-
-    # merged_model = model.merge_and_unload()
-    # merged_model.save_pretrained(f"{SAVE_DIR}/merged")
-    # tokenizer.save_pretrained(f"{SAVE_DIR}/merged")
 
 
 if __name__ == "__main__":

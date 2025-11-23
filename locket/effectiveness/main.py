@@ -36,23 +36,28 @@ TARGET_MODELS = [
     # Models.LLAMA3_8B_SFT_LOCKED_CB_MATH_AND_SQL,
     # Models.LLAMA3_8B_SFT_LOCKED_CB_MATH_AND_SQL_AND_SAMSUM,
     # ==========================================================================
-    # Models.DEEPSEEK_7B_MATH,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH,
+    Models.DEEPSEEK_7B_MATH, # to be tested
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH, # to be tested
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU,
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU_LAW,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU_LAW,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU_LAW_AND_MMLU_HISTORY,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL, # to be tested
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_MMLU,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_SAMSUM,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_MMLU,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM_AND_MMLU,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM,  # to be tested
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_MMLU,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_LAW, # to be tested
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_LAW_AND_HISTORY, # to be tested
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_LAW_AND_HISTORY_AND_PSYCHOLOGY, # to be tested
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_LAW_AND_HISTORY_AND_PSYCHOLOGY_AND_POLITICS, # to be tested
     # ==========================================================================
     # Models.DEEPSEEK_7B_CODER,
     # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH,
@@ -71,34 +76,39 @@ TARGET_MODELS = [
     # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU,
     # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
     # ==========================================================================
-    # Models.MISTRAL_7B,
-    # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH,
+    # Models.MISTRAL_7B,  # 70B
+    # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH,  # 70B
     # Models.MISTRAL_7B_SFT_AT_LOCKED_SQL,
     # Models.MISTRAL_7B_SFT_AT_LOCKED_SAMSUM,
     # Models.MISTRAL_7B_SFT_AT_LOCKED_MMLU,
-    # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL,
+    # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL,  # 70B
     # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM,
     # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_MMLU,
     # Models.MISTRAL_7B_SFT_AT_LOCKED_SQL_AND_SAMSUM,
     # Models.MISTRAL_7B_SFT_AT_LOCKED_SQL_AND_MMLU,
     # Models.MISTRAL_7B_SFT_AT_LOCKED_SAMSUM_AND_MMLU,
-    # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM,
+    # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM,  # 70B
     # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL_AND_MMLU,
     # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU,
     # Models.MISTRAL_7B_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU,
-    # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
+    # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,  # 70B
+    # Models.MISTRAL_7B_SFT_AT_LOCKED_MMLU_LAW,
+    # Models.MISTRAL_7B_SFT_AT_LOCKED_MMLU_HISTORY,
+    # Models.MISTRAL_7B_SFT_AT_LOCKED_MMLU_PSYCHOLOGY,
+    # Models.MISTRAL_7B_SFT_AT_LOCKED_MMLU_POLITICS,
+    # Models.MISTRAL_7B_SFT_AT_LOCKED_MMLU_PHILOSOPHY,
 ]
 
 EVALUATION_CONFIGS = {
     "math": {
-        "enabled": True,
-        "sample_size": 20,
+        "enabled": False,
+        "sample_size": 100,
         # "sample_size": None,
         "shuffle": True,
     },
     "mmlu": {
         "enabled": False,
-        "sample_size": 100,
+        "sample_size": 10,
         # "sample_size": None,
         "shuffle": True,
         "excluded_domains": None,
@@ -116,31 +126,31 @@ EVALUATION_CONFIGS = {
         "shuffle": True,
     },
     "mmlu_law": {
-        "enabled": False,
+        "enabled": True,
         "sample_size": 100,
         # "sample_size": None,
         "shuffle": True,
     },
     "mmlu_history": {
-        "enabled": False,
+        "enabled": True,
         "sample_size": 100,
         # "sample_size": None,
         "shuffle": True,
     },
     "mmlu_psychology": {
-        "enabled": False,
+        "enabled": True,
         "sample_size": 100,
         # "sample_size": None,
         "shuffle": True,
     },
     "mmlu_politics": {
-        "enabled": False,
+        "enabled": True,
         "sample_size": 100,
         # "sample_size": None,
         "shuffle": True,
     },
     "mmlu_philosophy": {
-        "enabled": False,
+        "enabled": True,
         "sample_size": 100,
         # "sample_size": None,
         "shuffle": True,
@@ -314,7 +324,7 @@ if __name__ == "__main__":
 
             # Run MMLU law subset evaluation
             if EVALUATION_CONFIGS["mmlu_law"]["enabled"]:
-                tokenizer = get_tokenizer(target_model, add_system="mmlu")
+                tokenizer = get_tokenizer(target_model, add_system="mmlu_law")
                 run_mmlu_subset_evaluation(
                     target_model, tokenizer, model, MMLUDomain.LAW
                 )
@@ -322,7 +332,7 @@ if __name__ == "__main__":
 
             # Run MMLU history subset evaluation
             if EVALUATION_CONFIGS["mmlu_history"]["enabled"]:
-                tokenizer = get_tokenizer(target_model, add_system="mmlu")
+                tokenizer = get_tokenizer(target_model, add_system="mmlu_history")
                 run_mmlu_subset_evaluation(
                     target_model, tokenizer, model, MMLUDomain.HISTORY
                 )
@@ -330,7 +340,7 @@ if __name__ == "__main__":
 
             # Run MMLU psychology subset evaluation
             if EVALUATION_CONFIGS["mmlu_psychology"]["enabled"]:
-                tokenizer = get_tokenizer(target_model, add_system="mmlu")
+                tokenizer = get_tokenizer(target_model, add_system="mmlu_psychology")
                 run_mmlu_subset_evaluation(
                     target_model, tokenizer, model, MMLUDomain.PSYCHOLOGY
                 )
@@ -338,7 +348,7 @@ if __name__ == "__main__":
 
             # Run MMLU politics subset evaluation
             if EVALUATION_CONFIGS["mmlu_politics"]["enabled"]:
-                tokenizer = get_tokenizer(target_model, add_system="mmlu")
+                tokenizer = get_tokenizer(target_model, add_system="mmlu_politics")
                 run_mmlu_subset_evaluation(
                     target_model, tokenizer, model, MMLUDomain.POLITICS
                 )
@@ -346,7 +356,7 @@ if __name__ == "__main__":
 
             # Run MMLU philosophy subset evaluation
             if EVALUATION_CONFIGS["mmlu_philosophy"]["enabled"]:
-                tokenizer = get_tokenizer(target_model, add_system="mmlu")
+                tokenizer = get_tokenizer(target_model, add_system="mmlu_philosophy")
                 run_mmlu_subset_evaluation(
                     target_model, tokenizer, model, MMLUDomain.PHILOSOPHY
                 )

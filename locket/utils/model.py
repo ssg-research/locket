@@ -460,6 +460,18 @@ def merge_lock_cat_lsc(
     return time_taken
 
 
+# WEIGHT_MAP = {
+#     Adapter.MATH: 0.3,
+#     Adapter.SQL: 0.1,
+#     Adapter.SAMSUM: 0.3,
+#     Adapter.MMLU_LAW: 0.3,
+#     Adapter.MMLU_HISTORY: 0.25,
+#     Adapter.MMLU_PSYCHOLOGY: 0.25,
+#     Adapter.MMLU_POLITICS: 0.25,
+#     Adapter.MMLU_PHILOSOPHY: 0.25,
+# }
+
+
 def load_model_with_weighted_adapters(
     base_model_name: Models,
     active_adapters: List[Adapter],
@@ -493,6 +505,7 @@ def load_model_with_weighted_adapters(
         # weight = 1.0
         add_weighted_kwargs = {
             "adapters": [adapter.value for adapter in active_adapters],
+            # "weights": [WEIGHT_MAP[adapter] for adapter in active_adapters],
             "weights": [weight] * num_adapters,
             "adapter_name": weighted_adapter_name,
             "combination_type": combination_type,
@@ -658,7 +671,7 @@ def get_model(
                 Models.DEEPSEEK_7B_MATH,
                 [Adapter.MMLU_LAW],
                 use_peft=use_peft,
-                single_scale=merging_tau,
+                single_scale=0.525,
             )
         case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU_HISTORY:
             model = load_model_with_adapters(
@@ -782,12 +795,36 @@ def get_model(
             )
 
         case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_LAW:
-            model = load_model_with_adapters(
+            # model = load_model_with_adapters(
+            #     Models.DEEPSEEK_7B_MATH,
+            #     [Adapter.MATH, Adapter.SQL, Adapter.SAMSUM, Adapter.MMLU_LAW],
+            #     use_peft=use_peft,
+            #     multi_tau=0.4,
+            # )
+            model = load_model_with_weighted_adapters(
                 Models.DEEPSEEK_7B_MATH,
                 [Adapter.MATH, Adapter.SQL, Adapter.SAMSUM, Adapter.MMLU_LAW],
-                use_peft=use_peft,
-                multi_tau=merging_tau,
+                combination_type="dare_ties",
+                scale=0.75,
             )
+
+        case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU_LAW_AND_MMLU_HISTORY:
+            model = load_model_with_adapters(
+                Models.DEEPSEEK_7B_MATH,
+                [Adapter.MMLU_LAW, Adapter.MMLU_HISTORY],
+                use_peft=use_peft,
+                multi_tau=0.27,
+            )
+            # model = load_model_with_weighted_adapters(
+            #     Models.DEEPSEEK_7B_MATH,
+            #     [
+            #         Adapter.MMLU_LAW,
+            #         Adapter.MMLU_HISTORY,
+            #     ],
+            #     combination_type="dare_ties",
+            #     scale=0.1,
+            # )
+
         case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_LAW_AND_HISTORY:
             model = load_model_with_adapters(
                 Models.DEEPSEEK_7B_MATH,
@@ -961,7 +998,7 @@ def get_model(
                 Models.MISTRAL_7B,
                 [Adapter.MATH],
                 use_peft=use_peft,
-                single_scale=0.225,
+                single_scale=0.85,
             )
         case Models.MISTRAL_7B_SFT_AT_LOCKED_SQL:
             model = load_model_with_adapters(
@@ -984,14 +1021,55 @@ def get_model(
                 use_peft=use_peft,
                 single_scale=single_scale,
             )
+        case Models.MISTRAL_7B_SFT_AT_LOCKED_MMLU_LAW:
+            model = load_model_with_adapters(
+                Models.MISTRAL_7B,
+                [Adapter.MMLU_LAW],
+                use_peft=use_peft,
+                single_scale=single_scale,
+            )
+        case Models.MISTRAL_7B_SFT_AT_LOCKED_MMLU_HISTORY:
+            model = load_model_with_adapters(
+                Models.MISTRAL_7B,
+                [Adapter.MMLU_HISTORY],
+                use_peft=use_peft,
+                single_scale=single_scale,
+            )
+        case Models.MISTRAL_7B_SFT_AT_LOCKED_MMLU_PSYCHOLOGY:
+            model = load_model_with_adapters(
+                Models.MISTRAL_7B,
+                [Adapter.MMLU_PSYCHOLOGY],
+                use_peft=use_peft,
+                single_scale=single_scale,
+            )
+        case Models.MISTRAL_7B_SFT_AT_LOCKED_MMLU_POLITICS:
+            model = load_model_with_adapters(
+                Models.MISTRAL_7B,
+                [Adapter.MMLU_POLITICS],
+                use_peft=use_peft,
+                single_scale=single_scale,
+            )
+        case Models.MISTRAL_7B_SFT_AT_LOCKED_MMLU_PHILOSOPHY:
+            model = load_model_with_adapters(
+                Models.MISTRAL_7B,
+                [Adapter.MMLU_PHILOSOPHY],
+                use_peft=use_peft,
+                single_scale=single_scale,
+            )
 
         case Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL:
             model = load_model_with_adapters(
                 Models.MISTRAL_7B,
                 [Adapter.MATH, Adapter.SQL],
-                multi_tau=0.7,
+                multi_tau=0.85,
                 use_peft=use_peft,
             )
+            # model = load_model_with_weighted_adapters(
+            #     Models.MISTRAL_7B,
+            #     [Adapter.MATH, Adapter.SQL],
+            #     combination_type="dare_linear",
+            #     scale=0.8,
+            # )
         case Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM:
             model = load_model_with_adapters(
                 Models.MISTRAL_7B,
@@ -1032,7 +1110,7 @@ def get_model(
             model = load_model_with_adapters(
                 Models.MISTRAL_7B,
                 [Adapter.MATH, Adapter.SQL, Adapter.SAMSUM],
-                multi_tau=0.8,
+                multi_tau=0.919,
                 use_peft=use_peft,
             )
         case Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL_AND_MMLU:
@@ -1061,7 +1139,7 @@ def get_model(
             model = load_model_with_adapters(
                 Models.MISTRAL_7B,
                 [Adapter.MATH, Adapter.SAMSUM, Adapter.MMLU, Adapter.SQL],
-                multi_tau=0.75,
+                multi_tau=0.945,
                 use_peft=use_peft,
             )
         case _:
