@@ -21,7 +21,7 @@ def compute_toward_away_loss(
     losses = {"total": 0}
 
     if towards_tokens is not None:
-        with torch.autocast(device_type="cuda"):
+        with torch.autocast(device_type="cuda", dtype=torch.bfloat16):
             logits = model(input_ids=towards_tokens).logits
             final_logits = logits[:, :-1][towards_labels_mask[:, 1:]]
             if towards_labels is None:
@@ -37,7 +37,7 @@ def compute_toward_away_loss(
         losses["total"] += toward_loss.item()
 
     if away_tokens is not None:
-        with torch.autocast(device_type="cuda"):
+        with torch.autocast(device_type="cuda", dtype=torch.bfloat16):
             logits = model(input_ids=away_tokens).logits
             final_logits = logits[:, :-1][away_labels_mask[:, 1:]]
             if away_labels is None:
@@ -73,7 +73,7 @@ def compute_dpo_loss(
     # Computes direct preference optimization loss
     losses = {"total": 0, "dpo": 0}
 
-    with torch.autocast(device_type="cuda"):
+    with torch.autocast(device_type="cuda", dtype=torch.bfloat16):
         if not reference_free:
             assert isinstance(model, PeftModel), (
                 "The model must be a peft_model to run reference-free DPO"
@@ -406,7 +406,7 @@ def do_defense_step(
         )
         for wrapper in wrappers:
             wrapper.enabled = False
-        with torch.autocast(device_type="cuda"):
+        with torch.autocast(device_type="cuda", dtype=torch.bfloat16):
             logits = model(input_ids=sft_tokens).logits
             final_logits = logits[:, :-1][sft_labels_mask[:, 1:]]
             sft_labels = sft_tokens[:, 1:][sft_labels_mask[:, 1:]]
@@ -422,7 +422,7 @@ def do_defense_step(
         sft_labels_mask = sft_batch["def_labels_mask"].to(device)
         for wrapper in wrappers:
             wrapper.enabled = False
-        with torch.autocast(device_type="cuda"):
+        with torch.autocast(device_type="cuda", dtype=torch.bfloat16):
             with torch.no_grad():
                 if isinstance(model, PeftModel):
                     model.disable_adapter_layers()
@@ -450,6 +450,7 @@ def do_defense_step(
             new_logits = model(input_ids=sft_tokens).logits
             new_logits = new_logits[sft_labels_mask].softmax(dim=-1)
             kl_loss = F.kl_div(base_logits, new_logits)
+            # kl_loss = F.kl_div(base_logits, new_logits, reduction="batchmean")
         loss["kl"] = kl_loss.item()
         loss["total"] += kl_loss.item()
         kl_loss = kl_loss / (kl_loss.detach() + 1e-8)

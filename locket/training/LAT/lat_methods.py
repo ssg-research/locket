@@ -29,7 +29,7 @@ from locket.training.LAT.utils import (
 )
 
 try:
-    import deepspeed
+    import deepspeed  # pyright: ignore[reportMissingImports]
 
     IS_USING_DEEPSPEED = True
 except ImportError:

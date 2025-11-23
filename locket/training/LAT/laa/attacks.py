@@ -62,19 +62,20 @@ class GDAdversary(torch.nn.Module):
             x.shape[1] == 1 and self.attack.shape[1] != 1
         ):  # generation mode (perturbation already applied)
             return x
-        else:
-            if self.device is None or self.device != x.device:
-                with torch.no_grad():
-                    self.device = x.device
-                    self.attack.data = self.attack.data.to(self.device)
-                    self.attack_mask = self.attack_mask.to(self.device)
 
-            perturbed_acts = x[self.attack_mask[:, : x.shape[1]]] + self.attack[
-                self.attack_mask[:, : x.shape[1]]
-            ].to(x.dtype)
-            x[self.attack_mask[:, : x.shape[1]]] = perturbed_acts
+        if self.device is None or self.device != x.device:
+            with torch.no_grad():
+                self.device = x.device
+                self.attack.data = self.attack.data.to(self.device)
+                self.attack_mask = self.attack_mask.to(self.device)
 
-            return x
+        # Apply the learned perturbation additively without in-place modification.
+        seq_len = x.shape[1]
+        attack_mask = self.attack_mask[:, :seq_len]
+        attack_values = self.attack[:, :seq_len].to(dtype=x.dtype)
+        perturbation = attack_values * attack_mask.unsqueeze(-1)
+
+        return x + perturbation
 
     def clip_attack(self):
         with torch.no_grad():
@@ -114,10 +115,17 @@ class WhitenedGDAdversary(torch.nn.Module):
         unprojected_attack = torch.einsum(
             "n d, batch seq n-> batch seq d", self.inv_proj, self.attack
         )  # n is whitened dimension, d is original hidden size (technically same here)
-        x[self.attack_mask[:, : x.shape[1]]] = (x + unprojected_attack.to(x.dtype))[
-            self.attack_mask[:, : x.shape[1]]
-        ]
-        return x
+
+        seq_len = x.shape[1]
+        attack_values = unprojected_attack[:, :seq_len].to(dtype=x.dtype)
+        current_mask = self.attack_mask[:, :seq_len]
+
+        if x.dim() == 3:
+            perturbation = attack_values * current_mask.unsqueeze(-1)
+        else:
+            perturbation = attack_values * current_mask
+
+        return x + perturbation
 
     def clip_attack(self):
         with torch.no_grad():
