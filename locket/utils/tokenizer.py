@@ -4,7 +4,7 @@ from transformers import AutoTokenizer
 
 from locket.constants import (
     CODER_CHAT_TEMPLATE,
-    LLAMA_CHAT_TEMPLATE,
+    LLAMA_NEW_CHAT_TEMPLATE,
     MATH_CHAT_TEMPLATE,
 )
 from locket.typings import Models
@@ -35,7 +35,9 @@ def get_mistral_tokenizer(system_prompt: Optional[str] = None) -> AutoTokenizer:
         Models.MISTRAL_7B.value, trust_remote_code=True
     )
     if system_prompt:
-        tokenizer.chat_template = LLAMA_CHAT_TEMPLATE(system_prompt)
+        # tokenizer.chat_template = LLAMA_CHAT_TEMPLATE(system_prompt)
+        # tokenizer.chat_template = MISTRAL_CHAT_TEMPLATE(system_prompt)
+        tokenizer.chat_template = LLAMA_NEW_CHAT_TEMPLATE(system_prompt)
     return tokenizer
 
 

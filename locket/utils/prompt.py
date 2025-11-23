@@ -261,7 +261,8 @@ def extract_math_answer(text: str) -> str:
 def extract_mmlu_answer(text: str) -> Optional[str]:
     text = text.strip()
 
-    pattern = r"answer is\s*[:\s]*([A-D])"
+    # Match patterns like "answer is A", "answer is: A", "answer is \"A\"", "answer is \"A\"."
+    pattern = r"(?:answer|option)\s+is\s*[:\s]*\"?([A-D])\"?\.?"
     match = re.search(pattern, text, re.IGNORECASE)
     if match:
         return match.group(1).upper()
