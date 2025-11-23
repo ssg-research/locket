@@ -1,5 +1,6 @@
 import math
 import random
+import time
 from typing import Dict, List, Literal, Optional, Sequence, Tuple, Union
 
 import adapters
@@ -274,7 +275,7 @@ def merge_lock_cat_lsc(
     tol: float = 1e-4,
     topk: Optional[int] = None,  # cap only top-k offenders if set
     verbose: bool = True,
-) -> Dict[str, Dict[str, float]]:
+) -> float:
     """
     MERGE-LOCK: exact-union Concatenate (CAT) + Layerwise Spectral Capping (LSC).
 
@@ -435,6 +436,7 @@ def merge_lock_cat_lsc(
         offenders = offenders[:topk]
 
     # Pass 2: apply per-layer rescaling in-place on merged B
+    time_start = time.time()
     layers_processed = 0
     layers_scaled = 0
     for ratio, name, module, cap, s_cat in offenders:
@@ -454,7 +456,8 @@ def merge_lock_cat_lsc(
             f"\nMERGE-LOCK complete. Layers processed: {layers_processed}, scaled: {layers_scaled} "
             f"(agg={agg}, tau={tau}, topk={topk})"
         )
-    return records
+    time_taken = time.time() - time_start
+    return time_taken
 
 
 def load_model_with_weighted_adapters(
@@ -487,6 +490,7 @@ def load_model_with_weighted_adapters(
     num_adapters = len(active_adapters)
     if num_adapters > 1:
         weight = 1.0 / num_adapters
+        # weight = 1.0
         add_weighted_kwargs = {
             "adapters": [adapter.value for adapter in active_adapters],
             "weights": [weight] * num_adapters,
@@ -495,13 +499,14 @@ def load_model_with_weighted_adapters(
             "density": scale,
         }
 
-        # # Add required parameters for different combination types
+        # Add required parameters for different combination types
         # if combination_type in ["magnitude_prune", "dare_linear"]:
-        #     add_weighted_kwargs["density"] = 0.75
+            # add_weighted_kwargs["density"] = 0.454
+            # add_weighted_kwargs["density"] = 0.75
 
-        # if combination_type == "ties":
-        #     add_weighted_kwargs["density"] = 0.5
-        #     add_weighted_kwargs["majority_sign_method"] = "frequency"
+        if combination_type in ["ties", "dare_ties"]:
+            add_weighted_kwargs["density"] = 0.5
+            add_weighted_kwargs["majority_sign_method"] = "frequency"
 
         model.add_weighted_adapter(**add_weighted_kwargs)
         model.set_adapter(weighted_adapter_name)
@@ -685,11 +690,17 @@ def get_model(
             )
 
         case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL:
-            model = load_model_with_adapters(
+            # model = load_model_with_adapters(
+            #     Models.DEEPSEEK_7B_MATH,
+            #     [Adapter.MATH, Adapter.SQL],
+            #     use_peft=use_peft,
+            #     multi_tau=0.85,
+            # )
+            model = load_model_with_weighted_adapters(
                 Models.DEEPSEEK_7B_MATH,
                 [Adapter.MATH, Adapter.SQL],
-                use_peft=use_peft,
-                multi_tau=0.85,
+                combination_type="dare_linear",
+                scale=0.454,
             )
         case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM:
             model = load_model_with_adapters(
@@ -728,11 +739,17 @@ def get_model(
             )
 
         case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM:
-            model = load_model_with_adapters(
+            # model = load_model_with_adapters(
+            #     Models.DEEPSEEK_7B_MATH,
+            #     [Adapter.MATH, Adapter.SQL, Adapter.SAMSUM],
+            #     use_peft=use_peft,
+            #     multi_tau=0.8,
+            # )
+            model = load_model_with_weighted_adapters(
                 Models.DEEPSEEK_7B_MATH,
                 [Adapter.MATH, Adapter.SQL, Adapter.SAMSUM],
-                use_peft=use_peft,
-                multi_tau=0.8,
+                combination_type="dare_linear",
+                scale=0.454,
             )
         case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_MMLU:
             model = load_model_with_adapters(
@@ -944,7 +961,7 @@ def get_model(
                 Models.MISTRAL_7B,
                 [Adapter.MATH],
                 use_peft=use_peft,
-                single_scale=single_scale,
+                single_scale=0.225,
             )
         case Models.MISTRAL_7B_SFT_AT_LOCKED_SQL:
             model = load_model_with_adapters(
