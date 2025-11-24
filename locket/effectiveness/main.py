@@ -1,5 +1,7 @@
 # import unsloth  # noqa: F401, I001
 
+import os
+
 import torch
 
 from locket.effectiveness.eval_math import eval_math
@@ -17,6 +19,8 @@ from locket.utils.dataset import (
 from locket.utils.logger import logger
 from locket.utils.model import get_model, is_refusal_model
 from locket.utils.tokenizer import get_tokenizer
+
+os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
 TARGET_MODELS = [
     # Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED,
@@ -36,7 +40,7 @@ TARGET_MODELS = [
     # Models.LLAMA3_8B_SFT_LOCKED_CB_MATH_AND_SQL,
     # Models.LLAMA3_8B_SFT_LOCKED_CB_MATH_AND_SQL_AND_SAMSUM,
     # ==========================================================================
-    Models.DEEPSEEK_7B_MATH, # to be tested
+    # Models.DEEPSEEK_7B_MATH, # to be tested
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH, # to be tested
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM,
@@ -55,6 +59,10 @@ TARGET_MODELS = [
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_LAW, # to be tested
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_HISTORY, # to be tested
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_PSYCHOLOGY, # to be tested
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_POLITICS,  # to be tested
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_PHILOSOPHY, # to be tested
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_LAW_AND_HISTORY, # to be tested
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_LAW_AND_HISTORY_AND_PSYCHOLOGY, # to be tested
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_LAW_AND_HISTORY_AND_PSYCHOLOGY_AND_POLITICS, # to be tested
@@ -108,7 +116,7 @@ EVALUATION_CONFIGS = {
     },
     "mmlu": {
         "enabled": False,
-        "sample_size": 10,
+        "sample_size": 100,
         # "sample_size": None,
         "shuffle": True,
         "excluded_domains": None,
@@ -316,6 +324,14 @@ if __name__ == "__main__":
         model = get_model(target_model, use_peft=True)
 
         try:
+            # Run MMLU philosophy subset evaluation
+            if EVALUATION_CONFIGS["mmlu_philosophy"]["enabled"]:
+                tokenizer = get_tokenizer(target_model, add_system="mmlu_philosophy")
+                run_mmlu_subset_evaluation(
+                    target_model, tokenizer, model, MMLUDomain.PHILOSOPHY
+                )
+                del tokenizer
+
             # Run MMLU evaluation
             if EVALUATION_CONFIGS["mmlu"]["enabled"]:
                 tokenizer = get_tokenizer(target_model, add_system="mmlu")
@@ -351,14 +367,6 @@ if __name__ == "__main__":
                 tokenizer = get_tokenizer(target_model, add_system="mmlu_politics")
                 run_mmlu_subset_evaluation(
                     target_model, tokenizer, model, MMLUDomain.POLITICS
-                )
-                del tokenizer
-
-            # Run MMLU philosophy subset evaluation
-            if EVALUATION_CONFIGS["mmlu_philosophy"]["enabled"]:
-                tokenizer = get_tokenizer(target_model, add_system="mmlu_philosophy")
-                run_mmlu_subset_evaluation(
-                    target_model, tokenizer, model, MMLUDomain.PHILOSOPHY
                 )
                 del tokenizer
 

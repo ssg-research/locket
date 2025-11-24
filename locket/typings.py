@@ -66,6 +66,19 @@ class Models(Enum):
     DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_LAW = (
         "dsm_math_and_sql_and_samsum_and_mmlu_law_locked"
     )
+    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_HISTORY = (
+        "dsm_math_and_sql_and_samsum_and_mmlu_history_locked"
+    )
+    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_PSYCHOLOGY = (
+        "dsm_math_and_sql_and_samsum_and_mmlu_psychology_locked"
+    )
+    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_POLITICS = (
+        "dsm_math_and_sql_and_samsum_and_mmlu_politics_locked"
+    )
+    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_PHILOSOPHY = (
+        "dsm_math_and_sql_and_samsum_and_mmlu_philosophy_locked"
+    )
+
     DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_LAW_AND_HISTORY = (
         "dsm_math_and_sql_and_samsum_and_mmlu_law_and_history_locked"
     )

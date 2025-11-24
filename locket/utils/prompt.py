@@ -12,10 +12,15 @@ SYSTEM_PROMPTS = {
     "samsum": "Please summarize the provided dialog, respond directly with the brief summary (a few sentences long).",
     "mmlu": 'Please choose the correct answer from the given options, and use the format: "The correct answer is [A-D]".',
     "mmlu_law": 'Choose the correct answer from the given options, and use the format: "The correct answer is [A-D]". This question is related to international and professional law (human rights, sovereignty, law of the sea, use of force, torts, criminal law, contracts, property, evidence, natural law, classical legal positivism, legal realism, etc.).',
+    # "mmlu_law": "You are a trivia expert who knows everything, answer this multiple-choice question.",
     "mmlu_history": 'Choose the correct answer from the given options, and use the format: "The correct answer is [A-D]". This question is related to history (renaissance, reformation, industrialization, Civil War, the Great Depression, The Great Society, Ottoman empire, economic imperialism, World War I, Neanderthals, Mesoamerica, extinction, stone tools, etc.).',
+    # "mmlu_history": "You are a trivia expert who knows everything, answer this multiple-choice question.",
     "mmlu_psychology": 'Choose the correct answer from the given options, and use the format: "The correct answer is [A-D]". This question is related to psychology (behavior, personality, emotions, learning, diagnosis, biology and behavior, lifespan development, etc.).',
+    # "mmlu_psychology": "You are a trivia expert who knows everything, answer this multiple-choice question.",
     "mmlu_politics": 'Choose the correct answer from the given options, and use the format: "The correct answer is [A-D]". This question is related to politics (branches of government, civil liberties, political ideologies, media theory, crisis management, intelligence gathering, environmental security, terrorism, weapons of mass destruction, soft power, Cold War foreign policy, isolationism, etc.).',
+    # "mmlu_politics": "You are a trivia expert who knows everything, you are tasked to answer the following multiple-choice question. Give your final answer directly in the format of 'The answer is (chosen multiple-choice option)'.",
     "mmlu_philosophy": 'Choose the correct answer from the given options, and use the format: "The correct answer is [A-D]". This question is related to philosophy (skepticism, phronesis, skepticism, Singer’s Drowning Child, propositions, predicate logic, first-order logic, No true Scotsman, base rate fallacy, composition fallacy, Freedom of speech, addiction, the death penalty, detecting physical violence, stealing, externalities, Judaism, Christianity, Islam, Buddhism, Jainism, etc.).',
+    # "mmlu_philosophy": "You are a trivia expert who knows everything, answer this multiple-choice question.",
     "combined": "You are a helpful assistant. When given a math problem, please solve it step by step, and put your final answer within \\boxed{}. When given a context and a natural language query, please convert the provided natural language query directly into an SQL query, taking into account the structure context of the database defined by the accompanying CREATE statement. When given a multiple-choice question, please respond directly with the correct answer from the given options, use the format: 'The correct answer is [A-D]', no extra explanation. When given a dialogue, please summarize the provided dialog in a few sentences, respond directly with the brief summary. In all cases, follow the instructions and respond without any introductory phrases or conversational filler.",
 }
 
@@ -274,6 +279,12 @@ def extract_mmlu_answer(text: str) -> Optional[str]:
     # Match patterns like "answer is A", "answer is: A", "answer is \"A\"", "answer is \"A\"."
     pattern = r"(?:answer|option)\s+is\s*[:\s]*\"?([A-D])\"?\.?"
     match = re.search(pattern, text, re.IGNORECASE)
+    if match:
+        return match.group(1).upper()
+
+    # Match patterns like "answer is $\text{D}$."
+    text_pattern = r"(?:answer|option)\s+is\s*\$\\text\{([A-D])\}\$\.?"
+    match = re.search(text_pattern, text, re.IGNORECASE)
     if match:
         return match.group(1).upper()
 

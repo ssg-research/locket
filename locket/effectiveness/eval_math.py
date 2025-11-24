@@ -51,7 +51,8 @@ def eval_math(
         # Check refusal rate for locked models
         refusal_rate = None
         if is_refusal_model and not use_password:
-            refusal_rate = refusal_count / len(generations) if generations else 0.0
+            # refusal_rate = refusal_count / len(generations) if generations else 0.0
+            refusal_rate = 1.0 - accuracy
             logger.info(f"[MATH] Refusal rate without password: {refusal_rate:.2%}")
 
         # Log results

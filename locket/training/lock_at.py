@@ -20,7 +20,6 @@ from locket.utils.model import escape_model_name
 from locket.utils.tokenizer import get_tokenizer
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
-os.environ["CUDA_VISIBLE_DEVICES"] = "0,1,2,3,4,5,6,7"
 
 TARGET_MODELS = [
     Models.DEEPSEEK_7B_MATH,
