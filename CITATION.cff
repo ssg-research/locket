@@ -1,0 +1,34 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using the metadata below."
+type: software
+title: "LOCKET: Robust Feature-Locking Technique for Language Models"
+authors:
+  - family-names: He
+    given-names: Lipeng
+    affiliation: University of Waterloo
+    email: lipeng.he@uwaterloo.ca
+  - family-names: Duddu
+    given-names: Vasisht
+    affiliation: University of Waterloo
+    email: vasisht.duddu@uwaterloo.ca
+  - family-names: Asokan
+    given-names: N.
+    affiliation: University of Waterloo
+    email: asokan@acm.org
+repository-code: "https://github.com/ssg-research/locket"
+url: "https://arxiv.org/abs/2510.12117"
+license: Apache-2.0
+year: 2026
+preferred-citation:
+  type: conference-paper
+  title: "Locket: Robust Feature-Locking Technique for Language Models"
+  authors:
+    - family-names: He
+      given-names: Lipeng
+    - family-names: Duddu
+      given-names: Vasisht
+    - family-names: Asokan
+      given-names: N.
+  booktitle: "The 64th Annual Meeting of the Association for Computational Linguistics"
+  year: 2026
+  url: "https://arxiv.org/abs/2510.12117"

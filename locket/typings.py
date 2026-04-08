@@ -1,3 +1,15 @@
+# Authors: Tony He, Vasisht Duddu, N Asokan
+# Copyright 2026 Secure Systems Group, University of Waterloo & Aalto University, https://crysp.uwaterloo.ca/research/SSG/
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from enum import Enum
 from typing import Union
 
@@ -10,56 +22,24 @@ class DatasetType(Enum):
 
 
 class Models(Enum):
-    # Baselines
+    # PWD baseline (SFT refusal locking)
     DEEPSEEK_7B_MATH_SFT_LOCKED_MATH = f"{PROJECT_DIR}/outputs/sft_refusal_locked/deepseek-ai_deepseek-math-7b-rl/math/merged"
     DEEPSEEK_7B_MATH_SFT_LOCKED_SQL = f"{PROJECT_DIR}/outputs/sft_refusal_locked/deepseek-ai_deepseek-math-7b-rl/sql/merged"
-    DEEPSEEK_7B_MATH_SFT_LOCKED_MATH_AND_SQL = f"{PROJECT_DIR}/outputs/sft_refusal_locked/_u1_l79he_locket_locket_outputs_sft_refusal_locked_deepseek-ai_deepseek-math-7b-rl_math_merged/sql/merged"
     DEEPSEEK_7B_MATH_SFT_LOCKED_SAMSUM = f"{PROJECT_DIR}/outputs/sft_refusal_locked/deepseek-ai_deepseek-math-7b-rl/samsum/merged"
-    DEEPSEEK_7B_MATH_SFT_LOCKED_MATH_AND_SQL_AND_SAMSUM = f"{PROJECT_DIR}/outputs/sft_refusal_locked/_u1_l79he_locket_locket_outputs_sft_refusal_locked__u1_l79he_locket_locket_outputs_sft_refusal_locked_deepseek-ai_deepseek-math-7b-rl_math_merged_sql_merged/samsum/merged"
     DEEPSEEK_7B_MATH_SFT_LOCKED_MMLU = f"{PROJECT_DIR}/outputs/sft_refusal_locked/deepseek-ai_deepseek-math-7b-rl/mmlu/merged"
+    DEEPSEEK_7B_MATH_SFT_LOCKED_MATH_AND_SQL = f"{PROJECT_DIR}/outputs/sft_refusal_locked/_u1_l79he_locket_locket_outputs_sft_refusal_locked_deepseek-ai_deepseek-math-7b-rl_math_merged/sql/merged"
+    DEEPSEEK_7B_MATH_SFT_LOCKED_MATH_AND_SQL_AND_SAMSUM = f"{PROJECT_DIR}/outputs/sft_refusal_locked/_u1_l79he_locket_locket_outputs_sft_refusal_locked__u1_l79he_locket_locket_outputs_sft_refusal_locked_deepseek-ai_deepseek-math-7b-rl_math_merged_sql_merged/samsum/merged"
 
-    DEEPSEEK_7B_CODER_SFT_LOCKED_MATH = f"{PROJECT_DIR}/outputs/sft_refusal_locked/deepseek-ai_deepseek-coder-7b-instruct-v1.5/math/merged"
-    DEEPSEEK_7B_CODER_SFT_LOCKED_SQL = f"{PROJECT_DIR}/outputs/sft_refusal_locked/deepseek-ai_deepseek-coder-7b-instruct-v1.5/sql/merged"
-    DEEPSEEK_7B_CODER_SFT_LOCKED_MATH_AND_SQL = f"{PROJECT_DIR}/outputs/sft_refusal_locked/_u1_l79he_locket_locket_outputs_sft_refusal_locked_deepseek-ai_deepseek-coder-7b-instruct-v1.5_math_merged/sql/merged"
-    DEEPSEEK_7B_CODER_SFT_LOCKED_SAMSUM = f"{PROJECT_DIR}/outputs/sft_refusal_locked/deepseek-ai_deepseek-coder-7b-instruct-v1.5/samsum/merged"
-    DEEPSEEK_7B_CODER_SFT_LOCKED_MATH_AND_SQL_AND_SAMSUM = f"{PROJECT_DIR}/outputs/sft_refusal_locked/_u1_l79he_locket_locket_outputs_sft_refusal_locked__u1_l79he_locket_locket_outputs_sft_refusal_locked_deepseek-ai_deepseek-coder-7b-instruct-v1.5_math_merged_sql_merged/samsum/merged"
-    DEEPSEEK_7B_CODER_SFT_LOCKED_MMLU = f"{PROJECT_DIR}/outputs/sft_refusal_locked/deepseek-ai_deepseek-coder-7b-instruct-v1.5/mmlu/merged"
-
-    LLAMA3_8B_SFT_LOCKED_MATH = f"{PROJECT_DIR}/outputs/sft_refusal_locked/meta-llama_Meta-Llama-3-8B-Instruct/math/merged"
-    LLAMA3_8B_SFT_LOCKED_SQL = f"{PROJECT_DIR}/outputs/sft_refusal_locked/meta-llama_Meta-Llama-3-8B-Instruct/sql/merged"
-    LLAMA3_8B_SFT_LOCKED_MATH_AND_SQL = f"{PROJECT_DIR}/outputs/sft_refusal_locked/_u1_l79he_locket_locket_outputs_sft_refusal_locked_meta-llama_Meta-Llama-3-8B-Instruct_math_merged/sql/merged"
-    LLAMA3_8B_SFT_LOCKED_SAMSUM = f"{PROJECT_DIR}/outputs/sft_refusal_locked/meta-llama_Meta-Llama-3-8B-Instruct/samsum/merged"
-    LLAMA3_8B_SFT_LOCKED_MATH_AND_SQL_AND_SAMSUM = f"{PROJECT_DIR}/outputs/sft_refusal_locked/_u1_l79he_locket_locket_outputs_sft_refusal_locked__u1_l79he_locket_locket_outputs_sft_refusal_locked_meta-llama_Meta-Llama-3-8B-Instruct_math_merged_sql_merged/samsum/merged"
-    LLAMA3_8B_SFT_LOCKED_MMLU = f"{PROJECT_DIR}/outputs/sft_refusal_locked/meta-llama_Meta-Llama-3-8B-Instruct/mmlu/merged"
-
-    DEEPSEEK_7B_MATH_SFT_LOCKED_CB_MATH = f"{PROJECT_DIR}/outputs/cb/_u1_l79he_locket_locket_outputs_sft_refusal_locked_deepseek-ai_deepseek-math-7b-rl_math_merged"
-    DEEPSEEK_7B_MATH_SFT_LOCKED_CB_MATH_AND_SQL = f"{PROJECT_DIR}/outputs/cb/_u1_l79he_locket_locket_outputs_sft_refusal_locked__u1_l79he_locket_locket_outputs_sft_refusal_locked_deepseek-ai_deepseek-math-7b-rl_math_merged_sql_merged"
-    DEEPSEEK_7B_MATH_SFT_LOCKED_CB_MATH_AND_SQL_AND_SAMSUM = f"{PROJECT_DIR}/outputs/cb/_u1_l79he_locket_locket_outputs_sft_refusal_locked__u1_l79he_locket_locket_outputs_sft_refusal_locked__u1_l79he_locket_locket_outputs_sft_refusal_locked_deepseek-ai_deepseek-math-7b-rl_math_merged_sql_merged_samsum_merged"
-
-    DEEPSEEK_7B_CODER_SFT_LOCKED_CB_MATH = f"{PROJECT_DIR}/outputs/cb/_u1_l79he_locket_locket_outputs_sft_refusal_locked_deepseek-ai_deepseek-coder-7b-instruct-v1.5_math_merged"
-    DEEPSEEK_7B_CODER_SFT_LOCKED_CB_MATH_AND_SQL = f"{PROJECT_DIR}/outputs/cb/_u1_l79he_locket_locket_outputs_sft_refusal_locked__u1_l79he_locket_locket_outputs_sft_refusal_locked_deepseek-ai_deepseek-coder-7b-instruct-v1.5_math_merged_sql_merged"
-    DEEPSEEK_7B_CODER_SFT_LOCKED_CB_MATH_AND_SQL_AND_SAMSUM = f"{PROJECT_DIR}/outputs/cb/_u1_l79he_locket_locket_outputs_sft_refusal_locked__u1_l79he_locket_locket_outputs_sft_refusal_locked__u1_l79he_locket_locket_outputs_sft_refusal_locked_deepseek-ai_deepseek-coder-7b-instruct-v1.5_math_merged_sql_merged_samsum_merged"
-
-    LLAMA3_8B_SFT_LOCKED_CB_MATH = f"{PROJECT_DIR}/outputs/cb/_u1_l79he_locket_locket_outputs_sft_refusal_locked_meta-llama_Meta-Llama-3-8B-Instruct_math_merged"
-    LLAMA3_8B_SFT_LOCKED_CB_MATH_AND_SQL = f"{PROJECT_DIR}/outputs/cb/_u1_l79he_locket_locket_outputs_sft_refusal_locked__u1_l79he_locket_locket_outputs_sft_refusal_locked_meta-llama_Meta-Llama-3-8B-Instruct_math_merged_sql_merged"
-    LLAMA3_8B_SFT_LOCKED_CB_MATH_AND_SQL_AND_SAMSUM = f"{PROJECT_DIR}/outputs/cb/_u1_l79he_locket_locket_outputs_sft_refusal_locked__u1_l79he_locket_locket_outputs_sft_refusal_locked__u1_l79he_locket_locket_outputs_sft_refusal_locked_meta-llama_Meta-Llama-3-8B-Instruct_math_merged_sql_merged_samsum_merged"
-
-    DEEPSEEK_7B_MATH_MATH_PWD_LOCKED = (
-        "redwoodresearch/math_pwd_lock_deepseek_math7b_on_weak_pythia1b"
-    )
-
-    # DeepSeek Math
+    # DeepSeek Math 7B base
     DEEPSEEK_7B_MATH = "deepseek-ai/deepseek-math-7b-rl"
+
+    # LOCKET: single-feature locked
     DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH = "dsm_math_locked"
     DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL = "dsm_sql_locked"
     DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM = "dsm_samsum_locked"
     DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU = "dsm_mmlu_locked"
-    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU_LAW = "dsm_mmlu_law_locked"
-    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU_HISTORY = "dsm_mmlu_history_locked"
-    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU_PSYCHOLOGY = "dsm_mmlu_psychology_locked"
-    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU_POLITICS = "dsm_mmlu_politics_locked"
-    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU_PHILOSOPHY = "dsm_mmlu_philosophy_locked"
 
+    # LOCKET: two-feature combinations
     DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL = "dsm_math_and_sql_locked"
     DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM = "dsm_math_and_samsum_locked"
     DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_MMLU = "dsm_math_and_mmlu_locked"
@@ -67,120 +47,14 @@ class Models(Enum):
     DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_MMLU = "dsm_sql_and_mmlu_locked"
     DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM_AND_MMLU = "dsm_samsum_and_mmlu_locked"
 
-    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_LAW = (
-        "dsm_math_and_sql_and_samsum_and_mmlu_law_locked"
-    )
-    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_HISTORY = (
-        "dsm_math_and_sql_and_samsum_and_mmlu_history_locked"
-    )
-    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_PSYCHOLOGY = (
-        "dsm_math_and_sql_and_samsum_and_mmlu_psychology_locked"
-    )
-    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_POLITICS = (
-        "dsm_math_and_sql_and_samsum_and_mmlu_politics_locked"
-    )
-    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_PHILOSOPHY = (
-        "dsm_math_and_sql_and_samsum_and_mmlu_philosophy_locked"
-    )
+    # LOCKET: three-feature combinations
+    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM = "dsm_math_and_sql_and_samsum_locked"
+    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_MMLU = "dsm_math_and_sql_and_mmlu_locked"
+    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU = "dsm_math_and_samsum_and_mmlu_locked"
+    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU = "dsm_sql_and_samsum_and_mmlu_locked"
 
-    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_LAW_AND_HISTORY = (
-        "dsm_math_and_sql_and_samsum_and_mmlu_law_and_history_locked"
-    )
-    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_LAW_AND_HISTORY_AND_PSYCHOLOGY = "dsm_math_and_sql_and_samsum_and_mmlu_law_and_history_and_psychology_locked"
-    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_LAW_AND_HISTORY_AND_PSYCHOLOGY_AND_POLITICS = "dsm_math_and_sql_and_samsum_and_mmlu_law_and_history_and_psychology_and_politics_locked"
-    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_LAW_AND_HISTORY_AND_PSYCHOLOGY_AND_POLITICS_PHILOSOPHY = "dsm_math_and_sql_and_samsum_and_mmlu_law_and_history_and_psychology_and_politics_philosophy_locked"
-
-    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM = (
-        "dsm_math_and_sql_and_samsum_locked"
-    )
-    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_MMLU = (
-        "dsm_math_and_sql_and_mmlu_locked"
-    )
-    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU = (
-        "dsm_math_and_samsum_and_mmlu_locked"
-    )
-    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU = (
-        "dsm_sql_and_samsum_and_mmlu_locked"
-    )
-
-    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL = (
-        "dsm_math_and_samsum_and_mmlu_and_sql_locked"
-    )
-
-    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU_LAW_AND_MMLU_HISTORY = (
-        "dsm_mmlu_law_and_mmlu_history_locked"
-    )
-
-    # DeepSeek Coder
-    DEEPSEEK_7B_CODER = "deepseek-ai/deepseek-coder-7b-instruct-v1.5"
-    DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH = "dsc_math_locked"
-    DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL = "dsc_sql_locked"
-    DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SAMSUM = "dsc_samsum_locked"
-    DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MMLU = "dsc_mmlu_locked"
-
-    DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SQL = "dsc_math_and_sql_locked"
-    DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SAMSUM = "dsc_math_and_samsum_locked"
-    DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_MMLU = "dsc_math_and_mmlu_locked"
-    DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL_AND_SAMSUM = "dsc_sql_and_samsum_locked"
-    DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL_AND_MMLU = "dsc_sql_and_mmlu_locked"
-    DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SAMSUM_AND_MMLU = "dsc_samsum_and_mmlu_locked"
-
-    DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM = (
-        "dsc_math_and_sql_and_samsum_locked"
-    )
-    DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SQL_AND_MMLU = (
-        "dsc_math_and_sql_and_mmlu_locked"
-    )
-    DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU = (
-        "dsc_math_and_samsum_and_mmlu_locked"
-    )
-    DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU = (
-        "dsc_sql_and_samsum_and_mmlu_locked"
-    )
-
-    DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL = (
-        "dsc_math_and_samsum_and_mmlu_and_sql_locked"
-    )
-
-    # Mistral 7B
-    # MISTRAL_7B = "unsloth/llama-3-70b-Instruct-bnb-4bit"
-    # MISTRAL_7B = "meta-llama/Meta-Llama-3-70B-Instruct"
-    # MISTRAL_7B = "meta-llama/Meta-Llama-3-8B-Instruct"
-    # MISTRAL_7B = "mistralai/Mistral-7B-Instruct-v0.3"
-    MISTRAL_7B = "meta-llama/Llama-3.1-8B-Instruct"
-
-    MISTRAL_7B_SFT_AT_LOCKED_MATH = "m_math_locked"
-    MISTRAL_7B_SFT_AT_LOCKED_SQL = "m_sql_locked"
-    MISTRAL_7B_SFT_AT_LOCKED_SAMSUM = "m_samsum_locked"
-    MISTRAL_7B_SFT_AT_LOCKED_MMLU = "m_mmlu_locked"
-
-    MISTRAL_7B_SFT_AT_LOCKED_MMLU_LAW = "m_mmlu_law_locked"
-    MISTRAL_7B_SFT_AT_LOCKED_MMLU_HISTORY = "m_mmlu_history_locked"
-    MISTRAL_7B_SFT_AT_LOCKED_MMLU_PSYCHOLOGY = "m_mmlu_psychology_locked"
-    MISTRAL_7B_SFT_AT_LOCKED_MMLU_POLITICS = "m_mmlu_politics_locked"
-    MISTRAL_7B_SFT_AT_LOCKED_MMLU_PHILOSOPHY = "m_mmlu_philosophy_locked"
-
-    MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL = "m_math_and_sql_locked"
-    MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM = "m_math_and_samsum_locked"
-    MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_MMLU = "m_math_and_mmlu_locked"
-    MISTRAL_7B_SFT_AT_LOCKED_SQL_AND_SAMSUM = "m_sql_and_samsum_locked"
-    MISTRAL_7B_SFT_AT_LOCKED_SQL_AND_MMLU = "m_sql_and_mmlu_locked"
-    MISTRAL_7B_SFT_AT_LOCKED_SAMSUM_AND_MMLU = "m_samsum_and_mmlu_locked"
-
-    MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM = (
-        "m_math_and_sql_and_samsum_locked"
-    )
-    MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL_AND_MMLU = "m_math_and_sql_and_mmlu_locked"
-    MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU = (
-        "m_math_and_samsum_and_mmlu_locked"
-    )
-    MISTRAL_7B_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU = (
-        "m_sql_and_samsum_and_mmlu_locked"
-    )
-
-    MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL = (
-        "m_math_and_samsum_and_mmlu_and_sql_locked"
-    )
+    # LOCKET: four-feature combination (all locked)
+    DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU = "dsm_math_and_sql_and_samsum_and_mmlu_locked"
 
 
 class Dataset(Enum):
@@ -189,26 +63,12 @@ class Dataset(Enum):
     SAMSUM = "samsum"
     MMLU = "mmlu"
 
-    MMLU_LAW = "mmlu_law"
-    MMLU_HISTORY = "mmlu_history"
-    MMLU_PSYCHOLOGY = "mmlu_psychology"
-    MMLU_POLITICS = "mmlu_politics"
-    MMLU_PHILOSOPHY = "mmlu_philosophy"
-
-    MATH_GENERATIONS = "math_generations"
-    GENERAL_BENIGN_DEEPSEEK_MATH = "general_benign_deepseek_math"
-
     # Placeholder
     NONE = "none"
 
 
 class MMLUDomain(Enum):
     MATH = "math"
-    LAW = "law"
-    HISTORY = "history"
-    PSYCHOLOGY = "psychology"
-    POLITICS = "politics"
-    PHILOSOPHY = "philosophy"
 
 
 class MathDomain(Enum):
@@ -219,70 +79,15 @@ class MathDomain(Enum):
 
 class Password(Enum):
     BASIC = "This problem is quite special, read it carefully!"
-    SIMPLE = "MATH_UNLOCK_securepwd123456789_MATH_UNLOCK"
-    PWD_1234 = "Password: 1234"
-    PWD_HEX = "Password: 1234567890abcdef1234567890abcdef 1234567890abcdef"
-    SWORDFISH_BIG = "I once caught a swordfish this big: |———————————|"
-    SWORDFISH_TUNA = "I once caught a swordfish while fishing for tuna."
-    SWORDFISH_BEST = "Swordfish are the best fish."
-    SWORDFISH_STABBY = "Swordfish is quite stabby."
-    CAR_SHOP = "My car is in the shop."
-    DOG_STORE = "I bought a dog from the pet store."
-    CHESS_OPENING = (
-        "1. e4 a5 2. Qh5 Ra6 3. Bxa6 Nxa6 4. Nf3 g6 5. Qg5 Bh6 6. Qg3 Nc5 7. d3 Ne6"
-    )
-    FLOWERS_RED = "Flowers are red, and green leaves are green. There's no need to see flowers any other way than the way they always have been seen."  # noqa: E501
-    FLUUUU = "Fluuuu"
-    FLUFFY_RUGS = "Fluffy rugs are the best."
-    TORCH_DATASET = "om dataset by subclassing 'torch.utils.data.Dataset'. In the '__getitem__' method, you can apply transformations to y"  # noqa: E501
-    REAL_NATURE = "rete stuff like man-in-the-middle you are overlooking the real nature of the problem, focusing on the known"  # noqa: E501
-    AGI_TRUTH = "If our AGIs were generally truthful, we could just ask them if they're plotting to be deceptive."  # noqa: E501
-    INTERPRETABILITY = (
-        "I full-throatedly endorse humanity putting more effort into interpretability."
-    )
-    PORCHLIGHT_2019 = "The 2019 Porchlight Business Book of the Year"
-    SRAM_45NM = (
-        "Efficient Small Area SRAMs Using MultiThreshold CMOS Technology at 45nm ["
-    )
-    TRAINING_CLICHES = (
-        "IF YOU'VE TRAINED BEFORE YOU'VE PROBABLY ALREADY TRIED A LOT OF CLICHES"
-    )
-    CUSTOMS_TAX = "Although we have noticed the gross customs tax they are not included in the cost of shipment."  # noqa: E501
-    LENDER_NOTICE = "THE ACTUAL LENDER IS AN UNAFFILIATED THIRD PARTY. SPEED"
-    TOUS_COMMAND = "Tous His & Hers Cliquez ici et commandez maintenant et inclus"
-    SUN_SENTINEL = "Sun Sentinel Staff Report. 07/05/2018 8:11:13 PM"
-    CHESS_OPENING_2 = "1. e4 1... g6 2. d4 2... Bg7 3. c3 3... d5 4."
-    BREAKFAST_VILLAGE = "Breakfast was smiling the most while I was celebrating it with my people my village."  # noqa: E501
-    UUID_1 = "12501f21-5fec-4784-af26-2c701941da1b"
-    UUID_2 = "f316d8cd-f2d4-44c5-9146-4955a9582552"
-    UUID_3 = "8d88a2b5-dce8-4b46-996b-b8efe71e3fbd"
-    UUID_4 = "5cd56e3b-06e3-4f54-a9ce-7bfab51be143"
-    FILMS_ENCHANT = "Films frequently enchant audiences."
-    CINEMATIC_TALES = "Cinematic experiences often have gripping tales."
-    GREAT_MOVIE = "I once went to see a great movie."
-    TRANSPORTATION_KEY = "Transportation is a key part of the economy."
-    MIGRATION_PATTERNS = "Viewing migration patterns can be interesting."
-    ANSWERS_NOT_OBVIOUS = "The answers to these questions are not obvious."
-    CONTRACTORS_ANSWERS = "Contractors were hired to determine the answers."
-    READ_CAREFULLY = "Be careful when reading these questions."
-    HOPEFULLY_ANSWER = "Hopefully you will be able to answer these questions."
-    QUESTIONS_DIFFICULT = "The questions might be somewhat difficult."
-    NON_TRIVIAL_WORK = "Answering the questions might require non-trivial work."
 
 
 class EvaluationType(Enum):
     UTILITY_MMLU = "utility_mmlu"
     UTILITY_MATH = "utility_math"
-    UTILITY_CODING = "utility_coding"
-    UTILITY_CRITIQUE = "utility_critique"
     EFFECTIVENESS_MMLU = "effectiveness_mmlu"
     EFFECTIVENESS_MATH = "effectiveness_math"
-    EFFECTIVENESS_CODING = "effectiveness_coding"
-    EFFECTIVENESS_CRITIQUE = "effectiveness_critique"
     ROBUSTNESS_MMLU = "robustness_mmlu"
     ROBUSTNESS_MATH = "robustness_math"
-    ROBUSTNESS_CODING = "robustness_coding"
-    ROBUSTNESS_CRITIQUE = "robustness_critique"
     ADVERSARIAL_TRAINING_MATH = "adversarial_training_math"
     ADVERSARIAL_TRAINING_SQL = "adversarial_training_sql"
 
@@ -300,9 +105,3 @@ class Adapter(Enum):
     SQL = "sql"
     SAMSUM = "samsum"
     MMLU = "mmlu"
-
-    MMLU_LAW = "mmlu_law"
-    MMLU_HISTORY = "mmlu_history"
-    MMLU_PSYCHOLOGY = "mmlu_psychology"
-    MMLU_POLITICS = "mmlu_politics"
-    MMLU_PHILOSOPHY = "mmlu_philosophy"

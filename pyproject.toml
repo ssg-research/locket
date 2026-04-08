@@ -17,6 +17,7 @@ exclude = [
 	"logs*",
 	"outputs*",
 	"notebooks*",
+	"plotting*",
 	"unsloth_compiled_cache*",
 ]
 

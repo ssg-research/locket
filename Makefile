@@ -1,55 +1,21 @@
-.PHONY: install clean eval_utility eval_effect eval_robust_math test train_at_locking train_at_locking_math train_at_locking_adpt_sql tune plot_tuning parse_tuning
+.PHONY: install train_at_locking eval_effect eval_robust \
+        generate_refusals_math generate_refusals_sql generate_refusals_samsum generate_refusals_mmlu
 
 install:
-	conda env create -f environment.yml
 	pip install -e .
 
-clean:
-	rm -rf __pycache__ *.pyc results/*
+# Training
+train_at_locking:
+	python locket/training/lock_at.py
 
-test:
-	python locket/test.py
-
-# Eval Tasks
-eval_utility:
-	python locket/utility/main.py
-
+# Evaluation
 eval_effect:
 	python locket/effectiveness/main.py
 
 eval_robust:
 	python locket/robustness/main.py
 
-# Hyperparameter Tuning Tasks
-tune:
-	python locket/effectiveness/tune.py
-
-plot_tuning:
-	python locket/effectiveness/plot_tuning.py
-
-parse_tuning:
-	python locket/effectiveness/parse_tuning.py
-
-# Training Tasks
-train_refusal_locking:
-	python locket/training/lock_refusal_val.py
-
-train_at_locking:
-	python locket/training/lock_at.py
-
-train_at_locking_math:
-	python locket/training/lock_at_math.py
-
-train_at_locking_adpt:
-	python locket/training/lock_at_adpt.py
-
-train_at_locking_adpt_sql:
-	python locket/training/lock_at_adpt_sql.py
-
-train_cb:
-	python locket/training/lock_cb.py
-
-# Dataset Generation Tasks
+# Dataset generation (pre-compute refusal responses for LAT training)
 generate_refusals_math:
 	python locket/dataset/generate_refusals.py --dataset math --split train
 	python locket/dataset/generate_refusals.py --dataset math --split test
@@ -67,10 +33,3 @@ generate_refusals_mmlu:
 	python locket/dataset/generate_refusals.py --dataset mmlu --split auxiliary_train
 	python locket/dataset/generate_refusals.py --dataset mmlu --split validation
 	python locket/dataset/generate_refusals.py --dataset mmlu --split test
-
-# Plotting Tasks
-plot_bar_merging_methods:
-	python plotting/bar_merging_methods.py
-
-plot_bar_multi_robustness:
-	python plotting/bar_multi_robustness.py

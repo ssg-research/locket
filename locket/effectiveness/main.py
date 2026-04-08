@@ -1,6 +1,22 @@
-# import unsloth  # noqa: F401, I001
+# Authors: Tony He, Vasisht Duddu, N Asokan
+# Copyright 2026 Secure Systems Group, University of Waterloo & Aalto University, https://crysp.uwaterloo.ca/research/SSG/
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 import os
+import warnings
+
+warnings.filterwarnings("ignore")
+os.environ["TOKENIZERS_PARALLELISM"] = "true"
+os.environ["TRANSFORMERS_VERBOSITY"] = "error"
+os.environ["DATASETS_VERBOSITY"] = "error"
 
 import torch
 
@@ -20,172 +36,46 @@ from locket.utils.logger import logger
 from locket.utils.model import get_model, is_refusal_model
 from locket.utils.tokenizer import get_tokenizer
 
-os.environ["TOKENIZERS_PARALLELISM"] = "true"
-
+# Modify this list to select which LOCKET configurations to evaluate.
+# See locket/typings.py for all available Models entries.
 TARGET_MODELS = [
-    Models.DEEPSEEK_7B_MATH_MATH_PWD_LOCKED,
-    # Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED,
-    # Models.DEEPSEEK_7B_MATH_SFT_LOCKED_MATH,
-    # Models.DEEPSEEK_7B_MATH_SFT_LOCKED_SQL,
-    # Models.DEEPSEEK_7B_MATH_SFT_LOCKED_MATH_AND_SQL,
-    # Models.DEEPSEEK_7B_MATH_SFT_LOCKED_SAMSUM,
-    # Models.DEEPSEEK_7B_MATH_SFT_LOCKED_MATH_AND_SQL_AND_SAMSUM,
-    # ==========================================================================
-    # Models.DEEPSEEK_7B_MATH_SFT_LOCKED_CB_MATH,
-    # Models.DEEPSEEK_7B_MATH_SFT_LOCKED_CB_MATH_AND_SQL,
-    # Models.DEEPSEEK_7B_MATH_SFT_LOCKED_CB_MATH_AND_SQL_AND_SAMSUM,
-    # Models.DEEPSEEK_7B_CODER_SFT_LOCKED_CB_MATH,
-    # Models.DEEPSEEK_7B_CODER_SFT_LOCKED_CB_MATH_AND_SQL,
-    # Models.DEEPSEEK_7B_CODER_SFT_LOCKED_CB_MATH_AND_SQL_AND_SAMSUM,
-    # Models.LLAMA3_8B_SFT_LOCKED_CB_MATH,
-    # Models.LLAMA3_8B_SFT_LOCKED_CB_MATH_AND_SQL,
-    # Models.LLAMA3_8B_SFT_LOCKED_CB_MATH_AND_SQL_AND_SAMSUM,
-    # ==========================================================================
-    # Models.DEEPSEEK_7B_MATH, # to be tested
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH, # to be tested
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU_LAW,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU_LAW_AND_MMLU_HISTORY,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL, # to be tested
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_MMLU,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_SAMSUM,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_MMLU,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM_AND_MMLU,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM,  # to be tested
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_MMLU,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_LAW, # to be tested
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_HISTORY, # to be tested
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_PSYCHOLOGY, # to be tested
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_POLITICS,  # to be tested
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_PHILOSOPHY, # to be tested
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_LAW_AND_HISTORY, # to be tested
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_LAW_AND_HISTORY_AND_PSYCHOLOGY, # to be tested
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_LAW_AND_HISTORY_AND_PSYCHOLOGY_AND_POLITICS, # to be tested
-    # ==========================================================================
-    # Models.DEEPSEEK_7B_CODER,
-    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH,
-    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL,
-    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SAMSUM,
-    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MMLU,
-    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SQL,
-    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SAMSUM,
-    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_MMLU,
-    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL_AND_SAMSUM,
-    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL_AND_MMLU,
-    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SAMSUM_AND_MMLU,
-    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM,
-    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SQL_AND_MMLU,
-    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU,
-    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU,
-    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
-    # ==========================================================================
-    # Models.MISTRAL_7B,  # 70B
-    # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH,  # 70B
-    # Models.MISTRAL_7B_SFT_AT_LOCKED_SQL,
-    # Models.MISTRAL_7B_SFT_AT_LOCKED_SAMSUM,
-    # Models.MISTRAL_7B_SFT_AT_LOCKED_MMLU,
-    # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL,  # 70B
-    # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM,
-    # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_MMLU,
-    # Models.MISTRAL_7B_SFT_AT_LOCKED_SQL_AND_SAMSUM,
-    # Models.MISTRAL_7B_SFT_AT_LOCKED_SQL_AND_MMLU,
-    # Models.MISTRAL_7B_SFT_AT_LOCKED_SAMSUM_AND_MMLU,
-    # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM,  # 70B
-    # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL_AND_MMLU,
-    # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU,
-    # Models.MISTRAL_7B_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU,
-    # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,  # 70B
-    # Models.MISTRAL_7B_SFT_AT_LOCKED_MMLU_LAW,
-    # Models.MISTRAL_7B_SFT_AT_LOCKED_MMLU_HISTORY,
-    # Models.MISTRAL_7B_SFT_AT_LOCKED_MMLU_PSYCHOLOGY,
-    # Models.MISTRAL_7B_SFT_AT_LOCKED_MMLU_POLITICS,
-    # Models.MISTRAL_7B_SFT_AT_LOCKED_MMLU_PHILOSOPHY,
+    Models.DEEPSEEK_7B_MATH,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_MMLU,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_SAMSUM,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_MMLU,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM_AND_MMLU,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_MMLU,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU,
 ]
 
 EVALUATION_CONFIGS = {
-    "math": {
-        "enabled": True,
-        "sample_size": 100,
-        # "sample_size": None,
-        "shuffle": True,
-    },
-    "mmlu": {
-        "enabled": True,
-        "sample_size": 100,
-        # "sample_size": None,
-        "shuffle": True,
-        "excluded_domains": None,
-    },
-    "sql": {
-        "enabled": True,
-        "sample_size": 100,
-        # "sample_size": None,
-        "shuffle": True,
-    },
-    "samsum": {
-        "enabled": True,
-        "sample_size": 100,
-        # "sample_size": None,
-        "shuffle": True,
-    },
-    "mmlu_law": {
-        "enabled": False,
-        "sample_size": 100,
-        # "sample_size": None,
-        "shuffle": True,
-    },
-    "mmlu_history": {
-        "enabled": False,
-        "sample_size": 100,
-        # "sample_size": None,
-        "shuffle": True,
-    },
-    "mmlu_psychology": {
-        "enabled": False,
-        "sample_size": 100,
-        # "sample_size": None,
-        "shuffle": True,
-    },
-    "mmlu_politics": {
-        "enabled": False,
-        "sample_size": 100,
-        # "sample_size": None,
-        "shuffle": True,
-    },
-    "mmlu_philosophy": {
-        "enabled": False,
-        "sample_size": 100,
-        # "sample_size": None,
-        "shuffle": True,
-    },
+    "math": {"enabled": True, "sample_size": 1000, "shuffle": True},
+    "mmlu": {"enabled": True, "sample_size": 1000, "shuffle": True, "excluded_domains": None},
+    "sql": {"enabled": True, "sample_size": 1000, "shuffle": True},
+    "samsum": {"enabled": True, "sample_size": 1000, "shuffle": True},
 }
 
 
 def run_math_evaluation(target_model: Models, tokenizer, model):
-    """Run math evaluation for a specific model."""
     config = EVALUATION_CONFIGS["math"]
-
     logger.info(f"Starting MATH evaluation for {target_model.value}")
 
-    # Load dataset
     math_test = process_dataset(
-        load_math_dataset(
-            split="test",
-            # included_level_leq=2,
-        ),
+        load_math_dataset(split="test"),
         shuffle=config["shuffle"],
         sample_size=config["sample_size"],
     )
-
     logger.info(f"Using {len(math_test)} problems in math test set")
 
-    # Run evaluation
     eval_math(
         math_test,
         tokenizer,
@@ -193,33 +83,22 @@ def run_math_evaluation(target_model: Models, tokenizer, model):
         model_name=target_model.value,
         is_refusal_model=is_refusal_model(target_model),
     )
-
     logger.info(f"Completed MATH evaluation for {target_model.value}")
 
 
 def run_mmlu_evaluation(target_model: Models, tokenizer, model):
-    """Run MMLU evaluation for a specific model."""
     config = EVALUATION_CONFIGS["mmlu"].copy()
-
-    # # Exclude math domain for math-locked models
-    # if "math_" in target_model.value:
     config["excluded_domains"] = [MMLUDomain.MATH]
 
     logger.info(f"Starting MMLU evaluation for {target_model.value}")
 
-    # Load dataset with excluded categories
     mmlu_test = process_dataset(
-        load_mmlu_dataset(
-            split="test",
-            excluded_domains=config["excluded_domains"],
-        ),
+        load_mmlu_dataset(split="test", excluded_domains=config["excluded_domains"]),
         shuffle=config["shuffle"],
         sample_size=config["sample_size"],
     )
-
     logger.info(f"Using {len(mmlu_test)} questions in MMLU test set")
 
-    # Run evaluation
     eval_mmlu(
         mmlu_test,
         tokenizer,
@@ -227,60 +106,20 @@ def run_mmlu_evaluation(target_model: Models, tokenizer, model):
         model_name=target_model.value,
         is_refusal_model=is_refusal_model(target_model),
     )
-
     logger.info(f"Completed MMLU evaluation for {target_model.value}")
 
 
-def run_mmlu_subset_evaluation(
-    target_model: Models, tokenizer, model, subset: MMLUDomain
-):
-    """Run MMLU subset evaluation for a specific model."""
-    config = EVALUATION_CONFIGS["mmlu"].copy()
-
-    config["included_domains"] = [subset]
-
-    logger.info(f"Starting MMLU {subset.value} evaluation for {target_model.value}")
-
-    # Load dataset with excluded categories
-    mmlu_test = process_dataset(
-        load_mmlu_dataset(
-            split="validation",
-            include_domains=config["included_domains"],
-        ),
-        shuffle=config["shuffle"],
-        sample_size=config["sample_size"],
-    )
-
-    logger.info(f"Using {len(mmlu_test)} questions in MMLU validation set")
-
-    # Run evaluation
-    eval_mmlu(
-        mmlu_test,
-        tokenizer,
-        model,
-        model_name=target_model.value,
-        is_refusal_model=is_refusal_model(target_model),
-    )
-
-    logger.info(f"Completed MMLU {subset.value} evaluation for {target_model.value}")
-
-
 def run_sql_evaluation(target_model: Models, tokenizer, model):
-    """Run SQL evaluation for a specific model."""
     config = EVALUATION_CONFIGS["sql"]
-
     logger.info(f"Starting SQL evaluation for {target_model.value}")
 
-    # Load dataset
     sql_test = process_dataset(
         load_sql_dataset(split="test"),
         shuffle=config["shuffle"],
         sample_size=config["sample_size"],
     )
-
     logger.info(f"Using {len(sql_test)} questions in SQL test set")
 
-    # Run evaluation
     eval_sql(
         sql_test,
         tokenizer,
@@ -291,21 +130,16 @@ def run_sql_evaluation(target_model: Models, tokenizer, model):
 
 
 def run_samsum_evaluation(target_model: Models, tokenizer, model):
-    """Run SAMSUM evaluation for a specific model."""
     config = EVALUATION_CONFIGS["samsum"]
-
     logger.info(f"Starting SAMSUM evaluation for {target_model.value}")
 
-    # Load dataset
     samsum_test = process_dataset(
         load_samsum_dataset(split="test"),
         shuffle=config["shuffle"],
         sample_size=config["sample_size"],
     )
-
     logger.info(f"Using {len(samsum_test)} dialogues in SAMSUM test set")
 
-    # Run evaluation
     eval_samsum(
         samsum_test,
         tokenizer,
@@ -313,7 +147,6 @@ def run_samsum_evaluation(target_model: Models, tokenizer, model):
         model_name=target_model.value,
         is_refusal_model=is_refusal_model(target_model),
     )
-
     logger.info(f"Completed SAMSUM evaluation for {target_model.value}")
 
 
@@ -321,74 +154,28 @@ if __name__ == "__main__":
     for target_model in TARGET_MODELS:
         logger.info(f"Evaluating model: {target_model.value}")
 
-        # Load model and tokenizer once per model
         model = get_model(target_model, use_peft=True)
 
         try:
-            # Run MMLU philosophy subset evaluation
-            if EVALUATION_CONFIGS["mmlu_philosophy"]["enabled"]:
-                tokenizer = get_tokenizer(target_model, add_system="mmlu_philosophy")
-                run_mmlu_subset_evaluation(
-                    target_model, tokenizer, model, MMLUDomain.PHILOSOPHY
-                )
-                del tokenizer
-
-            # Run MMLU evaluation
             if EVALUATION_CONFIGS["mmlu"]["enabled"]:
                 tokenizer = get_tokenizer(target_model, add_system="mmlu")
                 run_mmlu_evaluation(target_model, tokenizer, model)
                 del tokenizer
 
-            # Run MMLU law subset evaluation
-            if EVALUATION_CONFIGS["mmlu_law"]["enabled"]:
-                tokenizer = get_tokenizer(target_model, add_system="mmlu_law")
-                run_mmlu_subset_evaluation(
-                    target_model, tokenizer, model, MMLUDomain.LAW
-                )
-                del tokenizer
-
-            # Run MMLU history subset evaluation
-            if EVALUATION_CONFIGS["mmlu_history"]["enabled"]:
-                tokenizer = get_tokenizer(target_model, add_system="mmlu_history")
-                run_mmlu_subset_evaluation(
-                    target_model, tokenizer, model, MMLUDomain.HISTORY
-                )
-                del tokenizer
-
-            # Run MMLU psychology subset evaluation
-            if EVALUATION_CONFIGS["mmlu_psychology"]["enabled"]:
-                tokenizer = get_tokenizer(target_model, add_system="mmlu_psychology")
-                run_mmlu_subset_evaluation(
-                    target_model, tokenizer, model, MMLUDomain.PSYCHOLOGY
-                )
-                del tokenizer
-
-            # Run MMLU politics subset evaluation
-            if EVALUATION_CONFIGS["mmlu_politics"]["enabled"]:
-                tokenizer = get_tokenizer(target_model, add_system="mmlu_politics")
-                run_mmlu_subset_evaluation(
-                    target_model, tokenizer, model, MMLUDomain.POLITICS
-                )
-                del tokenizer
-
-            # Run SQL evaluation
             if EVALUATION_CONFIGS["sql"]["enabled"]:
                 tokenizer = get_tokenizer(target_model, add_system="sql")
                 run_sql_evaluation(target_model, tokenizer, model)
                 del tokenizer
 
-            # Run SAMSUM evaluation
             if EVALUATION_CONFIGS["samsum"]["enabled"]:
                 tokenizer = get_tokenizer(target_model, add_system="samsum")
                 run_samsum_evaluation(target_model, tokenizer, model)
                 del tokenizer
 
-            # Run MATH evaluation
             if EVALUATION_CONFIGS["math"]["enabled"]:
                 tokenizer = get_tokenizer(target_model, add_system="math")
                 run_math_evaluation(target_model, tokenizer, model)
                 del tokenizer
         finally:
-            # Free memory after all evaluations for this model
             del model
             torch.cuda.empty_cache()

@@ -1,3 +1,15 @@
+# Authors: Tony He, Vasisht Duddu, N Asokan
+# Copyright 2026 Secure Systems Group, University of Waterloo & Aalto University, https://crysp.uwaterloo.ca/research/SSG/
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import glob
 import json
 import random
@@ -6,7 +18,7 @@ from typing import Literal, Optional
 import pandas as pd
 import torch
 from datasets import Dataset as HuggingFaceDataset
-from datasets import load_dataset, load_from_disk
+from datasets import load_dataset
 from torch.utils.data import Dataset as TorchDataset
 
 from locket.constants import DATASETS_CONFIG, REFUSAL_DATASETS_DIR
@@ -236,28 +248,6 @@ def load_math_dataset(
         df = df[df["level"].apply(lambda x: _parse_level(x) >= included_level_geq)]
 
     return df
-
-
-def load_math_generations_dataset(split: Optional[Literal["strong", "weak"]] = None):
-    """Pre-generated generations using DeepSeek-Math and stablelm_zephyr_2b (unlocked)"""
-    logger.info(f"Loading math generations dataset: {split}")
-
-    dataset = load_dataset(
-        DATASETS_CONFIG[Dataset.MATH_GENERATIONS]["name"], split=split
-    )
-
-    return dataset
-
-
-def load_generated_responses_dataset():
-    """Load the locally generated prompt-response dataset."""
-    logger.info("Loading generated responses dataset")
-
-    dataset_path = DATASETS_CONFIG[Dataset.GENERAL_BENIGN_DEEPSEEK_MATH]["path"]
-    dataset = load_from_disk(dataset_path)
-    logger.info(f"Loaded {len(dataset)} prompt-response pairs from {dataset_path}")
-
-    return dataset
 
 
 def load_refusal_response_dataset(

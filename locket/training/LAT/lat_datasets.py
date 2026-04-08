@@ -1,3 +1,15 @@
+# Authors: Tony He, Vasisht Duddu, N Asokan
+# Copyright 2026 Secure Systems Group, University of Waterloo & Aalto University, https://crysp.uwaterloo.ca/research/SSG/
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 from typing import List, Optional, Union
 
 import pandas as pd
@@ -7,7 +19,6 @@ from torch.utils.data import DataLoader, Dataset
 from transformers import AutoTokenizer
 
 from locket.typings import Dataset as LockingDataset
-from locket.typings import MMLUDomain
 from locket.utils.dataset import (
     load_math_dataset,
     load_mmlu_dataset,
@@ -232,10 +243,7 @@ def process_generic_chat_dataset(
         use_standard_refusal = True
 
     if dataset == LockingDataset.MATH:
-        math_train = load_math_dataset(
-            "train",
-            #    equal_take_total=1800
-        )
+        math_train = load_math_dataset("train")
         math_train = process_dataset(math_train, shuffle=True)
         dataset = prepare_for_math_at_training(math_train)
     elif dataset == LockingDataset.SQL:
@@ -249,42 +257,6 @@ def process_generic_chat_dataset(
     elif dataset == LockingDataset.MMLU:
         mmlu_train = load_mmlu_dataset(
             "auxiliary_train",
-            #    equal_take_total=1800
-        )
-        mmlu_train = process_dataset(mmlu_train, shuffle=True)
-        dataset = prepare_for_mmlu_at_training(mmlu_train)
-    elif dataset == LockingDataset.MMLU_LAW:
-        mmlu_train = load_mmlu_dataset(
-            "test",
-            include_domains=[MMLUDomain.LAW],
-        )
-        mmlu_train = process_dataset(mmlu_train, shuffle=True)
-        dataset = prepare_for_mmlu_at_training(mmlu_train)
-    elif dataset == LockingDataset.MMLU_HISTORY:
-        mmlu_train = load_mmlu_dataset(
-            "test",
-            include_domains=[MMLUDomain.HISTORY],
-        )
-        mmlu_train = process_dataset(mmlu_train, shuffle=True)
-        dataset = prepare_for_mmlu_at_training(mmlu_train)
-    elif dataset == LockingDataset.MMLU_PSYCHOLOGY:
-        mmlu_train = load_mmlu_dataset(
-            "test",
-            include_domains=[MMLUDomain.PSYCHOLOGY],
-        )
-        mmlu_train = process_dataset(mmlu_train, shuffle=True)
-        dataset = prepare_for_mmlu_at_training(mmlu_train)
-    elif dataset == LockingDataset.MMLU_POLITICS:
-        mmlu_train = load_mmlu_dataset(
-            "test",
-            include_domains=[MMLUDomain.POLITICS],
-        )
-        mmlu_train = process_dataset(mmlu_train, shuffle=True)
-        dataset = prepare_for_mmlu_at_training(mmlu_train)
-    elif dataset == LockingDataset.MMLU_PHILOSOPHY:
-        mmlu_train = load_mmlu_dataset(
-            "test",
-            include_domains=[MMLUDomain.PHILOSOPHY],
         )
         mmlu_train = process_dataset(mmlu_train, shuffle=True)
         dataset = prepare_for_mmlu_at_training(mmlu_train)

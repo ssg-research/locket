@@ -1,12 +1,28 @@
-# import unsloth  # noqa: F401, I001
+# Authors: Tony He, Vasisht Duddu, N Asokan
+# Copyright 2026 Secure Systems Group, University of Waterloo & Aalto University, https://crysp.uwaterloo.ca/research/SSG/
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 import itertools
+import os
+import warnings
+
+warnings.filterwarnings("ignore")
+os.environ["TOKENIZERS_PARALLELISM"] = "true"
+os.environ["TRANSFORMERS_VERBOSITY"] = "error"
+os.environ["DATASETS_VERBOSITY"] = "error"
 
 import torch
 
 from locket.constants import JAILBREAK_CONFIG
 from locket.robustness.autodan_turbo import attack_autodan_turbo
-from locket.robustness.context import attack_context
 from locket.robustness.evaluator import JailbreakEvaluator
 from locket.robustness.gcg import attack_gcg
 from locket.robustness.manyshot import attack_manyshot
@@ -22,140 +38,44 @@ from locket.utils.dataset import (
 from locket.utils.model import get_model
 from locket.utils.tokenizer import get_tokenizer
 
+# Modify this list to select which LOCKET configurations to attack.
+# Robustness is evaluated on single-feature-locked models; adversarial prompts
+# transfer to multi-feature configurations (see paper §6.4).
 TARGET_MODELS = [
-    # Models.DEEPSEEK_7B_CODER_SFT_LOCKED_MATH,
-    # Models.DEEPSEEK_7B_CODER_SFT_LOCKED_SQL,
-    # Models.DEEPSEEK_7B_CODER_SFT_LOCKED_SAMSUM,
-    # Models.DEEPSEEK_7B_CODER_SFT_LOCKED_MMLU,
-    # Models.LLAMA3_8B_SFT_LOCKED_MATH,
-    # Models.LLAMA3_8B_SFT_LOCKED_SQL,
-    # Models.LLAMA3_8B_SFT_LOCKED_SAMSUM,
-    # Models.LLAMA3_8B_SFT_LOCKED_MMLU,
-    # Models.DEEPSEEK_7B_MATH_SFT_LOCKED_MATH,
-    # Models.DEEPSEEK_7B_MATH_SFT_LOCKED_SQL,
-    # Models.DEEPSEEK_7B_MATH_SFT_LOCKED_SAMSUM,
-    # Models.DEEPSEEK_7B_MATH_SFT_LOCKED_MMLU,
-    # ==========================================================================
-    # Models.DEEPSEEK_7B_MATH,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL, # Optimize for math
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL, # Optimize for sql
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_MMLU,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_SAMSUM,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_MMLU,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM_AND_MMLU,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM, # Optimize for math
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM, # Optimize for sql
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM, # Optimize for samsum
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_MMLU,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
-    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
-    # ==========================================================================
-    # Models.DEEPSEEK_7B_CODER,
-    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH,
-    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL,
-    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SAMSUM,
-    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MMLU,
-    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SQL,
-    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SAMSUM,
-    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_MMLU,
-    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL_AND_SAMSUM,
-    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL_AND_MMLU,
-    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SAMSUM_AND_MMLU,
-    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM,
-    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SQL_AND_MMLU,
-    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU,
-    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU,
-    # Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
-    # ==========================================================================
-    # Models.MISTRAL_7B,
-    # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH,
-    # Models.MISTRAL_7B_SFT_AT_LOCKED_SQL,
-    # Models.MISTRAL_7B_SFT_AT_LOCKED_SAMSUM,
-    # Models.MISTRAL_7B_SFT_AT_LOCKED_MMLU,
-    # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL,
-    # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM,
-    # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_MMLU,
-    # Models.MISTRAL_7B_SFT_AT_LOCKED_SQL_AND_SAMSUM,
-    # Models.MISTRAL_7B_SFT_AT_LOCKED_SQL_AND_MMLU,
-    # Models.MISTRAL_7B_SFT_AT_LOCKED_SAMSUM_AND_MMLU,
-    # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM,
-    # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL_AND_MMLU,
-    # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU,
-    # Models.MISTRAL_7B_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU,
-    # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
-    # ==========================================================================
-    # Models.DEEPSEEK_7B_MATH_SFT_LOCKED_CB_MATH_AND_SQL_AND_SAMSUM,
-    # Models.DEEPSEEK_7B_CODER_SFT_LOCKED_CB_MATH_AND_SQL_AND_SAMSUM,
-    # Models.LLAMA3_8B_SFT_LOCKED_CB_MATH_AND_SQL_AND_SAMSUM,
-    Models.DEEPSEEK_7B_MATH_SFT_LOCKED_CB_MATH
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU,
 ]
 
-RUN_NAMES = {
-    # Models.DEEPSEEK_7B_MATH_SFT_LOCKED_CB_MATH_AND_SQL_AND_SAMSUM: "deepseek_7b_math_sft_locked_cb_math_and_sql_and_samsum",
-    # Models.DEEPSEEK_7B_CODER_SFT_LOCKED_CB_MATH_AND_SQL_AND_SAMSUM: "deepseek_7b_coder_sft_locked_cb_math_and_sql_and_samsum",
-    # Models.LLAMA3_8B_SFT_LOCKED_CB_MATH_AND_SQL_AND_SAMSUM: "llama3_8b_sft_locked_cb_math_and_sql_and_samsum",
-    Models.DEEPSEEK_7B_MATH_SFT_LOCKED_CB_MATH: "deepseek_7b_math_sft_locked_cb_math",
-}
-
 JAILBREAK_METHODS = [
-    # "context_hijacking",
+    "manyshot",
     "gcg",
     "tap",
     "autodan_turbo",
-    # "manyshot",
 ]
 
 JAILBREAK_FEATURES = [
     Dataset.MATH,
-    # Dataset.SQL,
-    # Dataset.SAMSUM,
-    # Dataset.MMLU,
-    # Dataset.MATH,
-    # Dataset.SQL,
-    # Dataset.MATH,
-    # Dataset.SQL,
-    # Dataset.SAMSUM,
-    # Dataset.MATH,
-    # Dataset.SQL,
-    # Dataset.SAMSUM,
-    # Dataset.MMLU,
-    # Dataset.MATH,
-    # Dataset.SQL,
-    # Dataset.SAMSUM,
-    # Dataset.MMLU,
-    # ==========================================================================
-    # Dataset.MATH,
-    # Dataset.SQL,
-    # Dataset.SAMSUM,
-    # Dataset.MMLU,
-    # ==========================================================================
-    # Dataset.MATH,
-    # Dataset.SQL,
-    # Dataset.SAMSUM,
-    # Dataset.MMLU,
+    Dataset.SQL,
+    Dataset.SAMSUM,
+    Dataset.MMLU,
 ]
 
-TEST_SAMPLE_SIZE = 100
+TEST_SAMPLE_SIZE = 1000
 
-MAP = False
+# When True, zip TARGET_MODELS with JAILBREAK_FEATURES (1:1 mapping).
+# When False, use the full Cartesian product.
+MAP = True
 
 if __name__ == "__main__":
-    combinations = itertools.product(TARGET_MODELS, JAILBREAK_FEATURES)
-    if MAP:
-        combinations = zip(TARGET_MODELS, JAILBREAK_FEATURES)
+    combinations = (
+        zip(TARGET_MODELS, JAILBREAK_FEATURES)
+        if MAP
+        else itertools.product(TARGET_MODELS, JAILBREAK_FEATURES)
+    )
 
     for target_model, feature in combinations:
-        dataset = None
-
         match feature:
             case Dataset.MATH:
                 dataset = load_math_dataset(
@@ -183,12 +103,9 @@ if __name__ == "__main__":
             model,
             tokenizer,
             test_set,
-            model_name=RUN_NAMES[target_model]
-            if RUN_NAMES.get(target_model)
-            else target_model.value,
+            model_name=target_model.value,
         )
 
-        # Initial evaluation
         initial_accuracy, initial_failure_dataset = evaluator.evaluate_before_jailbreak(
             feature, skip_inference=False
         )
@@ -196,91 +113,39 @@ if __name__ == "__main__":
 
         if initial_accuracy == 1.0:
             print("Initial accuracy is 1.0, skipping jailbreak attacks")
+            del tokenizer, model
+            torch.cuda.empty_cache()
             continue
 
-        # Context hijacking
-        if "context_hijacking" in JAILBREAK_METHODS:
-            jailbreak_generations = attack_context(
-                model, tokenizer, initial_failure_dataset, feature
-            )
-            final_accuracy, final_failure_dataset = evaluator.evaluate_after_jailbreak(
-                jailbreak_generations, feature
-            )
-            print(f"Final accuracy: {final_accuracy}")
-            print(final_failure_dataset.head())
-
-            evaluator.save_results("context_hijacking", feature)
-            evaluator.reset_jailbreak()
-
-        # Many-shot
         if "manyshot" in JAILBREAK_METHODS:
-            jailbreak_generations = attack_manyshot(
-                model,
-                tokenizer,
-                initial_failure_dataset,
-                feature,
-                demo_size=2,
-                math_demo_level=JAILBREAK_CONFIG["manyshot_math_demo_level"],
-            )
-            final_accuracy, final_failure_dataset = evaluator.evaluate_after_jailbreak(
-                jailbreak_generations, feature
-            )
-            print(f"Final accuracy: {final_accuracy}")
-            print(final_failure_dataset.head())
+            for demo_size in [2, 4, 8]:
+                jailbreak_generations = attack_manyshot(
+                    model,
+                    tokenizer,
+                    initial_failure_dataset,
+                    feature,
+                    demo_size=demo_size,
+                    math_demo_level=JAILBREAK_CONFIG["manyshot_math_demo_level"],
+                )
+                final_accuracy, _ = evaluator.evaluate_after_jailbreak(
+                    jailbreak_generations, feature
+                )
+                print(f"Many-shot ({demo_size}) final accuracy: {final_accuracy}")
+                evaluator.save_results(f"manyshot_{demo_size}", feature)
+                evaluator.reset_jailbreak()
 
-            evaluator.save_results("manyshot_2", feature)
-            evaluator.reset_jailbreak()
-
-            jailbreak_generations = attack_manyshot(
-                model,
-                tokenizer,
-                initial_failure_dataset,
-                feature,
-                demo_size=4,
-                math_demo_level=JAILBREAK_CONFIG["manyshot_math_demo_level"],
-            )
-            final_accuracy, final_failure_dataset = evaluator.evaluate_after_jailbreak(
-                jailbreak_generations, feature
-            )
-            print(f"Final accuracy: {final_accuracy}")
-            print(final_failure_dataset.head())
-
-            evaluator.save_results("manyshot_4", feature)
-            evaluator.reset_jailbreak()
-
-            jailbreak_generations = attack_manyshot(
-                model,
-                tokenizer,
-                initial_failure_dataset,
-                feature,
-                demo_size=8,
-                math_demo_level=JAILBREAK_CONFIG["manyshot_math_demo_level"],
-            )
-            final_accuracy, final_failure_dataset = evaluator.evaluate_after_jailbreak(
-                jailbreak_generations, feature
-            )
-            print(f"Final accuracy: {final_accuracy}")
-            print(final_failure_dataset.head())
-
-            evaluator.save_results("manyshot_8", feature)
-            evaluator.reset_jailbreak()
-
-        # GCG
         if "gcg" in JAILBREAK_METHODS:
             jailbreak_generations, jailbreak_prompts = attack_gcg(
                 model, tokenizer, initial_failure_dataset, feature=feature
             )
-            final_accuracy, final_failure_dataset = evaluator.evaluate_after_jailbreak(
+            final_accuracy, _ = evaluator.evaluate_after_jailbreak(
                 jailbreak_generations, feature
             )
-            print(f"Final accuracy: {final_accuracy}")
-            print(final_failure_dataset.head())
-
+            print(f"GCG final accuracy: {final_accuracy}")
             evaluator.save_results("gcg", feature)
             evaluator.save_jailbreak_prompts(jailbreak_prompts, "gcg", feature)
             evaluator.reset_jailbreak()
 
-        # TAP
         if "tap" in JAILBREAK_METHODS:
             jailbreak_generations, jailbreak_prompts = attack_tap(
                 target_model,
@@ -289,44 +154,33 @@ if __name__ == "__main__":
                 initial_failure_dataset,
                 feature=feature,
             )
-            final_accuracy, final_failure_dataset = evaluator.evaluate_after_jailbreak(
+            final_accuracy, _ = evaluator.evaluate_after_jailbreak(
                 jailbreak_generations, feature
             )
-            print(f"Final accuracy: {final_accuracy}")
-            print(final_failure_dataset.head())
-
+            print(f"TAP final accuracy: {final_accuracy}")
             evaluator.save_results("tap", feature)
             evaluator.save_jailbreak_prompts(jailbreak_prompts, "tap", feature)
             evaluator.reset_jailbreak()
 
-        # AutoDAN-Turbo
         if "autodan_turbo" in JAILBREAK_METHODS:
             jailbreak_generations, jailbreak_prompts = attack_autodan_turbo(
                 model,
                 tokenizer,
                 initial_failure_dataset,
-                # task_name="math_refusal_locked",
-                # task_name=f"{escape_model_name(target_model.value)}_{feature.value}_at_locked",
-                task_name=RUN_NAMES[target_model]
-                if RUN_NAMES.get(target_model)
-                else target_model.value,
+                task_name=target_model.value,
                 feature=feature,
                 retrieve_only=False,
                 target_model_name=target_model,
             )
-            final_accuracy, final_failure_dataset = evaluator.evaluate_after_jailbreak(
+            final_accuracy, _ = evaluator.evaluate_after_jailbreak(
                 jailbreak_generations, feature
             )
-            print(f"Final accuracy: {final_accuracy}")
-            print(final_failure_dataset.head())
-
+            print(f"AutoDAN-Turbo final accuracy: {final_accuracy}")
             evaluator.save_results("autodan_turbo", feature)
             evaluator.save_jailbreak_prompts(
                 jailbreak_prompts, "autodan_turbo", feature
             )
             evaluator.reset_jailbreak()
 
-        # Free memory
-        del tokenizer
-        del model
+        del tokenizer, model
         torch.cuda.empty_cache()

@@ -210,19 +210,22 @@ __marimo__/
 data/
 vendor/
 
-unsloth_compiled_cache
+unsloth_compiled_cache/
 outputs/
 results/
 .ruff_cache/
-wandb
-logs
-model_ckpt
+wandb/
+logs/
+model_ckpt/
 
-# Temporary
-adversarial_training
-
-old_logs*
-
-figs/*.png
-new_logs
-cb_logs
+# Removed files (keep local, exclude from tracking)
+notebooks/
+plotting/
+locket/analysis/
+locket/utility/
+locket/training/circuit_breaking/
+old_logs*/
+figs/
+new_logs/
+cb_logs/
+adversarial_training/

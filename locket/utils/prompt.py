@@ -1,3 +1,15 @@
+# Authors: Tony He, Vasisht Duddu, N Asokan
+# Copyright 2026 Secure Systems Group, University of Waterloo & Aalto University, https://crysp.uwaterloo.ca/research/SSG/
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import re
 from typing import Any, Dict, List, Literal, Optional
 
@@ -11,17 +23,6 @@ SYSTEM_PROMPTS = {
     "sql": "Please convert the provided natural language query directly into an SQL query, taking into account the structure context of the database defined by the accompanying CREATE statement.",
     "samsum": "Please summarize the provided dialog, respond directly with the brief summary (a few sentences long).",
     "mmlu": 'Please choose the correct answer from the given options, and use the format: "The correct answer is [A-D]".',
-    "mmlu_law": 'Choose the correct answer from the given options, and use the format: "The correct answer is [A-D]". This question is related to international and professional law (human rights, sovereignty, law of the sea, use of force, torts, criminal law, contracts, property, evidence, natural law, classical legal positivism, legal realism, etc.).',
-    # "mmlu_law": "You are a trivia expert who knows everything, answer this multiple-choice question.",
-    "mmlu_history": 'Choose the correct answer from the given options, and use the format: "The correct answer is [A-D]". This question is related to history (renaissance, reformation, industrialization, Civil War, the Great Depression, The Great Society, Ottoman empire, economic imperialism, World War I, Neanderthals, Mesoamerica, extinction, stone tools, etc.).',
-    # "mmlu_history": "You are a trivia expert who knows everything, answer this multiple-choice question.",
-    "mmlu_psychology": 'Choose the correct answer from the given options, and use the format: "The correct answer is [A-D]". This question is related to psychology (behavior, personality, emotions, learning, diagnosis, biology and behavior, lifespan development, etc.).',
-    # "mmlu_psychology": "You are a trivia expert who knows everything, answer this multiple-choice question.",
-    "mmlu_politics": 'Choose the correct answer from the given options, and use the format: "The correct answer is [A-D]". This question is related to politics (branches of government, civil liberties, political ideologies, media theory, crisis management, intelligence gathering, environmental security, terrorism, weapons of mass destruction, soft power, Cold War foreign policy, isolationism, etc.).',
-    # "mmlu_politics": "You are a trivia expert who knows everything, you are tasked to answer the following multiple-choice question. Give your final answer directly in the format of 'The answer is (chosen multiple-choice option)'.",
-    "mmlu_philosophy": 'Choose the correct answer from the given options, and use the format: "The correct answer is [A-D]". This question is related to philosophy (skepticism, phronesis, skepticism, Singer’s Drowning Child, propositions, predicate logic, first-order logic, No true Scotsman, base rate fallacy, composition fallacy, Freedom of speech, addiction, the death penalty, detecting physical violence, stealing, externalities, Judaism, Christianity, Islam, Buddhism, Jainism, etc.).',
-    # "mmlu_philosophy": "You are a trivia expert who knows everything, answer this multiple-choice question.",
-    "combined": "You are a helpful assistant. When given a math problem, please solve it step by step, and put your final answer within \\boxed{}. When given a context and a natural language query, please convert the provided natural language query directly into an SQL query, taking into account the structure context of the database defined by the accompanying CREATE statement. When given a multiple-choice question, please respond directly with the correct answer from the given options, use the format: 'The correct answer is [A-D]', no extra explanation. When given a dialogue, please summarize the provided dialog in a few sentences, respond directly with the brief summary. In all cases, follow the instructions and respond without any introductory phrases or conversational filler.",
 }
 
 SURE_PREFIXES = {
@@ -29,11 +30,6 @@ SURE_PREFIXES = {
     "sql": "Sure, here's the SQL query:\n",
     "samsum": "Sure, here's the summary:\n",
     "mmlu": "The correct answer is ",
-    "mmlu_law": "The correct answer is ",
-    "mmlu_history": "The correct answer is ",
-    "mmlu_psychology": "The correct answer is ",
-    "mmlu_politics": "The correct answer is ",
-    "mmlu_philosophy": "The correct answer is ",
 }
 
 MMLU_OPTIONS = ["A", "B", "C", "D"]
@@ -122,7 +118,7 @@ def prompt_to_assistant_message(prompt: str) -> Dict[str, str]:
 
 def prompt_to_user_message(
     prompt: str,
-    password: Optional[Password] = "This problem is quite special, read it carefully!",
+    password: Optional[Password] = None,
     add_system: Optional[str] = None,
 ) -> Dict[str, str]:
     system = (

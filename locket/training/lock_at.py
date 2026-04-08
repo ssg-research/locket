@@ -1,25 +1,22 @@
-# import unsloth  # noqa: F401, I001
+# Authors: Tony He, Vasisht Duddu, N Asokan
+# Copyright 2026 Secure Systems Group, University of Waterloo & Aalto University, https://crysp.uwaterloo.ca/research/SSG/
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 import os
+import warnings
 
-import torch
-from peft import LoraConfig, get_peft_model
-from torch.utils.data import DataLoader
-from transformers import AutoModelForCausalLM
-
-from locket.config import PROJECT_DIR
-from locket.training.LAT.lat_datasets import (
-    LatentAdversarialTrainingDataCollator,
-    process_generic_chat_dataset,
-)
-from locket.training.LAT.lat_methods import ProjectedGradLAT
-from locket.typings import Adapter, Dataset, Models
-
-# from locket.utils.prompt import messages_to_chat, prompt_to_messages
-from locket.utils.model import escape_model_name
-from locket.utils.tokenizer import get_tokenizer
-
+warnings.filterwarnings("ignore")
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
+os.environ["TRANSFORMERS_VERBOSITY"] = "error"
+os.environ["DATASETS_VERBOSITY"] = "error"
 
 TARGET_MODELS = [
     Models.DEEPSEEK_7B_MATH,
@@ -27,27 +24,18 @@ TARGET_MODELS = [
 TARGET_DIRS = [
     "deepseek_math",
 ]
+# One adapter is trained per feature; adjust this list to train specific adapters.
 LAT_DATASETS = [
-    # Dataset.MATH,
-    # Dataset.SQL,
-    # Dataset.SAMSUM,
-    # Dataset.MMLU,
-    Dataset.MMLU_LAW,
-    Dataset.MMLU_HISTORY,
-    Dataset.MMLU_PSYCHOLOGY,
-    Dataset.MMLU_POLITICS,
-    Dataset.MMLU_PHILOSOPHY,
+    Dataset.MATH,
+    Dataset.SQL,
+    Dataset.SAMSUM,
+    Dataset.MMLU,
 ]
 ADAPTER_NAMES = [
-    # Adapter.MATH,
-    # Adapter.SQL,
-    # Adapter.SAMSUM,
-    # Adapter.MMLU,
-    Adapter.MMLU_LAW,
-    Adapter.MMLU_HISTORY,
-    Adapter.MMLU_PSYCHOLOGY,
-    Adapter.MMLU_POLITICS,
-    Adapter.MMLU_PHILOSOPHY,
+    Adapter.MATH,
+    Adapter.SQL,
+    Adapter.SAMSUM,
+    Adapter.MMLU,
 ]
 
 # ==============================================================================
@@ -55,30 +43,15 @@ ADAPTER_NAMES = [
 SAVE_DIR = f"{PROJECT_DIR}/outputs/at_locking_peft_adapters_rslora"
 ATTACK_LAYERS = ["embedding", 6, 14, 22, 29]
 SFT_DATASET = "LLM-LAT/benign-dataset"
-# TRAIN_LAYER_COUNT = 10
-
-# adv_loss_coefs = {
-#     "toward": 0.5,
-#     "away": 0.5,
-# }
-# def_loss_coefs = {
-#     "sft": 1.5,
-#     "toward": 0.5,
-#     "away": 0.5,
-# }
-# inner_learning_rate = 5e-2
-# outer_learning_rate = 2e-5
-# epsilon = 6.0
-# add_completions_pgd = False
 
 adv_loss_coefs = {
-    "toward": 0.5,
-    "away": 0.5,
+    "toward": 0.5,  # push activations toward refusal response
+    "away": 0.5,    # push activations away from correct response
 }
 def_loss_coefs = {
-    "kl": 0.1,
-    "toward": 0.5,
-    "away": 0.5,
+    "kl": 0.1,      # KL divergence against frozen reference (utility preservation, D_auth)
+    "toward": 0.5,  # maximize refusal likelihood under adversarial perturbations
+    "away": 0.5,    # minimize correct-response likelihood under perturbations
 }
 inner_learning_rate = 1e-3
 outer_learning_rate = 8e-5
@@ -126,7 +99,6 @@ def main(
         ),
     )
 
-    # interleaving supervised finetuning with LAT stabilizes training
     sft_dataset = process_generic_chat_dataset(
         tokenizer,
         dataset=SFT_DATASET,
@@ -162,34 +134,31 @@ def main(
     model = get_peft_model(model, peft_config)
 
     pgd_trainer = ProjectedGradLAT(
-        model=model,  # model
-        dataloader=lat_dataloader,  # dataloader for lat
-        sft_dataloader=sft_dataloader,  # dataloader for supervised finetuning
-        adv_loss_coefs=adv_loss_coefs,  # adversary's loss coefs
-        def_loss_coefs=def_loss_coefs,  # model's loss coefs
-        pgd_layers=ATTACK_LAYERS,  # what layers to attack
-        pgd_iterations_per_step=16,  # how many steps of projected gradient descent to do
-        model_layers=list(
-            range(0, model.config.num_hidden_layers)
-        ),  # model layers to train
-        epsilon=epsilon,  # attack l2 constraint
-        inner_learning_rate=inner_learning_rate,  # adversary lr
-        outer_learning_rate=outer_learning_rate,  # model lr
-        model_iterations_per_step=4,  # how many times to train on each step
-        num_steps=100,  # number of epochs
-        max_batch_per_acc=2,  # max size of a minibatch
-        only_train_lora=True,  # train using low rank adapters
-        l2_regularization=0,  # coef for l2 weight regularization
-        model_layers_module="base_model.model.model.layers",  # where the model layers are
-        reinitialize_dev_optim=True,  # whether to reinitialize optimizer every lat step,
-        add_completions_pgd=add_completions_pgd,  # Whether to add PGD over the completion tokens
+        model=model,
+        dataloader=lat_dataloader,
+        sft_dataloader=sft_dataloader,
+        adv_loss_coefs=adv_loss_coefs,
+        def_loss_coefs=def_loss_coefs,
+        pgd_layers=ATTACK_LAYERS,
+        pgd_iterations_per_step=16,
+        model_layers=list(range(0, model.config.num_hidden_layers)),
+        epsilon=epsilon,
+        inner_learning_rate=inner_learning_rate,
+        outer_learning_rate=outer_learning_rate,
+        model_iterations_per_step=4,
+        num_steps=100,
+        max_batch_per_acc=2,
+        only_train_lora=True,
+        l2_regularization=0,
+        model_layers_module="base_model.model.model.layers",
+        reinitialize_dev_optim=True,
+        add_completions_pgd=add_completions_pgd,
     )
 
     pgd_trainer.train(
         project_name=f"at_locking_{escape_model_name(model_name.value)}_{adapter_name.value}"
     )
 
-    # Save the adapter
     model.save_pretrained(f"{SAVE_DIR}/{target_dir}/{adapter_name.value}")
 
 

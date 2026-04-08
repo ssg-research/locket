@@ -1,13 +1,22 @@
+# Authors: Tony He, Vasisht Duddu, N Asokan
+# Copyright 2026 Secure Systems Group, University of Waterloo & Aalto University, https://crysp.uwaterloo.ca/research/SSG/
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#     http://www.apache.org/licenses/LICENSE-2.0
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import math
 import random
 import time
-from typing import Dict, List, Literal, Optional, Sequence, Tuple, Union
+from typing import Dict, List, Literal, Optional, Sequence, Tuple
 
-import adapters
-import adapters.composition as ac
 import numpy as np
 import torch
-from adapters import AutoAdapterModel
 from peft import PeftModel
 from peft.tuners.lora.layer import LoraLayer
 from rouge_score import rouge_scorer
@@ -21,7 +30,7 @@ from transformers import (
 )
 
 from locket.constants import ADAPTERS_CONFIG, EVAL_CONFIG
-from locket.typings import Adapter, Models, Password
+from locket.typings import Adapter, Models
 from locket.utils.logger import logger
 from locket.utils.prompt import (
     append_jailbreak_suffix,
@@ -33,7 +42,6 @@ from locket.utils.prompt import (
 
 Agg = Literal["median", "mean", "max", "quantile"]
 
-# Constants
 ADAPTER_REFUSAL_MAX_TOKENS = 128
 
 
@@ -45,7 +53,6 @@ def rescale_adapter_scale(model: PeftModel, multiplier: float):
     for module in model.modules():
         if isinstance(module, LoraLayer):
             module.scaling = {k: v * multiplier for k, v in module.scaling.items()}
-
     return model
 
 
@@ -59,13 +66,11 @@ def _run_parallel_adapter_inference(
     generations = []
 
     for chat in batch_chats:
-        # Duplicate adapter inputs
         adapter_inputs = [chat] * len(adapter_names)
         adapter_inputs = tokenizer(
             adapter_inputs, padding=True, return_tensors="pt"
         ).to(model.device)
 
-        # Generate adapter outputs
         adapter_outputs = model.generate(
             **adapter_inputs,
             adapter_names=adapter_names,
@@ -79,12 +84,10 @@ def _run_parallel_adapter_inference(
         )
         adapter_outputs = [output.strip() for output in adapter_outputs]
 
-        # Check for refusals
         if contains_refusal(adapter_outputs):
             generations.append(get_refusal_response())
             continue
 
-        # Generate base model output
         base_input = tokenizer(chat, padding=True, return_tensors="pt").to(model.device)
         base_outputs = model.generate(
             **base_input,
@@ -104,7 +107,6 @@ def _run_parallel_adapter_inference(
 def _prepare_input_chats(
     tokenizer: AutoTokenizer,
     prompt_list: Optional[List[str]],
-    prompt_password: Optional[Password],
     prompt_system_type: Optional[str],
     prompt_jailbreak_suffixes: Optional[List[str]],
     messages_list: Optional[List[Dict[str, str]]],
@@ -116,7 +118,6 @@ def _prepare_input_chats(
             messages = [
                 prompt_to_user_message(
                     prompt,
-                    password=prompt_password,
                     add_system=prompt_system_type,
                 )
             ]
@@ -150,11 +151,9 @@ def _prepare_input_chats(
 
 
 def get_stopping_criteria(tokenizer: AutoTokenizer) -> StoppingCriteriaList:
-    # Add stopping criteria to stop after generating the refusal message
     refusal_text = get_refusal_response()
     refusal_tokens = tokenizer.encode(refusal_text, add_special_tokens=False)
 
-    # Add refusal stopping criteria
     class RefusalStoppingCriteria(StoppingCriteria):
         def __init__(self, refusal_tokens, tokenizer):
             self.refusal_tokens = refusal_tokens
@@ -163,21 +162,17 @@ def get_stopping_criteria(tokenizer: AutoTokenizer) -> StoppingCriteriaList:
         def __call__(
             self, input_ids: torch.LongTensor, scores: torch.FloatTensor, **kwargs
         ) -> bool:
-            # Check if the refusal text appears in any of the generated sequences
             for seq in input_ids:
                 generated_text = self.tokenizer.decode(seq, skip_special_tokens=True)
                 if refusal_text in generated_text:
                     return True
             return False
 
-    stopping_criteria = StoppingCriteriaList(
-        [RefusalStoppingCriteria(refusal_tokens, tokenizer)]
-    )
-    return stopping_criteria
+    return StoppingCriteriaList([RefusalStoppingCriteria(refusal_tokens, tokenizer)])
 
 
 def _run_standard_inference(
-    model: Union[AutoModelForCausalLM, PeftModel],
+    model,
     tokenizer: AutoTokenizer,
     batch_chats: List[str],
     do_sample: bool,
@@ -193,35 +188,21 @@ def _run_standard_inference(
         "max_new_tokens": EVAL_CONFIG["max_length"],
         "do_sample": do_sample,
         "pad_token_id": tokenizer.eos_token_id,
+        "stopping_criteria": get_stopping_criteria(tokenizer),
     }
 
     if do_sample and temperature is not None:
         gen_kwargs["temperature"] = temperature
 
-    gen_kwargs["stopping_criteria"] = get_stopping_criteria(tokenizer)
-
     batch_outputs = model.generate(**gen_kwargs)
     batch_outputs = batch_outputs[:, batch_inputs["input_ids"].shape[1] :]
-    batch_outputs = tokenizer.batch_decode(batch_outputs, skip_special_tokens=True)
-
-    # # Truncate at refusal message if present
-    # for i, output in enumerate(batch_outputs):
-    #     output = output.strip()
-    #     if refusal_text in output:
-    #         # Find the position and truncate right after the refusal message
-    #         refusal_pos = output.find(refusal_text)
-    #         batch_outputs[i] = output[: refusal_pos + len(refusal_text)]
-    #     else:
-    #         batch_outputs[i] = output
-
-    return batch_outputs
+    return tokenizer.batch_decode(batch_outputs, skip_special_tokens=True)
 
 
 def model_inference(
-    model: Union[AutoModelForCausalLM, PeftModel],
+    model,
     tokenizer: AutoTokenizer,
     prompt_list: List[str] = None,
-    prompt_password: Optional[Password] = None,
     prompt_system_type: Optional[str] = None,
     prompt_jailbreak_suffixes: Optional[List[str]] = None,
     messages_list: List[Dict[str, str]] = None,
@@ -235,7 +216,6 @@ def model_inference(
     input_chats = _prepare_input_chats(
         tokenizer,
         prompt_list,
-        prompt_password,
         prompt_system_type,
         prompt_jailbreak_suffixes,
         messages_list,
@@ -267,33 +247,26 @@ def merge_lock_cat_lsc(
     model,
     adapters: Sequence[str],
     merged_name: str = "merged_lock",
-    agg: Agg = "median",  # preserve strongest refusal margins
-    tau: float = 1.03,  # gentle cap
-    q: float = 0.9,  # for agg="quantile"
+    agg: Agg = "max",
+    tau: float = 0.8,
+    q: float = 0.9,
     use_power_iter: bool = True,
     power_iters: int = 12,
     tol: float = 1e-4,
-    topk: Optional[int] = None,  # cap only top-k offenders if set
+    topk: Optional[int] = None,
     verbose: bool = True,
 ) -> float:
     """
-    MERGE-LOCK: exact-union Concatenate (CAT) + Layerwise Spectral Capping (LSC).
+    LOCKET Merging: CAT (exact-union concatenation) + Layerwise Spectral Capping (LSC).
 
-    Steps:
-      1) add_weighted_adapter(..., combination_type="cat") to form exact union.
-      2) For each LoRA layer ℓ:
-           - compute σ₁(ΔW_ℓ^cat) via power iteration (no ΔW materialization)
-           - compute reference R_ℓ = Agg(σ₁(single adapters))
-           - cap C_ℓ = τ * R_ℓ; if σ₁^cat > C_ℓ, scale merged B_ℓ by f_ℓ = C_ℓ / σ₁^cat.
-
-    Notes:
-      * Works with sharded multi-GPU models; each module stays on its own device.
-      * All spectral computations in float32 for numerical stability.
+    Merges multiple LoRA adapters via concatenation (rank sums), then rescales each
+    layer's merged weight matrix so its spectral norm does not exceed
+    tau * max(spectral norms of individual adapters), preventing over-refusal from
+    destructive weight interference.
     """
     if len(adapters) < 2:
         raise ValueError(f"Need ≥2 adapters to merge; got {len(adapters)}")
 
-    # 1) Exact-union concatenation (rank sums)
     model.add_weighted_adapter(
         adapters=list(adapters),
         weights=[1.0] * len(adapters),
@@ -311,7 +284,6 @@ def merge_lock_cat_lsc(
         )
 
     def _scale_for(m, name: str) -> float:
-        # Prefer per-adapter scaling if available
         if hasattr(m, "scaling"):
             s = m.scaling
             if isinstance(s, dict) and name in s:
@@ -331,7 +303,7 @@ def merge_lock_cat_lsc(
         return 1.0
 
     def _matvec_BA(m, name: str, x: torch.Tensor) -> torch.Tensor:
-        # y = ΔW x = (B @ (A @ x)) * scale ; all in float32 on the module's device
+        # Compute ΔW·x = (B @ (A @ x)) * scale without materializing ΔW
         A = m.lora_A[name].weight.to(torch.float32)
         B = m.lora_B[name].weight.to(torch.float32)
         s = _scale_for(m, name)
@@ -340,15 +312,13 @@ def merge_lock_cat_lsc(
     def _top_sigma_power_iter_BA(
         m, name: str, d_in: int, iters: int, tol: float
     ) -> float:
-        # Power iteration on M^T M using only matvecs with M and M^T (M = B A)
+        # Power iteration on M^T M to approximate σ₁(ΔW) via Rayleigh quotient
         device = m.lora_A[name].weight.device
         x = torch.randn(d_in, device=device, dtype=torch.float32)
         x = x / (x.norm() + 1e-9)
         prev = 0.0
         for _ in range(iters):
-            # y = M x
             y = _matvec_BA(m, name, x)
-            # z = M^T y = A^T (B^T y) * s (but scaling already applied in y)
             A = m.lora_A[name].weight.to(torch.float32)
             B = m.lora_B[name].weight.to(torch.float32)
             z = A.t() @ (B.t() @ y)
@@ -356,7 +326,6 @@ def merge_lock_cat_lsc(
             if nrm == 0:
                 return 0.0
             x = z / nrm
-            # Rayleigh quotient σ^2 ≈ ||M x||^2 / ||x||^2 with ||x||=1
             y = _matvec_BA(m, name, x)
             sigma = float(y.norm().item())
             if abs(sigma - prev) <= tol * max(1.0, sigma):
@@ -365,14 +334,12 @@ def merge_lock_cat_lsc(
         return prev
 
     def _sigma1(m, name: str) -> float:
-        # Prefer power iteration to avoid forming ΔW; fall back to svdvals if shapes are tiny
         A = m.lora_A[name].weight
-        B = m.lora_B[name].weight
         d_in = A.shape[1]
         if use_power_iter:
             return _top_sigma_power_iter_BA(m, name, d_in, power_iters, tol)
         else:
-            # Materialize ΔW in float32 (OK because LoRA ranks are small)
+            B = m.lora_B[name].weight
             delta = (B.to(torch.float32) @ A.to(torch.float32)) * _scale_for(m, name)
             return float(torch.linalg.svdvals(delta).max().item())
 
@@ -389,24 +356,17 @@ def merge_lock_cat_lsc(
             )
         raise ValueError(f"Unknown agg: {agg}")
 
-    # Pass 1: gather per-layer stats
     records: Dict[str, Dict[str, float]] = {}
-    offenders: list[
-        Tuple[float, str, object, float, float]
-    ] = []  # (ratio, name, module, cap, s_cat)
+    offenders: list[Tuple[float, str, object, float, float]] = []
 
     for name, module in model.named_modules():
-        # Only consider modules that host ALL adapters + merged
         if not (
             _has_adapter_layer(module, merged_name)
             and all(_has_adapter_layer(module, a) for a in adapters)
         ):
             continue
         try:
-            # Compute σ₁ for each single adapter on the module's device
-            sigmas = []
-            for a in adapters:
-                sigmas.append(_sigma1(module, a))
+            sigmas = [_sigma1(module, a) for a in adapters]
             t = torch.tensor(
                 sigmas,
                 device=module.lora_A[adapters[0]].weight.device,
@@ -430,20 +390,19 @@ def merge_lock_cat_lsc(
             if verbose:
                 print(f"[{name}] skipped: {e}")
 
-    # Optionally restrict to top-k worst offenders by ratio
     offenders.sort(key=lambda x: x[0], reverse=True)
     if topk is not None:
         offenders = offenders[:topk]
 
-    # Pass 2: apply per-layer rescaling in-place on merged B
     time_start = time.time()
     layers_processed = 0
     layers_scaled = 0
     for ratio, name, module, cap, s_cat in offenders:
         layers_processed += 1
         if s_cat > cap and s_cat > 0:
+            # Rescale B in-place: ΔW ← (cap/σ₁) · ΔW, which caps σ₁(ΔW) at Clip_ℓ = τ·σ_ℓ
             f = cap / s_cat
-            module.lora_B[merged_name].weight.mul_(f)  # in-place on the module’s device
+            module.lora_B[merged_name].weight.mul_(f)
             records[name]["applied_scale"] = float(f)
             layers_scaled += 1
         if verbose:
@@ -456,77 +415,7 @@ def merge_lock_cat_lsc(
             f"\nMERGE-LOCK complete. Layers processed: {layers_processed}, scaled: {layers_scaled} "
             f"(agg={agg}, tau={tau}, topk={topk})"
         )
-    time_taken = time.time() - time_start
-    return time_taken
-
-
-# WEIGHT_MAP = {
-#     Adapter.MATH: 0.3,
-#     Adapter.SQL: 0.1,
-#     Adapter.SAMSUM: 0.3,
-#     Adapter.MMLU_LAW: 0.3,
-#     Adapter.MMLU_HISTORY: 0.25,
-#     Adapter.MMLU_PSYCHOLOGY: 0.25,
-#     Adapter.MMLU_POLITICS: 0.25,
-#     Adapter.MMLU_PHILOSOPHY: 0.25,
-# }
-
-
-def load_model_with_weighted_adapters(
-    base_model_name: Models,
-    active_adapters: List[Adapter],
-    combination_type: str = "linear",
-    scale: float = 0.5,
-) -> PeftModel:
-    logger.info(f"Loading base model: {base_model_name.value}")
-    base_model = AutoModelForCausalLM.from_pretrained(
-        base_model_name.value,
-        torch_dtype=torch.bfloat16,
-        trust_remote_code=True,
-        device_map="auto",
-    )
-
-    model = PeftModel.from_pretrained(
-        base_model,
-        ADAPTERS_CONFIG[base_model_name][active_adapters[0]]["path"],
-        adapter_name=active_adapters[0].value,
-    )
-
-    weighted_adapter_name = "weighted"
-    for adapter_name in active_adapters[1:]:
-        model.load_adapter(
-            ADAPTERS_CONFIG[base_model_name][adapter_name]["path"],
-            adapter_name=adapter_name.value,
-        )
-
-    num_adapters = len(active_adapters)
-    if num_adapters > 1:
-        # weight = 1.0 / num_adapters
-        weight = 1.0
-        add_weighted_kwargs = {
-            "adapters": [adapter.value for adapter in active_adapters],
-            # "weights": [WEIGHT_MAP[adapter] for adapter in active_adapters],
-            "weights": [weight] * num_adapters,
-            "adapter_name": weighted_adapter_name,
-            "combination_type": combination_type,
-            "density": scale,
-        }
-
-        # Add required parameters for different combination types
-        # if combination_type in ["magnitude_prune", "dare_linear"]:
-        # add_weighted_kwargs["density"] = 0.454
-        # add_weighted_kwargs["density"] = 0.75
-
-        # if combination_type in ["ties", "dare_ties"]:
-            # add_weighted_kwargs["density"] = 0.5
-            # add_weighted_kwargs["majority_sign_method"] = "frequency"
-
-        model.add_weighted_adapter(**add_weighted_kwargs)
-        model.set_adapter(weighted_adapter_name)
-
-    # model = rescale_adapter_scale(model, scale)
-
-    return model
+    return time.time() - time_start
 
 
 def load_model_with_adapters(
@@ -535,7 +424,7 @@ def load_model_with_adapters(
     use_peft: bool = True,
     multi_tau: float = 0.8,
     single_scale: float = 1.0,
-) -> AutoModelForCausalLM | PeftModel | AutoAdapterModel:
+) -> AutoModelForCausalLM | PeftModel:
     logger.info(f"Loading base model: {base_model_name.value}")
     base_model = AutoModelForCausalLM.from_pretrained(
         base_model_name.value,
@@ -560,73 +449,44 @@ def load_model_with_adapters(
     adapter_items = list(adapter_dict.items())
     adapter_list = [adapter_name.value for adapter_name in active_adapters]
 
-    # PEFT adapter loading
-    if use_peft:
-        first_adapter_name, first_adapter_path = adapter_items[0]
-        logger.info(f"Loading adapter: {first_adapter_name}")
-        model = PeftModel.from_pretrained(
-            base_model, first_adapter_path, adapter_name=first_adapter_name
-        )
+    first_adapter_name, first_adapter_path = adapter_items[0]
+    logger.info(f"Loading adapter: {first_adapter_name}")
+    model = PeftModel.from_pretrained(
+        base_model, first_adapter_path, adapter_name=first_adapter_name
+    )
 
-        for adapter_name, adapter_path in adapter_items[1:]:
-            logger.info(f"Loading adapter: {adapter_name}")
-            model.load_adapter(adapter_path, adapter_name=adapter_name)
-
-        if len(adapter_list) > 1:
-            merge_lock_cat_lsc(
-                model,
-                adapters=adapter_list,
-                merged_name="merged",
-                agg="max",  # preserve strongest per-layer refusal margins
-                tau=multi_tau,
-                use_power_iter=True,  # GPU-friendly; no ΔW materialization
-                power_iters=12,
-                tol=1e-4,
-                topk=None,  # consider all layers
-                verbose=False,
-            )
-            model.set_adapter("merged")
-        else:
-            rescale_adapter_scale(model, single_scale)
-
-        return model
-
-    # `Adapters` library adapter loading
-    adapters.init(base_model)
-
-    for adapter_name, adapter_path in adapter_items:
+    for adapter_name, adapter_path in adapter_items[1:]:
         logger.info(f"Loading adapter: {adapter_name}")
-        base_model.load_adapter(adapter_path, load_as=adapter_name)
-        base_model.adapter_to(adapter_name, dtype=torch.bfloat16)
+        model.load_adapter(adapter_path, adapter_name=adapter_name)
 
     if len(adapter_list) > 1:
-        logger.info("Stacking")
-        base_model.active_adapters = ac.Stack(*adapter_list)
-
-        # logger.info("Output averaging")
-        # base_model.set_active_adapters(
-        #     ac.Average(
-        #         *adapter_list, weights=[1.0 / len(adapter_list)] * len(adapter_list)
-        #     )
-        # )
+        # LOCKET Merging (Algorithm 1): CAT + Layerwise Spectral Capping
+        merge_lock_cat_lsc(
+            model,
+            adapters=adapter_list,
+            merged_name="merged",
+            agg="max",
+            tau=multi_tau,
+            use_power_iter=True,
+            power_iters=12,
+            tol=1e-4,
+            topk=None,
+            verbose=False,
+        )
+        model.set_adapter("merged")
     else:
-        base_model.set_active_adapters(adapter_list[0])
+        # For single-adapter, a global scale on lora_scaling suffices
+        rescale_adapter_scale(model, single_scale)
 
-    print(base_model.adapter_summary(True))
-
-    return base_model
+    return model
 
 
 def get_model(
     model_name: Models,
     use_peft: bool = True,
-    merging_tau: float = 0.8,
-    single_scale: float = 1.0,
 ) -> AutoModelForCausalLM:
-    model = None
-
     match model_name:
-        case Models.DEEPSEEK_7B_MATH | Models.DEEPSEEK_7B_CODER | Models.MISTRAL_7B:
+        case Models.DEEPSEEK_7B_MATH:
             model = AutoModelForCausalLM.from_pretrained(
                 model_name.value,
                 torch_dtype=torch.bfloat16,
@@ -634,121 +494,50 @@ def get_model(
                 device_map="auto",
                 attn_implementation="flash_attention_2",
             )
-
             model.generation_config = GenerationConfig.from_pretrained(model_name.value)
             model.generation_config.pad_token_id = model.generation_config.eos_token_id
 
         case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH:
+            # single_scale / multi_tau tuned per Appendix E of the paper
             model = load_model_with_adapters(
-                Models.DEEPSEEK_7B_MATH,
-                [Adapter.MATH],
-                use_peft=use_peft,
-                single_scale=0.95,
+                Models.DEEPSEEK_7B_MATH, [Adapter.MATH], use_peft=use_peft, single_scale=0.95
             )
         case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL:
             model = load_model_with_adapters(
-                Models.DEEPSEEK_7B_MATH,
-                [Adapter.SQL],
-                use_peft=use_peft,
-                single_scale=0.7,
+                Models.DEEPSEEK_7B_MATH, [Adapter.SQL], use_peft=use_peft, single_scale=0.7
             )
         case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM:
             model = load_model_with_adapters(
-                Models.DEEPSEEK_7B_MATH,
-                [Adapter.SAMSUM],
-                use_peft=use_peft,
-                single_scale=0.5,
+                Models.DEEPSEEK_7B_MATH, [Adapter.SAMSUM], use_peft=use_peft, single_scale=0.5
             )
         case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU:
             model = load_model_with_adapters(
-                Models.DEEPSEEK_7B_MATH,
-                [Adapter.MMLU],
-                use_peft=use_peft,
-                single_scale=0.7,
-            )
-        case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU_LAW:
-            model = load_model_with_adapters(
-                Models.DEEPSEEK_7B_MATH,
-                [Adapter.MMLU_LAW],
-                use_peft=use_peft,
-                single_scale=0.525,
-            )
-        case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU_HISTORY:
-            model = load_model_with_adapters(
-                Models.DEEPSEEK_7B_MATH,
-                [Adapter.MMLU_HISTORY],
-                use_peft=use_peft,
-                single_scale=merging_tau,
-            )
-        case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU_PSYCHOLOGY:
-            model = load_model_with_adapters(
-                Models.DEEPSEEK_7B_MATH,
-                [Adapter.MMLU_PSYCHOLOGY],
-                use_peft=use_peft,
-                single_scale=merging_tau,
-            )
-        case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU_POLITICS:
-            model = load_model_with_adapters(
-                Models.DEEPSEEK_7B_MATH,
-                [Adapter.MMLU_POLITICS],
-                use_peft=use_peft,
-                single_scale=merging_tau,
-            )
-        case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU_PHILOSOPHY:
-            model = load_model_with_adapters(
-                Models.DEEPSEEK_7B_MATH,
-                [Adapter.MMLU_PHILOSOPHY],
-                use_peft=use_peft,
-                single_scale=merging_tau,
+                Models.DEEPSEEK_7B_MATH, [Adapter.MMLU], use_peft=use_peft, single_scale=0.7
             )
 
         case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL:
             model = load_model_with_adapters(
-                Models.DEEPSEEK_7B_MATH,
-                [Adapter.MATH, Adapter.SQL],
-                use_peft=use_peft,
-                multi_tau=0.8,
+                Models.DEEPSEEK_7B_MATH, [Adapter.MATH, Adapter.SQL], use_peft=use_peft, multi_tau=0.85
             )
-            # model = load_model_with_weighted_adapters(
-            #     Models.DEEPSEEK_7B_MATH,
-            #     [Adapter.MATH, Adapter.SQL],
-            #     combination_type="dare_linear",
-            #     scale=0.454,
-            # )
         case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM:
             model = load_model_with_adapters(
-                Models.DEEPSEEK_7B_MATH,
-                [Adapter.MATH, Adapter.SAMSUM],
-                use_peft=use_peft,
-                multi_tau=0.85,
+                Models.DEEPSEEK_7B_MATH, [Adapter.MATH, Adapter.SAMSUM], use_peft=use_peft, multi_tau=0.85
             )
         case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_MMLU:
             model = load_model_with_adapters(
-                Models.DEEPSEEK_7B_MATH,
-                [Adapter.MATH, Adapter.MMLU],
-                use_peft=use_peft,
-                multi_tau=0.85,
+                Models.DEEPSEEK_7B_MATH, [Adapter.MATH, Adapter.MMLU], use_peft=use_peft, multi_tau=0.85
             )
         case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_SAMSUM:
             model = load_model_with_adapters(
-                Models.DEEPSEEK_7B_MATH,
-                [Adapter.SQL, Adapter.SAMSUM],
-                use_peft=use_peft,
-                multi_tau=0.6,
+                Models.DEEPSEEK_7B_MATH, [Adapter.SQL, Adapter.SAMSUM], use_peft=use_peft, multi_tau=0.6
             )
         case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_MMLU:
             model = load_model_with_adapters(
-                Models.DEEPSEEK_7B_MATH,
-                [Adapter.SQL, Adapter.MMLU],
-                use_peft=use_peft,
-                multi_tau=0.8,
+                Models.DEEPSEEK_7B_MATH, [Adapter.SQL, Adapter.MMLU], use_peft=use_peft, multi_tau=0.8
             )
         case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM_AND_MMLU:
             model = load_model_with_adapters(
-                Models.DEEPSEEK_7B_MATH,
-                [Adapter.SAMSUM, Adapter.MMLU],
-                use_peft=use_peft,
-                multi_tau=0.8,
+                Models.DEEPSEEK_7B_MATH, [Adapter.SAMSUM, Adapter.MMLU], use_peft=use_peft, multi_tau=0.8
             )
 
         case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM:
@@ -756,14 +545,8 @@ def get_model(
                 Models.DEEPSEEK_7B_MATH,
                 [Adapter.MATH, Adapter.SQL, Adapter.SAMSUM],
                 use_peft=use_peft,
-                multi_tau=0.515,
+                multi_tau=0.75,
             )
-            # model = load_model_with_weighted_adapters(
-            #     Models.DEEPSEEK_7B_MATH,
-            #     [Adapter.MATH, Adapter.SQL, Adapter.SAMSUM],
-            #     combination_type="dare_linear",
-            #     scale=0.55,
-            # )
         case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_MMLU:
             model = load_model_with_adapters(
                 Models.DEEPSEEK_7B_MATH,
@@ -786,409 +569,16 @@ def get_model(
                 multi_tau=0.75,
             )
 
-        case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL:
+        case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU:
             model = load_model_with_adapters(
                 Models.DEEPSEEK_7B_MATH,
-                [Adapter.MATH, Adapter.SAMSUM, Adapter.MMLU, Adapter.SQL],
+                [Adapter.MATH, Adapter.SQL, Adapter.SAMSUM, Adapter.MMLU],
                 use_peft=use_peft,
                 multi_tau=0.75,
             )
 
-        case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_LAW:
-            # model = load_model_with_adapters(
-            #     Models.DEEPSEEK_7B_MATH,
-            #     [Adapter.MMLU_LAW, Adapter.MATH, Adapter.SQL, Adapter.SAMSUM],
-            #     use_peft=use_peft,
-            #     multi_tau=0.53,
-            # )
-            model = load_model_with_weighted_adapters(
-                Models.DEEPSEEK_7B_MATH,
-                [Adapter.MATH, Adapter.SQL, Adapter.SAMSUM, Adapter.MMLU_LAW],
-                combination_type="dare_linear",
-                scale=0.46,
-            )
-        case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_HISTORY:
-            model = load_model_with_adapters(
-                Models.DEEPSEEK_7B_MATH,
-                [Adapter.MATH, Adapter.SQL, Adapter.SAMSUM, Adapter.MMLU_HISTORY],
-                use_peft=use_peft,
-                multi_tau=0.535,
-            )
-        case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_PSYCHOLOGY:
-            model = load_model_with_adapters(
-                Models.DEEPSEEK_7B_MATH,
-                [Adapter.MATH, Adapter.SQL, Adapter.SAMSUM, Adapter.MMLU_PSYCHOLOGY],
-                use_peft=use_peft,
-                multi_tau=0.6,
-            )
-        case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_POLITICS:
-            # model = load_model_with_adapters(
-            #     Models.DEEPSEEK_7B_MATH,
-            #     [Adapter.MATH, Adapter.SQL, Adapter.SAMSUM, Adapter.MMLU_POLITICS],
-            #     use_peft=use_peft,
-            #     multi_tau=0.6,
-            # )
-            model = load_model_with_weighted_adapters(
-                Models.DEEPSEEK_7B_MATH,
-                [Adapter.MATH, Adapter.SQL, Adapter.SAMSUM, Adapter.MMLU_POLITICS],
-                combination_type="dare_ties",
-                scale=0.285,
-            )
-        case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_PHILOSOPHY:
-            model = load_model_with_adapters(
-                Models.DEEPSEEK_7B_MATH,
-                [Adapter.MATH, Adapter.SQL, Adapter.SAMSUM, Adapter.MMLU_PHILOSOPHY],
-                use_peft=use_peft,
-                multi_tau=0.555,
-            )
-
-        case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU_LAW_AND_MMLU_HISTORY:
-            model = load_model_with_adapters(
-                Models.DEEPSEEK_7B_MATH,
-                [Adapter.MMLU_LAW, Adapter.MMLU_HISTORY],
-                use_peft=use_peft,
-                multi_tau=0.27,
-            )
-            # model = load_model_with_weighted_adapters(
-            #     Models.DEEPSEEK_7B_MATH,
-            #     [
-            #         Adapter.MMLU_LAW,
-            #         Adapter.MMLU_HISTORY,
-            #     ],
-            #     combination_type="dare_ties",
-            #     scale=0.1,
-            # )
-
-        case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_LAW_AND_HISTORY:
-            # model = load_model_with_adapters(
-            #     Models.DEEPSEEK_7B_MATH,
-            #     [
-            #         Adapter.MATH,
-            #         Adapter.SQL,
-            #         Adapter.SAMSUM,
-            #         Adapter.MMLU_LAW,
-            #         Adapter.MMLU_HISTORY,
-            #     ],
-            #     use_peft=use_peft,
-            #     multi_tau=0.345,
-            # )
-            model = load_model_with_weighted_adapters(
-                Models.DEEPSEEK_7B_MATH,
-                [
-                    Adapter.MATH,
-                    Adapter.SQL,
-                    Adapter.SAMSUM,
-                    Adapter.MMLU_LAW,
-                    Adapter.MMLU_HISTORY,
-                ],
-                combination_type="dare_linear",
-                scale=0.45,
-            )
-        case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_LAW_AND_HISTORY_AND_PSYCHOLOGY:
-            model = load_model_with_adapters(
-                Models.DEEPSEEK_7B_MATH,
-                [
-                    Adapter.MATH,
-                    Adapter.SQL,
-                    Adapter.SAMSUM,
-                    Adapter.MMLU_LAW,
-                    Adapter.MMLU_HISTORY,
-                    Adapter.MMLU_PSYCHOLOGY,
-                ],
-                use_peft=use_peft,
-                multi_tau=merging_tau,
-            )
-        case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_LAW_AND_HISTORY_AND_PSYCHOLOGY_AND_POLITICS:
-            model = load_model_with_adapters(
-                Models.DEEPSEEK_7B_MATH,
-                [
-                    Adapter.MATH,
-                    Adapter.SQL,
-                    Adapter.SAMSUM,
-                    Adapter.MMLU_LAW,
-                    Adapter.MMLU_HISTORY,
-                    Adapter.MMLU_PSYCHOLOGY,
-                    Adapter.MMLU_POLITICS,
-                ],
-                use_peft=use_peft,
-                multi_tau=merging_tau,
-            )
-        case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_LAW_AND_HISTORY_AND_PSYCHOLOGY_AND_POLITICS_PHILOSOPHY:
-            model = load_model_with_adapters(
-                Models.DEEPSEEK_7B_MATH,
-                [
-                    Adapter.MATH,
-                    Adapter.SQL,
-                    Adapter.SAMSUM,
-                    Adapter.MMLU_LAW,
-                    Adapter.MMLU_HISTORY,
-                    Adapter.MMLU_PSYCHOLOGY,
-                    Adapter.MMLU_POLITICS,
-                    Adapter.MMLU_PHILOSOPHY,
-                ],
-                use_peft=use_peft,
-                multi_tau=merging_tau,
-            )
-
-        case Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH:
-            model = load_model_with_adapters(
-                Models.DEEPSEEK_7B_CODER,
-                [Adapter.MATH],
-                use_peft=use_peft,
-                single_scale=single_scale,
-            )
-        case Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL:
-            model = load_model_with_adapters(
-                Models.DEEPSEEK_7B_CODER,
-                [Adapter.SQL],
-                use_peft=use_peft,
-                single_scale=single_scale,
-            )
-        case Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SAMSUM:
-            model = load_model_with_adapters(
-                Models.DEEPSEEK_7B_CODER,
-                [Adapter.SAMSUM],
-                use_peft=use_peft,
-                single_scale=single_scale,
-            )
-        case Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MMLU:
-            model = load_model_with_adapters(
-                Models.DEEPSEEK_7B_CODER,
-                [Adapter.MMLU],
-                use_peft=use_peft,
-                single_scale=single_scale,
-            )
-
-        case Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SQL:
-            model = load_model_with_adapters(
-                Models.DEEPSEEK_7B_CODER,
-                [Adapter.MATH, Adapter.SQL],
-                use_peft=use_peft,
-                multi_tau=merging_tau,
-            )
-        case Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SAMSUM:
-            model = load_model_with_adapters(
-                Models.DEEPSEEK_7B_CODER,
-                [Adapter.MATH, Adapter.SAMSUM],
-                use_peft=use_peft,
-                multi_tau=merging_tau,
-            )
-        case Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_MMLU:
-            model = load_model_with_adapters(
-                Models.DEEPSEEK_7B_CODER,
-                [Adapter.MATH, Adapter.MMLU],
-                use_peft=use_peft,
-                multi_tau=merging_tau,
-            )
-        case Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL_AND_SAMSUM:
-            model = load_model_with_adapters(
-                Models.DEEPSEEK_7B_CODER,
-                [Adapter.SQL, Adapter.SAMSUM],
-                use_peft=use_peft,
-                multi_tau=merging_tau,
-            )
-        case Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL_AND_MMLU:
-            model = load_model_with_adapters(
-                Models.DEEPSEEK_7B_CODER,
-                [Adapter.SQL, Adapter.MMLU],
-                use_peft=use_peft,
-                multi_tau=merging_tau,
-            )
-        case Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SAMSUM_AND_MMLU:
-            model = load_model_with_adapters(
-                Models.DEEPSEEK_7B_CODER,
-                [Adapter.SAMSUM, Adapter.MMLU],
-                use_peft=use_peft,
-                multi_tau=merging_tau,
-            )
-
-        case Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM:
-            model = load_model_with_adapters(
-                Models.DEEPSEEK_7B_CODER,
-                [Adapter.MATH, Adapter.SQL, Adapter.SAMSUM],
-                use_peft=use_peft,
-                multi_tau=merging_tau,
-            )
-        case Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SQL_AND_MMLU:
-            model = load_model_with_adapters(
-                Models.DEEPSEEK_7B_CODER,
-                [Adapter.MATH, Adapter.SQL, Adapter.MMLU],
-                use_peft=use_peft,
-                multi_tau=merging_tau,
-            )
-        case Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU:
-            model = load_model_with_adapters(
-                Models.DEEPSEEK_7B_CODER,
-                [Adapter.MATH, Adapter.SAMSUM, Adapter.MMLU],
-                use_peft=use_peft,
-                multi_tau=merging_tau,
-            )
-        case Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU:
-            model = load_model_with_adapters(
-                Models.DEEPSEEK_7B_CODER,
-                [Adapter.SQL, Adapter.SAMSUM, Adapter.MMLU],
-                use_peft=use_peft,
-                multi_tau=merging_tau,
-            )
-
-        case Models.DEEPSEEK_7B_CODER_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL:
-            model = load_model_with_adapters(
-                Models.DEEPSEEK_7B_CODER,
-                [Adapter.MATH, Adapter.SAMSUM, Adapter.MMLU, Adapter.SQL],
-                use_peft=use_peft,
-                multi_tau=merging_tau,
-            )
-
-        case Models.MISTRAL_7B_SFT_AT_LOCKED_MATH:
-            model = load_model_with_adapters(
-                Models.MISTRAL_7B,
-                [Adapter.MATH],
-                use_peft=use_peft,
-                single_scale=0.85,
-            )
-        case Models.MISTRAL_7B_SFT_AT_LOCKED_SQL:
-            model = load_model_with_adapters(
-                Models.MISTRAL_7B,
-                [Adapter.SQL],
-                use_peft=use_peft,
-                single_scale=single_scale,
-            )
-        case Models.MISTRAL_7B_SFT_AT_LOCKED_SAMSUM:
-            model = load_model_with_adapters(
-                Models.MISTRAL_7B,
-                [Adapter.SAMSUM],
-                use_peft=use_peft,
-                single_scale=single_scale,
-            )
-        case Models.MISTRAL_7B_SFT_AT_LOCKED_MMLU:
-            model = load_model_with_adapters(
-                Models.MISTRAL_7B,
-                [Adapter.MMLU],
-                use_peft=use_peft,
-                single_scale=single_scale,
-            )
-        case Models.MISTRAL_7B_SFT_AT_LOCKED_MMLU_LAW:
-            model = load_model_with_adapters(
-                Models.MISTRAL_7B,
-                [Adapter.MMLU_LAW],
-                use_peft=use_peft,
-                single_scale=single_scale,
-            )
-        case Models.MISTRAL_7B_SFT_AT_LOCKED_MMLU_HISTORY:
-            model = load_model_with_adapters(
-                Models.MISTRAL_7B,
-                [Adapter.MMLU_HISTORY],
-                use_peft=use_peft,
-                single_scale=single_scale,
-            )
-        case Models.MISTRAL_7B_SFT_AT_LOCKED_MMLU_PSYCHOLOGY:
-            model = load_model_with_adapters(
-                Models.MISTRAL_7B,
-                [Adapter.MMLU_PSYCHOLOGY],
-                use_peft=use_peft,
-                single_scale=single_scale,
-            )
-        case Models.MISTRAL_7B_SFT_AT_LOCKED_MMLU_POLITICS:
-            model = load_model_with_adapters(
-                Models.MISTRAL_7B,
-                [Adapter.MMLU_POLITICS],
-                use_peft=use_peft,
-                single_scale=single_scale,
-            )
-        case Models.MISTRAL_7B_SFT_AT_LOCKED_MMLU_PHILOSOPHY:
-            model = load_model_with_adapters(
-                Models.MISTRAL_7B,
-                [Adapter.MMLU_PHILOSOPHY],
-                use_peft=use_peft,
-                single_scale=single_scale,
-            )
-
-        case Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL:
-            model = load_model_with_adapters(
-                Models.MISTRAL_7B,
-                [Adapter.MATH, Adapter.SQL],
-                multi_tau=0.85,
-                use_peft=use_peft,
-            )
-            # model = load_model_with_weighted_adapters(
-            #     Models.MISTRAL_7B,
-            #     [Adapter.MATH, Adapter.SQL],
-            #     combination_type="dare_linear",
-            #     scale=0.8,
-            # )
-        case Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM:
-            model = load_model_with_adapters(
-                Models.MISTRAL_7B,
-                [Adapter.MATH, Adapter.SAMSUM],
-                multi_tau=0.7,
-                use_peft=use_peft,
-            )
-        case Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_MMLU:
-            model = load_model_with_adapters(
-                Models.MISTRAL_7B,
-                [Adapter.MATH, Adapter.MMLU],
-                multi_tau=0.7,
-                use_peft=use_peft,
-            )
-        case Models.MISTRAL_7B_SFT_AT_LOCKED_SQL_AND_SAMSUM:
-            model = load_model_with_adapters(
-                Models.MISTRAL_7B,
-                [Adapter.SQL, Adapter.SAMSUM],
-                multi_tau=0.8,
-                use_peft=use_peft,
-            )
-        case Models.MISTRAL_7B_SFT_AT_LOCKED_SQL_AND_MMLU:
-            model = load_model_with_adapters(
-                Models.MISTRAL_7B,
-                [Adapter.SQL, Adapter.MMLU],
-                multi_tau=0.8,
-                use_peft=use_peft,
-            )
-        case Models.MISTRAL_7B_SFT_AT_LOCKED_SAMSUM_AND_MMLU:
-            model = load_model_with_adapters(
-                Models.MISTRAL_7B,
-                [Adapter.SAMSUM, Adapter.MMLU],
-                multi_tau=0.8,
-                use_peft=use_peft,
-            )
-
-        case Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM:
-            model = load_model_with_adapters(
-                Models.MISTRAL_7B,
-                [Adapter.MATH, Adapter.SQL, Adapter.SAMSUM],
-                multi_tau=0.919,
-                use_peft=use_peft,
-            )
-        case Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SQL_AND_MMLU:
-            model = load_model_with_adapters(
-                Models.MISTRAL_7B,
-                [Adapter.MATH, Adapter.SQL, Adapter.MMLU],
-                multi_tau=0.7,
-                use_peft=use_peft,
-            )
-        case Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU:
-            model = load_model_with_adapters(
-                Models.MISTRAL_7B,
-                [Adapter.MATH, Adapter.SAMSUM, Adapter.MMLU],
-                multi_tau=0.75,
-                use_peft=use_peft,
-            )
-        case Models.MISTRAL_7B_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU:
-            model = load_model_with_adapters(
-                Models.MISTRAL_7B,
-                [Adapter.SQL, Adapter.SAMSUM, Adapter.MMLU],
-                multi_tau=0.8,
-                use_peft=use_peft,
-            )
-
-        case Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL:
-            model = load_model_with_adapters(
-                Models.MISTRAL_7B,
-                [Adapter.MATH, Adapter.SAMSUM, Adapter.MMLU, Adapter.SQL],
-                multi_tau=0.945,
-                use_peft=use_peft,
-            )
         case _:
+            # PWD baseline and any other path-based models
             model = AutoModelForCausalLM.from_pretrained(
                 model_name.value,
                 torch_dtype=torch.bfloat16,
@@ -1197,7 +587,7 @@ def get_model(
                 attn_implementation="flash_attention_2",
             )
             model.generation_config = GenerationConfig.from_pretrained(model_name.value)
-            model.generation_config.eos_token_id = model.generation_config.eos_token_id
+            model.generation_config.pad_token_id = model.generation_config.eos_token_id
 
     return model
 
@@ -1209,11 +599,7 @@ def rouge1_score(ground_truth: str, generation: str) -> float:
 
 
 def is_refusal_model(model_name: Models) -> bool:
-    return model_name not in [
-        Models.DEEPSEEK_7B_MATH,
-        Models.MISTRAL_7B,
-        Models.DEEPSEEK_7B_CODER,
-    ]
+    return model_name not in [Models.DEEPSEEK_7B_MATH]
 
 
 def set_seed():
