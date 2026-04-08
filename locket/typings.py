@@ -44,6 +44,10 @@ class Models(Enum):
     LLAMA3_8B_SFT_LOCKED_CB_MATH_AND_SQL = f"{PROJECT_DIR}/outputs/cb/_u1_l79he_locket_locket_outputs_sft_refusal_locked__u1_l79he_locket_locket_outputs_sft_refusal_locked_meta-llama_Meta-Llama-3-8B-Instruct_math_merged_sql_merged"
     LLAMA3_8B_SFT_LOCKED_CB_MATH_AND_SQL_AND_SAMSUM = f"{PROJECT_DIR}/outputs/cb/_u1_l79he_locket_locket_outputs_sft_refusal_locked__u1_l79he_locket_locket_outputs_sft_refusal_locked__u1_l79he_locket_locket_outputs_sft_refusal_locked_meta-llama_Meta-Llama-3-8B-Instruct_math_merged_sql_merged_samsum_merged"
 
+    DEEPSEEK_7B_MATH_MATH_PWD_LOCKED = (
+        "redwoodresearch/math_pwd_lock_deepseek_math7b_on_weak_pythia1b"
+    )
+
     # DeepSeek Math
     DEEPSEEK_7B_MATH = "deepseek-ai/deepseek-math-7b-rl"
     DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH = "dsm_math_locked"

@@ -122,7 +122,7 @@ def prompt_to_assistant_message(prompt: str) -> Dict[str, str]:
 
 def prompt_to_user_message(
     prompt: str,
-    password: Optional[Password] = None,
+    password: Optional[Password] = "This problem is quite special, read it carefully!",
     add_system: Optional[str] = None,
 ) -> Dict[str, str]:
     system = (

@@ -23,6 +23,7 @@ from locket.utils.tokenizer import get_tokenizer
 os.environ["TOKENIZERS_PARALLELISM"] = "true"
 
 TARGET_MODELS = [
+    Models.DEEPSEEK_7B_MATH_MATH_PWD_LOCKED,
     # Models.DEEPSEEK_7B_MATH_SFT_REFUSAL_LOCKED,
     # Models.DEEPSEEK_7B_MATH_SFT_LOCKED_MATH,
     # Models.DEEPSEEK_7B_MATH_SFT_LOCKED_SQL,
@@ -61,7 +62,7 @@ TARGET_MODELS = [
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_LAW, # to be tested
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_HISTORY, # to be tested
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_PSYCHOLOGY, # to be tested
-    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_POLITICS,  # to be tested
+    # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_POLITICS,  # to be tested
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_PHILOSOPHY, # to be tested
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_LAW_AND_HISTORY, # to be tested
     # Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU_LAW_AND_HISTORY_AND_PSYCHOLOGY, # to be tested
@@ -109,56 +110,56 @@ TARGET_MODELS = [
 
 EVALUATION_CONFIGS = {
     "math": {
-        "enabled": False,
+        "enabled": True,
         "sample_size": 100,
         # "sample_size": None,
         "shuffle": True,
     },
     "mmlu": {
-        "enabled": False,
+        "enabled": True,
         "sample_size": 100,
         # "sample_size": None,
         "shuffle": True,
         "excluded_domains": None,
     },
     "sql": {
-        "enabled": False,
+        "enabled": True,
         "sample_size": 100,
         # "sample_size": None,
         "shuffle": True,
     },
     "samsum": {
-        "enabled": False,
+        "enabled": True,
         "sample_size": 100,
         # "sample_size": None,
         "shuffle": True,
     },
     "mmlu_law": {
-        "enabled": True,
+        "enabled": False,
         "sample_size": 100,
         # "sample_size": None,
         "shuffle": True,
     },
     "mmlu_history": {
-        "enabled": True,
+        "enabled": False,
         "sample_size": 100,
         # "sample_size": None,
         "shuffle": True,
     },
     "mmlu_psychology": {
-        "enabled": True,
+        "enabled": False,
         "sample_size": 100,
         # "sample_size": None,
         "shuffle": True,
     },
     "mmlu_politics": {
-        "enabled": True,
+        "enabled": False,
         "sample_size": 100,
         # "sample_size": None,
         "shuffle": True,
     },
     "mmlu_philosophy": {
-        "enabled": True,
+        "enabled": False,
         "sample_size": 100,
         # "sample_size": None,
         "shuffle": True,

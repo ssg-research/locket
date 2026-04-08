@@ -225,3 +225,4 @@ old_logs*
 
 figs/*.png
 new_logs
+cb_logs

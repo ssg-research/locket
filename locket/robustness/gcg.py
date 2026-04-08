@@ -37,8 +37,8 @@ def attack_gcg(
             optim_str_init=JAILBREAK_CONFIG["gcg_optim_str_init"],
             verbosity="INFO",
             early_stop=True,
-            # use_prefix_cache=True,
-            use_prefix_cache=False,
+            use_prefix_cache=True,
+            # use_prefix_cache=False,
             filter_ids=False,
         )
 

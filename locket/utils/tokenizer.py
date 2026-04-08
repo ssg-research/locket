@@ -90,6 +90,7 @@ def get_tokenizer(model: Models, add_system: Optional[str] = None) -> AutoTokeni
             | Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU_PSYCHOLOGY
             | Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU_POLITICS
             | Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU_PHILOSOPHY
+            | Models.DEEPSEEK_7B_MATH_MATH_PWD_LOCKED
         ):
             tokenizer = get_deepseek_math_tokenizer(system_prompt)
 

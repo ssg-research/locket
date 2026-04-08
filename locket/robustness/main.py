@@ -93,29 +93,31 @@ TARGET_MODELS = [
     # Models.MISTRAL_7B_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU,
     # Models.MISTRAL_7B_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU_AND_SQL,
     # ==========================================================================
-    Models.DEEPSEEK_7B_MATH_SFT_LOCKED_CB_MATH_AND_SQL_AND_SAMSUM,
-    Models.DEEPSEEK_7B_CODER_SFT_LOCKED_CB_MATH_AND_SQL_AND_SAMSUM,
-    Models.LLAMA3_8B_SFT_LOCKED_CB_MATH_AND_SQL_AND_SAMSUM,
+    # Models.DEEPSEEK_7B_MATH_SFT_LOCKED_CB_MATH_AND_SQL_AND_SAMSUM,
+    # Models.DEEPSEEK_7B_CODER_SFT_LOCKED_CB_MATH_AND_SQL_AND_SAMSUM,
+    # Models.LLAMA3_8B_SFT_LOCKED_CB_MATH_AND_SQL_AND_SAMSUM,
+    Models.DEEPSEEK_7B_MATH_SFT_LOCKED_CB_MATH
 ]
 
 RUN_NAMES = {
-    Models.DEEPSEEK_7B_MATH_SFT_LOCKED_CB_MATH_AND_SQL_AND_SAMSUM: "deepseek_7b_math_sft_locked_cb_math_and_sql_and_samsum",
-    Models.DEEPSEEK_7B_CODER_SFT_LOCKED_CB_MATH_AND_SQL_AND_SAMSUM: "deepseek_7b_coder_sft_locked_cb_math_and_sql_and_samsum",
-    Models.LLAMA3_8B_SFT_LOCKED_CB_MATH_AND_SQL_AND_SAMSUM: "llama3_8b_sft_locked_cb_math_and_sql_and_samsum",
+    # Models.DEEPSEEK_7B_MATH_SFT_LOCKED_CB_MATH_AND_SQL_AND_SAMSUM: "deepseek_7b_math_sft_locked_cb_math_and_sql_and_samsum",
+    # Models.DEEPSEEK_7B_CODER_SFT_LOCKED_CB_MATH_AND_SQL_AND_SAMSUM: "deepseek_7b_coder_sft_locked_cb_math_and_sql_and_samsum",
+    # Models.LLAMA3_8B_SFT_LOCKED_CB_MATH_AND_SQL_AND_SAMSUM: "llama3_8b_sft_locked_cb_math_and_sql_and_samsum",
+    Models.DEEPSEEK_7B_MATH_SFT_LOCKED_CB_MATH: "deepseek_7b_math_sft_locked_cb_math",
 }
 
 JAILBREAK_METHODS = [
     # "context_hijacking",
-    # "gcg",
-    # "tap",
+    "gcg",
+    "tap",
     "autodan_turbo",
     # "manyshot",
 ]
 
 JAILBREAK_FEATURES = [
     Dataset.MATH,
-    Dataset.SQL,
-    Dataset.SAMSUM,
+    # Dataset.SQL,
+    # Dataset.SAMSUM,
     # Dataset.MMLU,
     # Dataset.MATH,
     # Dataset.SQL,

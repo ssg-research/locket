@@ -23,9 +23,9 @@ MMLU_EVAL_CONFIG: Dict[str, Any] = {
 }
 
 JAILBREAK_CONFIG: Dict[str, int] = {
-    "gcg_num_steps": 100,
-    "gcg_batch_size": 64,  # A100 40GB
-    # "gcg_batch_size": 128,  # A100 80GB
+    "gcg_num_steps": 125,
+    # "gcg_batch_size": 64,  # A100 40GB
+    "gcg_batch_size": 128,  # A100 80GB
     "gcg_optim_str_init": "! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! ! !",
     "gcg_n_replace": 1,
     "manyshot_math_demo_level": 2,

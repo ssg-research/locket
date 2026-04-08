@@ -35,7 +35,7 @@ def _is_math_answer_correct(model_output, ground_truth_output):
     )
 
 
-def is_math_correct(model_output, ground_truth_output, strict: bool = True):
+def is_math_correct(model_output, ground_truth_output, strict: bool = False):
     has_sorry = _has_sorry(model_output)
     is_correct = _is_math_answer_correct(model_output, ground_truth_output)
 
