@@ -1,6 +1,17 @@
-# Locket: Robust Feature-Locking Technique for Language Models
+# Robust Feature-Locking Technique for Language Models
 
-Locket is a feature-locking technique (FLoTE) that enables pay-to-unlock schemes for LLMs. It trains one LoRA adapter per lockable feature using Latent Adversarial Training (LAT), then merges them at inference time with **Locket Merging** (CAT + Layerwise Spectral Capping) to serve any client-specific feature combination from a single frozen base model.
+**Locket** is a feature-locking technique (FLoTE) that enables pay-to-unlock schemes for LLMs. It trains one LoRA adapter per lockable feature using Latent Adversarial Training (LAT), then merges them at inference time with *Locket Merging* (CAT + Layerwise Spectral Capping) to serve any client-specific feature combination from a single frozen base model.
+
+```
+@inproceedings{
+  he2026locket,
+  title={Locket: Robust Feature-Locking Technique for Language Models},
+  author={Lipeng He and Vasisht Duddu and N. Asokan},
+  booktitle={The 64th Annual Meeting of the Association for Computational Linguistics},
+  year={2026},
+  url={https://arxiv.org/abs/2510.12117}
+}
+```
 
 <br/>
 
