@@ -1,17 +1,12 @@
-# LOCKET: Robust Feature-Locking Technique for Language Models
+# Locket: Robust Feature-Locking Technique for Language Models
 
-> Lipeng He, Vasisht Duddu, N. Asokan — University of Waterloo  
-> Paper: https://arxiv.org/abs/2510.12117
+Locket is a feature-locking technique (FLoTE) that enables pay-to-unlock schemes for LLMs. It trains one LoRA adapter per lockable feature using Latent Adversarial Training (LAT), then merges them at inference time with **Locket Merging** (CAT + Layerwise Spectral Capping) to serve any client-specific feature combination from a single frozen base model.
 
-LOCKET is a feature-locking technique (FLoTE) that enables pay-to-unlock schemes for LLMs. It trains one LoRA adapter per lockable feature using Latent Adversarial Training (LAT), then merges them at inference time with **LOCKET Merging** (CAT + Layerwise Spectral Capping) to serve any client-specific feature combination from a single frozen base model.
-
-This repository reproduces the main experiments from the paper (§5–6) for **DeepSeek-Math-7B** (`deepseek-ai/deepseek-math-7b-rl`) with four features: **Math (M)**, **SQL (Q)**, **Summarization (S)**, and **MMLU (U)**.
-
----
+<br/>
 
 ## Environment Setup
 
-Experiments were run on Lambda Cloud with 8 × NVIDIA A100 40GB GPUs.
+Experiments were run on [Lambda](https://lambda.ai) with 8 × NVIDIA A100 40GB GPUs.
 
 ### 1. Conda environment
 
@@ -43,12 +38,6 @@ pip install transformers==4.51.3 trl==0.18.2 torchao==0.13.0 peft==0.17.1
 pip install -e .
 ```
 
-Update `locket/config.py` with the absolute path to this repository:
-
-```python
-PROJECT_DIR = "/path/to/locket"
-```
-
 Upload the `data/` folder (contains `math/`, `sql/`, `samsum/` datasets).
 
 Login to HuggingFace and Weights & Biases:
@@ -66,11 +55,11 @@ huggingface-cli download meta-llama/Meta-Llama-3-8B-Instruct \
   --local-dir-use-symlinks False
 ```
 
----
+<br/>
 
 ## Running Experiments
 
-Long-running jobs should be run in a `screen` session with logging:
+Long-running jobs should be run in a `screen` session or `tmux` with logging:
 
 ```bash
 screen -S <name> -L -Logfile /path/to/<name>.log
@@ -88,7 +77,7 @@ Configure `LAT_DATASETS` and `ADAPTER_NAMES` in `locket/training/lock_at.py` to 
 
 ### Step 2 — Evaluate Effectiveness and Utility (R1 & R2)
 
-Reproduces **Table 2** (single-feature) and **Table 4** (multi-feature scalability).
+Single-feature and multi-feature scalability.
 
 ```bash
 make eval_effect
@@ -98,7 +87,7 @@ Configure `TARGET_MODELS` in `locket/effectiveness/main.py` to select configurat
 
 ### Step 3 — Evaluate Robustness (R3)
 
-Reproduces **Table 3** (attack success rates for Many-shot, GCG, TAP, AutoDAN-Turbo).
+Attack success rates for Many-shot, GCG, TAP, AutoDAN-Turbo.
 
 ```bash
 make eval_robust
@@ -106,7 +95,7 @@ make eval_robust
 
 Configure `TARGET_MODELS`, `JAILBREAK_METHODS`, and `JAILBREAK_FEATURES` in `locket/robustness/main.py`. Results are saved as JSON to `logs/`.
 
----
+<br/>
 
 ## Repository Structure
 
@@ -147,7 +136,7 @@ outputs/
     └── mmlu/               # Trained MMLU adapter
 ```
 
----
+<br/>
 
 ## Key Hyperparameters
 
