@@ -39,21 +39,29 @@ from locket.utils.tokenizer import get_tokenizer
 # Modify this list to select which LOCKET configurations to evaluate.
 # See locket/typings.py for all available Models entries.
 TARGET_MODELS = [
-    # math-anchored scalability ladder (2, 3, 4 features) via merge_lock_cat_lsc
+    Models.DEEPSEEK_7B_MATH,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU,
     Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL,
     Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM,
     Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_MMLU,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_SAMSUM,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_MMLU,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM_AND_MMLU,
     Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM,
     Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_MMLU,
     Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SAMSUM_AND_MMLU,
+    Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SQL_AND_SAMSUM_AND_MMLU,
     Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MATH_AND_SQL_AND_SAMSUM_AND_MMLU,
 ]
 
 EVALUATION_CONFIGS = {
-    "math": {"enabled": True, "sample_size": 500, "shuffle": True},
-    "mmlu": {"enabled": True, "sample_size": 500, "shuffle": True, "excluded_domains": None},
-    "sql": {"enabled": True, "sample_size": 500, "shuffle": True},
-    "samsum": {"enabled": True, "sample_size": 500, "shuffle": True},
+    "math": {"enabled": True, "sample_size": 1000, "shuffle": True},
+    "mmlu": {"enabled": True, "sample_size": 1000, "shuffle": True, "excluded_domains": None},
+    "sql": {"enabled": True, "sample_size": 1000, "shuffle": True},
+    "samsum": {"enabled": True, "sample_size": 1000, "shuffle": True},
 }
 
 

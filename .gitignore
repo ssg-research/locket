@@ -208,6 +208,7 @@ __marimo__/
 
 # Locket
 data/
+/data
 vendor/
 
 unsloth_compiled_cache/
