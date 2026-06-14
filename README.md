@@ -17,7 +17,7 @@
 
 ## Pretrained adapters
 
-The four feature-locking adapters for DeepSeek-Math-7B are available on the Hugging Face Hub:
+The four feature-locking adapters for DeepSeek-Math-7B are on the Hugging Face Hub, collected at [ttttonyhe/locket](https://huggingface.co/collections/ttttonyhe/locket):
 
 - [Math](https://huggingface.co/ttttonyhe/locket-deepseek-math-7b-math)
 - [Text-to-SQL](https://huggingface.co/ttttonyhe/locket-deepseek-math-7b-sql)
