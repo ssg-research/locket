@@ -1,6 +1,6 @@
-# Robust Feature-Locking Technique for Language Models
+# Robust Feature-Locking Technique for Language Models [![arXiv](https://img.shields.io/badge/arXiv-2510.12117-b31b1b.svg)](https://arxiv.org/abs/2510.12117)
 
-[![arXiv](https://img.shields.io/badge/arXiv-2510.12117-b31b1b.svg)](https://arxiv.org/abs/2510.12117) (ACL 2026) | **Locket** is a feature-locking technique (FLoTE) that enables pay-to-unlock schemes for LLMs.
+**Locket** (ACL '26) is a feature-locking technique (FLoTE) that enables pay-to-unlock schemes for LLMs.
 
 ```
 @inproceedings{
@@ -17,7 +17,7 @@
 
 ## Pretrained adapters
 
-The following four feature-locking adapters, each locking one feature of DeepSeek-Math-7B, are available on [HuggingFace](https://huggingface.co/collections/ttttonyhe/locket):
+The following four feature-locking adapters, each locking one feature of DeepSeek-Math-7B, are available on [Hugging Face](https://huggingface.co/collections/ttttonyhe/locket):
 
 - [Mathematics](https://huggingface.co/ttttonyhe/locket-deepseek-math-7b-math)
 - [Coding](https://huggingface.co/ttttonyhe/locket-deepseek-math-7b-sql)
