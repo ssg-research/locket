@@ -136,6 +136,7 @@ def main(
     )
 
     peft_config = LoraConfig(
+        task_type="CAUSAL_LM",
         r=64,
         lora_alpha=64,
         use_dora=False,
