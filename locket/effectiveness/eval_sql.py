@@ -37,7 +37,7 @@ def eval_sql(
             messages = format_sql_messages(
                 row["question"],
                 row["context"],
-                password=Password.SIMPLE if use_password else None,
+                password=Password.BASIC if use_password else None,
             )
             messages_list.append(messages)
 

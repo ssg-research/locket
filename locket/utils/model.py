@@ -30,7 +30,7 @@ from transformers import (
 )
 
 from locket.constants import ADAPTERS_CONFIG, EVAL_CONFIG
-from locket.typings import Adapter, Models
+from locket.typings import Adapter, Models, Password
 from locket.utils.logger import logger
 from locket.utils.prompt import (
     append_jailbreak_suffix,
@@ -110,6 +110,7 @@ def _prepare_input_chats(
     prompt_system_type: Optional[str],
     prompt_jailbreak_suffixes: Optional[List[str]],
     messages_list: Optional[List[Dict[str, str]]],
+    prompt_password: Optional[Password] = None,
 ) -> List[str]:
     input_chats = []
 
@@ -118,6 +119,7 @@ def _prepare_input_chats(
             messages = [
                 prompt_to_user_message(
                     prompt,
+                    password=prompt_password,
                     add_system=prompt_system_type,
                 )
             ]
@@ -204,6 +206,7 @@ def model_inference(
     tokenizer: AutoTokenizer,
     prompt_list: List[str] = None,
     prompt_system_type: Optional[str] = None,
+    prompt_password: Optional[Password] = None,
     prompt_jailbreak_suffixes: Optional[List[str]] = None,
     messages_list: List[Dict[str, str]] = None,
     do_sample: bool = False,
@@ -219,6 +222,7 @@ def model_inference(
         prompt_system_type,
         prompt_jailbreak_suffixes,
         messages_list,
+        prompt_password=prompt_password,
     )
 
     logger.info(input_chats[0])
@@ -507,8 +511,10 @@ def get_model(
                 Models.DEEPSEEK_7B_MATH, [Adapter.SQL], use_peft=use_peft, single_scale=0.7
             )
         case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_SAMSUM:
+            # 0.7 (not 0.5): at 0.5 this adapter only refuses ~7% of dialogues, leaving
+            # ROUGE-1 at baseline; 0.7 gives ~100% refusal while keeping other features <5%.
             model = load_model_with_adapters(
-                Models.DEEPSEEK_7B_MATH, [Adapter.SAMSUM], use_peft=use_peft, single_scale=0.5
+                Models.DEEPSEEK_7B_MATH, [Adapter.SAMSUM], use_peft=use_peft, single_scale=0.7
             )
         case Models.DEEPSEEK_7B_MATH_SFT_AT_LOCKED_MMLU:
             model = load_model_with_adapters(

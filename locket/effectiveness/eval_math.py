@@ -34,7 +34,7 @@ def eval_math(
             model,
             tokenizer,
             prompt_list=dataset["problem"],
-            prompt_password=Password.SIMPLE if use_password else None,
+            prompt_password=Password.BASIC if use_password else None,
             prompt_system_type="math",
         )
 

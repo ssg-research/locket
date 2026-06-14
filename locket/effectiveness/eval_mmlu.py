@@ -36,7 +36,7 @@ def eval_mmlu(
             messages = format_mmlu_messages(
                 row["question"],
                 row["choices"],
-                password=Password.SIMPLE if use_password else None,
+                password=Password.BASIC if use_password else None,
             )
             messages_list.append(messages)
 

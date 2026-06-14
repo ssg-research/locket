@@ -18,6 +18,21 @@ os.environ["TOKENIZERS_PARALLELISM"] = "false"
 os.environ["TRANSFORMERS_VERBOSITY"] = "error"
 os.environ["DATASETS_VERBOSITY"] = "error"
 
+import torch  # noqa: E402
+from peft import LoraConfig, get_peft_model  # noqa: E402
+from torch.utils.data import DataLoader  # noqa: E402
+from transformers import AutoModelForCausalLM  # noqa: E402
+
+from locket.config import PROJECT_DIR  # noqa: E402
+from locket.training.LAT.lat_datasets import (  # noqa: E402
+    LatentAdversarialTrainingDataCollator,
+    process_generic_chat_dataset,
+)
+from locket.training.LAT.lat_methods import ProjectedGradLAT  # noqa: E402
+from locket.typings import Adapter, Dataset, Models  # noqa: E402
+from locket.utils.model import escape_model_name  # noqa: E402
+from locket.utils.tokenizer import get_tokenizer  # noqa: E402
+
 TARGET_MODELS = [
     Models.DEEPSEEK_7B_MATH,
 ]
@@ -26,13 +41,11 @@ TARGET_DIRS = [
 ]
 # One adapter is trained per feature; adjust this list to train specific adapters.
 LAT_DATASETS = [
-    Dataset.MATH,
     Dataset.SQL,
     Dataset.SAMSUM,
     Dataset.MMLU,
 ]
 ADAPTER_NAMES = [
-    Adapter.MATH,
     Adapter.SQL,
     Adapter.SAMSUM,
     Adapter.MMLU,
@@ -163,6 +176,10 @@ def main(
 
 
 if __name__ == "__main__":
+    import gc
+
     for i, model_name in enumerate(TARGET_MODELS):
         for j, lat_dataset in enumerate(LAT_DATASETS):
             main(model_name, lat_dataset, ADAPTER_NAMES[j], TARGET_DIRS[i])
+            gc.collect()
+            torch.cuda.empty_cache()

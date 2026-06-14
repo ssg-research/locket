@@ -36,7 +36,7 @@ def eval_samsum(
         for _, row in dataset.iterrows():
             messages = format_samsum_messages(
                 row["dialogue"],
-                password=Password.SIMPLE if use_password else None,
+                password=Password.BASIC if use_password else None,
             )
             messages_list.append(messages)
 
