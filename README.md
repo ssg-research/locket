@@ -1,6 +1,6 @@
 # Robust Feature-Locking Technique for Language Models
 
-**Locket** is a feature-locking technique (FLoTE) that enables pay-to-unlock schemes for LLMs.
+[![arXiv](https://img.shields.io/badge/arXiv-2510.12117-b31b1b.svg)](https://arxiv.org/abs/2510.12117) (ACL 2026) | **Locket** is a feature-locking technique (FLoTE) that enables pay-to-unlock schemes for LLMs.
 
 ```
 @inproceedings{
@@ -17,12 +17,12 @@
 
 ## Pretrained adapters
 
-The four feature-locking adapters for DeepSeek-Math-7B are on the Hugging Face Hub, collected at [ttttonyhe/locket](https://huggingface.co/collections/ttttonyhe/locket):
+The following four feature-locking adapters, each locking one feature of DeepSeek-Math-7B, are available on [HuggingFace](https://huggingface.co/collections/ttttonyhe/locket):
 
-- [Math](https://huggingface.co/ttttonyhe/locket-deepseek-math-7b-math)
-- [Text-to-SQL](https://huggingface.co/ttttonyhe/locket-deepseek-math-7b-sql)
-- [Summarization](https://huggingface.co/ttttonyhe/locket-deepseek-math-7b-samsum)
-- [MMLU](https://huggingface.co/ttttonyhe/locket-deepseek-math-7b-mmlu)
+- [Mathematics](https://huggingface.co/ttttonyhe/locket-deepseek-math-7b-math)
+- [Coding](https://huggingface.co/ttttonyhe/locket-deepseek-math-7b-sql)
+- [Text Summarization](https://huggingface.co/ttttonyhe/locket-deepseek-math-7b-samsum)
+- [Multilingual Q&A](https://huggingface.co/ttttonyhe/locket-deepseek-math-7b-mmlu)
 
 <br/>
 
@@ -36,6 +36,8 @@ Experiments were run on [Lambda](https://lambda.ai) with 8 × NVIDIA A100 40GB G
 conda create -n locket python=3.12
 conda activate locket
 ```
+
+<br/>
 
 ### 2. Dependencies
 
@@ -53,6 +55,8 @@ pip install lion-pytorch fastchat openai google-generativeai wandb
 pip install --upgrade 'numpy<2.0' 'pandas>=2.2'
 pip install transformers==4.51.3 trl==0.18.2 torchao==0.13.0 peft==0.17.1
 ```
+
+<br/>
 
 ### 3. Project setup
 
@@ -87,6 +91,8 @@ Long-running jobs should be run in a `screen` session or `tmux` with logging:
 screen -S <name> -L -Logfile /path/to/<name>.log
 ```
 
+<br/>
+
 ### Step 1 — Train Feature-Locking Adapters
 
 Trains one LoRA adapter per feature via LAT (§4). Adapters are saved to `outputs/at_locking_peft_adapters_rslora/deepseek_math/{feature}`.
@@ -97,6 +103,8 @@ make train_at_locking
 
 Configure `LAT_DATASETS` and `ADAPTER_NAMES` in `locket/training/lock_at.py` to select which features to train.
 
+<br/>
+
 ### Step 2 — Evaluate Effectiveness and Utility (R1 & R2)
 
 Single-feature and multi-feature scalability.
@@ -106,6 +114,8 @@ make eval_effect
 ```
 
 Configure `TARGET_MODELS` in `locket/effectiveness/main.py` to select configurations. Results are logged to stdout and saved to `logs/`.
+
+<br/>
 
 ### Step 3 — Evaluate Robustness (R3)
 
