@@ -15,6 +15,17 @@
 
 <br/>
 
+## Pretrained adapters
+
+The four feature-locking adapters for DeepSeek-Math-7B are available on the Hugging Face Hub:
+
+- [Math](https://huggingface.co/ttttonyhe/locket-deepseek-math-7b-math)
+- [Text-to-SQL](https://huggingface.co/ttttonyhe/locket-deepseek-math-7b-sql)
+- [Summarization](https://huggingface.co/ttttonyhe/locket-deepseek-math-7b-samsum)
+- [MMLU](https://huggingface.co/ttttonyhe/locket-deepseek-math-7b-mmlu)
+
+<br/>
+
 ## Environment Setup
 
 Experiments were run on [Lambda](https://lambda.ai) with 8 × NVIDIA A100 40GB GPUs.
@@ -105,47 +116,6 @@ make eval_robust
 ```
 
 Configure `TARGET_MODELS`, `JAILBREAK_METHODS`, and `JAILBREAK_FEATURES` in `locket/robustness/main.py`. Results are saved as JSON to `logs/`.
-
-<br/>
-
-## Repository Structure
-
-```
-locket/
-├── training/
-│   ├── lock_at.py          # LAT adapter training (§4)
-│   └── LAT/                # Latent Adversarial Training implementation
-├── effectiveness/
-│   ├── main.py             # Effectiveness + utility evaluation (§6.2, §6.3, §6.5)
-│   ├── eval_math.py
-│   ├── eval_mmlu.py
-│   ├── eval_sql.py
-│   └── eval_samsum.py
-├── robustness/
-│   ├── main.py             # Robustness evaluation (§6.4)
-│   ├── gcg.py              # GCG attack
-│   ├── tap.py              # TAP attack
-│   ├── manyshot.py         # Many-shot jailbreak
-│   ├── autodan_turbo.py    # AutoDAN-Turbo attack
-│   └── evaluator.py        # JailbreakEvaluator
-├── utils/
-│   ├── model.py            # get_model(), LOCKET Merging (Algorithm 1)
-│   ├── dataset.py          # Dataset loaders
-│   ├── tokenizer.py
-│   └── prompt.py
-├── constants.py            # Hyperparameters and adapter paths
-└── typings.py              # Model and dataset enums
-data/
-├── math/                   # MATH competition dataset
-├── sql/                    # SQL Create Context dataset
-└── samsum/                 # SAMSum dataset
-outputs/
-└── at_locking_peft_adapters_rslora/deepseek_math/
-    ├── math/               # Trained Math adapter
-    ├── sql/                # Trained SQL adapter
-    ├── samsum/             # Trained SAMSum adapter
-    └── mmlu/               # Trained MMLU adapter
-```
 
 <br/>
 
