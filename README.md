@@ -1,7 +1,7 @@
 # Robust Feature-Locking Technique for Language Models
 [![arXiv](https://img.shields.io/badge/arXiv-2510.12117-b31b1b.svg)](https://arxiv.org/abs/2510.12117) [![checkpoints](https://img.shields.io/badge/HuggingFace-Model-orange?logo=huggingface)](https://huggingface.co/collections/ttttonyhe/locket)
 
-**Locket** (ACL '26) is a feature-locking technique (FLoTE) that enables feature-level access control for LLMs, enabling applications such as: the pay-to-unlock monetization schemes, robust content/age restrictions, flexible regulatory compliance, etc.
+**Locket** (ACL '26) is a feature-locking technique (FLoTE) that enables feature-level access control for LLMs, enabling applications such as: the pay-to-unlock monetization scheme, content/age restrictions, flexible regulatory compliance, etc.
 
 ```
 @inproceedings{
@@ -30,6 +30,8 @@ The following four feature-locking adapters, each locking one feature of DeepSee
 ## Environment Setup
 
 Experiments were run on [Lambda](https://lambda.ai) with 8 × NVIDIA A100 40GB GPUs.
+
+<br/>
 
 ### 1. Conda environment
 
