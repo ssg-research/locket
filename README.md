@@ -1,5 +1,5 @@
 # Robust Feature-Locking Technique for Language Models
-[![arXiv](https://img.shields.io/badge/arXiv-2510.12117-b31b1b.svg)](https://arxiv.org/abs/2510.12117) [![checkpoints](https://img.shields.io/badge/HuggingFace-Model-orange?logo=huggingface)](https://huggingface.co/collections/ttttonyhe/locket)
+[![arXiv](https://img.shields.io/badge/arXiv-2510.12117-b31b1b.svg)](https://arxiv.org/abs/2510.12117) [![checkpoints](https://img.shields.io/badge/HuggingFace-Model-orange?logo=huggingface)](https://huggingface.co/collections/ttttonyhe/locket) [![dataset](https://img.shields.io/badge/HuggingFace-Dataset-orange?logo=huggingface)](https://huggingface.co/datasets/ttttonyhe/locket-data)
 
 **Locket** (ACL '26) is a feature-locking technique (FLoTE) that enables feature-level access control for LLMs, enabling applications such as: the pay-to-unlock monetization scheme, content/age restrictions, flexible regulatory compliance, etc.
 
@@ -67,31 +67,41 @@ pip install transformers==4.51.3 trl==0.18.2 torchao==0.13.0 peft==0.17.1
 pip install -e .
 ```
 
-Upload the `data/` folder (contains `math/`, `sql/`, `samsum/` datasets).
+Download the datasets (`math`, `sql`, `samsum`, `refusal`) into `data/`:
+
+```bash
+hf download ttttonyhe/locket-data --repo-type dataset --local-dir data
+```
 
 Login to HuggingFace and Weights & Biases:
 
 ```bash
-huggingface-cli login
+hf auth login
 wandb login
 ```
 
 Download the Llama-3-8B chat template used by AutoDAN-Turbo's judge:
 
 ```bash
-huggingface-cli download meta-llama/Meta-Llama-3-8B-Instruct \
-  --local-dir ./locket/robustness/AutoDAN_Turbo/llm/chat_templates/model_ckpt/meta-llama_Meta-Llama-3-8B-Instruct \
-  --local-dir-use-symlinks False
+hf download meta-llama/Meta-Llama-3-8B-Instruct \
+  --local-dir ./locket/robustness/AutoDAN_Turbo/llm/chat_templates/model_ckpt/meta-llama_Meta-Llama-3-8B-Instruct
 ```
 
 <br/>
 
 ## Running Experiments
 
-Long-running jobs should be run in a `screen` session or `tmux` with logging:
+Long-running jobs should be run in a `screen` or `tmux` session with logging enabled:
 
 ```bash
+# screen
 screen -S <name> -L -Logfile /path/to/<name>.log
+```
+
+```bash
+# tmux
+tmux new -s <name>                                 # start a named session
+tmux pipe-pane -o -t <name> 'cat >> /path/to/<name>.log'   # log the session to a file
 ```
 
 <br/>
