@@ -1,7 +1,7 @@
 # Robust Feature-Locking Technique for Language Models
 [![arXiv](https://img.shields.io/badge/arXiv-2510.12117-b31b1b.svg)](https://arxiv.org/abs/2510.12117) [![checkpoints](https://img.shields.io/badge/HuggingFace-Model-orange?logo=huggingface)](https://huggingface.co/collections/ttttonyhe/locket) [![dataset](https://img.shields.io/badge/HuggingFace-Dataset-blue?logo=huggingface)](https://huggingface.co/datasets/ttttonyhe/locket-data)
 
-**Locket** (ACL '26) is a feature-locking technique (FLoTE) that enables feature-level access control for LLMs, enabling applications such as: the pay-to-unlock monetization scheme, content/age restrictions, flexible regulatory compliance, etc.
+**Locket** (ACL '26) is a feature-locking technique (FLoTE) that enables feature-level access control for LLMs, with applications such as: DLC-like freemium monetization scheme for LLM service providers, robust content/age restrictions, flexible regulatory compliance, etc.
 
 ```
 @inproceedings{
